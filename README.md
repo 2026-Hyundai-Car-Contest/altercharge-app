@@ -145,7 +145,26 @@ git commit -m "feat: 다음 충전일 카드 구현"
 git pull --rebase && git push -u origin feat/charge-card
 ```
 
-## 3. 참고 문서
+## 3. 공모전 제출 (접수 마감 2026-11-15)
+
+[지원·제출 방법](https://appdevchallenge.auto-hmg.io/guide/submission) 기준으로 정리했다. 세부 내용은 공모전 사이트가 우선이다.
+
+| 항목 | 내용 |
+|---|---|
+| 필수 | 접수양식(기획서)과 참가자 전원의 개인정보 동의서를 `appdevchallenge@hyundai-partners.com`으로 이메일 제출 |
+| 가산점 | 시연 영상, GitHub 저장소(소스 + APK) |
+| APK 위치 | 저장소의 `apk/` 폴더, 파일명 `팀명_앱이름_release.apk`, 실행 가능한 release 버전 |
+| README | 앱 소개, 실행 방법, 테스트 환경, APK 위치를 적는다 |
+| 비공개 저장소 | 공지된 심사용 계정을 Collaborator로 초대한다 |
+| 수정 제출 | 마감 전에 처음 보낸 주소로 `[수정제출] ...` 제목으로 다시 보낸다 (마지막 제출본이 최종본) |
+
+### release APK 서명 키
+
+- 키스토어(`*.jks`, `*.keystore`)와 `keystore.properties`는 **저장소에 올리지 않는다.** (`.gitignore`로 제외됨)
+- 보관 담당과 공유 방법: (미정 — 정해지면 여기에 적는다. 비밀번호는 문서에 적지 않는다.)
+- APK는 한 명이 같은 키스토어로 만든다. 사람마다 다른 키로 서명하면 업데이트와 비교가 어긋난다.
+
+## 4. 참고 문서
 
 - [Pleos 개발 문서 시작하기](https://document.pleos.ai/docs/pleos-only/getting-started)
 - [Pleos Connect SDK 사용 가이드](https://document.pleos.ai/docs/pleos-only/connect-sdk-pleos/)
@@ -154,10 +173,11 @@ git pull --rebase && git push -u origin feat/charge-card
 - [차량 앱 개발 가이드(주행 규제, 오디오 포커스 등 정책)](https://document.pleos.ai/docs/pleos-only/vehicle-app-developer-guide/intro)
 - [공모전 사이트](https://appdevchallenge.auto-hmg.io/) — 접수 마감 2026.11.15, 1차 결과 11.23, 2차 PT 12.03~12.04
 
-## 4. 아직 정해지지 않은 것
+## 5. 아직 정해지지 않은 것
 
 - 배터리 잔량(SOC)과 플러그·충전 상태를 읽는 정확한 API 이름 (Vehicle SDK의 `EvBattery` 도메인으로 보이며 API 참조에서 확인 필요)
 - 주행 상태(주행 중/정차)를 판단하는 API (`CarUxRestrictions`는 문서에서 확인되지 않음. `DrivingMode`, NaviHelper 이벤트 후보)
+- release 키스토어 보관 담당과 공유 방법
 - 팀원 Pleos 팀 멤버 초대(프론트 2명, 백엔드)
 - TTS, STT, FusedLocation 제공 시점(현재 Coming Soon)
 - 빌드·lint 명령(프로젝트 생성 후 `CLAUDE.md`에 기록)
