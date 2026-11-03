@@ -47,3 +47,13 @@ jobs:
       - name: Debug 빌드
         if: steps.project.outputs.exists == 'true'
         run: ./gradlew assembleDebug
+
+      # main에 합쳐질 때마다 디버그 APK를 Actions 결과물(Artifacts)로 보관한다. (서명 키 불필요, 30일 보관)
+      - name: 디버그 APK 보관
+        if: steps.project.outputs.exists == 'true' && github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: '**/build/outputs/apk/debug/*.apk'
+          retention-days: 30
+          if-no-files-found: warn
