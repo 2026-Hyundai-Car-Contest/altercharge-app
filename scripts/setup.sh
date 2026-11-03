@@ -63,7 +63,7 @@ else
   echo "  내려받는 중... (끊기면 같은 명령을 다시 실행하면 이어받아요)"
   curl -fL -C - --progress-bar -o "$ZIP" "$ZIP_URL"
   echo "  체크섬 확인 중..."
-  actual=$(shasum -a 1 "$ZIP" | awk '{print $1}')
+  if command -v shasum >/dev/null 2>&1; then actual=$(shasum -a 1 "$ZIP" | awk '{print $1}'); else actual=$(sha1sum "$ZIP" | awk '{print $1}'); fi
   [ "$actual" = "$SHA1" ] || die "체크섬이 맞지 않아요. $ZIP 를 지우고 다시 실행해 주세요."
   ok "체크섬 일치"
   TOP=$(unzip -Z1 "$ZIP" | head -1 | cut -d/ -f1)

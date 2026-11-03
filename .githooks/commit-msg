@@ -9,7 +9,7 @@ case "$first_line" in
 esac
 
 # AI 작성 표시 금지
-if grep -Eiq 'co-authored-by:.*(claude|anthropic)|generated (with|by) (claude|ai)|claude code' "$msg_file"; then
+if grep -Eiq 'co-authored-by:.*(claude|anthropic)|generated (with|by) (claude|ai)' "$msg_file"; then
   echo "커밋 메시지에 Claude/AI 작성 표시를 넣을 수 없어요. 해당 줄을 지워 주세요."
   exit 1
 fi

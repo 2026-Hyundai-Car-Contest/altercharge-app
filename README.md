@@ -171,5 +171,4 @@ git pull --rebase && git push -u origin feat/charge-card
 - release 키스토어 보관 담당과 공유 방법
 - 팀원 Pleos 팀 멤버 초대(프론트 2명, 백엔드)
 - TTS, STT, FusedLocation 제공 시점(현재 Coming Soon)
-- 빌드·lint 명령(프로젝트 생성 후 `CLAUDE.md`에 기록)
-- JDK, AGP, Kotlin 버전(문서에 명시 없음. 프로젝트 생성 후 기록)
+- Android 버전 확정 여부: 현재 AGP 8.7.3, Kotlin 2.0.21, Gradle 8.9, JDK 17로 빌드됨. Pleos 문서에는 JDK, AGP, Kotlin 버전이 명시돼 있지 않음
