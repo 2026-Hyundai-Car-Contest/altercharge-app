@@ -1,0 +1,33 @@
+# Gradle / Android
+.gradle/
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+local.properties
+*.apk
+!apk/*.apk
+*.aab
+*.iml
+
+# Android Studio
+.idea/
+!.idea/codeStyles/
+!.idea/runConfigurations/
+
+# Signing / secrets (절대 커밋 금지)
+*.jks
+*.keystore
+keystore.properties
+secrets.properties
+.env
+.env.*
+
+# OS
+.DS_Store
+
+# Claude (스펙은 로컬 전용)
+.claude/specs/
+.claude/settings.local.json
+CLAUDE.local.md
+.claude/settings.json

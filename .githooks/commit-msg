@@ -1,0 +1,22 @@
+#!/bin/sh
+# 커밋 메시지 형식 검사: "type: 작업 내용" (scope 없음)
+msg_file="$1"
+first_line=$(head -n 1 "$msg_file")
+
+# merge / revert 커밋은 통과
+case "$first_line" in
+  Merge\ *|Revert\ *) exit 0 ;;
+esac
+
+# AI 작성 표시 금지
+if grep -Eiq 'co-authored-by:.*(claude|anthropic)|generated (with|by) (claude|ai)|claude code' "$msg_file"; then
+  echo "커밋 메시지에 Claude/AI 작성 표시를 넣을 수 없어요. 해당 줄을 지워 주세요."
+  exit 1
+fi
+
+if ! printf '%s' "$first_line" | grep -Eq '^(feat|fix|refactor|style|chore|docs|test): .+'; then
+  echo "커밋 메시지 형식이 맞지 않아요: \"$first_line\""
+  echo "형식: type: 작업 내용 (예: feat: 다음 충전일 카드 구현)"
+  echo "타입: feat, fix, refactor, style, chore, docs, test (scope 사용 안 함)"
+  exit 1
+fi
