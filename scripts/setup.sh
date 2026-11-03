@@ -47,9 +47,9 @@ esac
 CACHE="$HOME/.cache/altercharge"; mkdir -p "$CACHE"
 XML="$CACHE/pleos-sys-img.xml"
 curl -fsSL -m 60 -o "$XML" "$XML_URL" || die "Pleos 이미지 목록을 받지 못했어요. 인터넷 연결을 확인해 주세요."
-ABI=$(sed -n 's:.*<abi>\(.*\)</abi>.*:\1:p' "$XML" | head -1)
-ZIP_URL=$(sed -n 's:.*<url>\(.*\)</url>.*:\1:p' "$XML" | head -1)
-SHA1=$(sed -n 's:.*<checksum>\(.*\)</checksum>.*:\1:p' "$XML" | head -1)
+ABI=$(awk -F'[<>]' '/<abi>/ {print $3; exit}' "$XML")
+ZIP_URL=$(awk -F'[<>]' '/<url>/ {print $3; exit}' "$XML")
+SHA1=$(awk -F'[<>]' '/<checksum>/ {print $3; exit}' "$XML")
 [ -n "$ABI" ] && [ -n "$ZIP_URL" ] && [ -n "$SHA1" ] || die "이미지 목록 형식이 달라졌어요. README의 수동 설치 방법을 따라 주세요."
 IMG_DIR="$SDK/system-images/android-34/android-automotive/$ABI"
 
@@ -66,7 +66,7 @@ else
   if command -v shasum >/dev/null 2>&1; then actual=$(shasum -a 1 "$ZIP" | awk '{print $1}'); else actual=$(sha1sum "$ZIP" | awk '{print $1}'); fi
   [ "$actual" = "$SHA1" ] || die "체크섬이 맞지 않아요. $ZIP 를 지우고 다시 실행해 주세요."
   ok "체크섬 일치"
-  TOP=$(unzip -Z1 "$ZIP" | head -1 | cut -d/ -f1)
+  TOP=$(unzip -Z1 "$ZIP" | sed -n '1s:/.*::p')
   PARENT="$SDK/system-images/android-34/android-automotive"
   mkdir -p "$PARENT"
   echo "  압축 푸는 중... (몇 분 걸려요)"
@@ -80,7 +80,7 @@ say "5/6 가상 기기(AVD) 만들기: $AVD_NAME"
 if [ -f "$HOME/.android/avd/$AVD_NAME.ini" ]; then
   ok "이미 있음"
 else
-  DEVICE=$(sed -n 's:.*<d\:id>\(.*\)</d\:id>.*:\1:p' "$IMG_DIR/devices.xml" | head -1)
+  DEVICE=$(awk -F'[<>]' '/<d:id>/ {print $3; exit}' "$IMG_DIR/devices.xml")
   DEVICE=${DEVICE:-Pleos_Connect_v2_0}
   echo no | "$AVDMANAGER" create avd -n "$AVD_NAME" -k "system-images;android-34;android-automotive;$ABI" -d "$DEVICE" --force >/dev/null
   CFG="$HOME/.android/avd/$AVD_NAME.avd/config.ini"
