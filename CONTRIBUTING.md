@@ -6,13 +6,22 @@
 
 - `main` 하나만 쓴다. `develop`과 브랜치 보호는 없다.
 - 작업은 `main`에서 짧은 브랜치를 따서 하고, 하루 안에 합친다.
-- 이름: `type/작업내용` (영어 소문자, 하이픈). 이슈 번호는 선택.
+- 이름: `type/작업내용` (영어 소문자, 하이픈). **이슈가 있으면 번호를 붙인다:** `type/이슈번호-작업내용`
 
 ```
-feat/charge-card
-fix/soc-null-crash
-chore/initial-setup
+feat/12-charge-card      # 이슈 #12가 있을 때
+fix/20-soc-null-crash
+chore/initial-setup      # 이슈가 없을 때
 ```
+
+## 이슈 연결
+
+이슈는 선택이지만, **이슈가 있으면 번호를 연결한다.**
+
+- 브랜치 이름에 번호를 붙인다. (`feat/12-charge-card`)
+- PR 본문의 Related Issue에 `Close #12`를 적는다. PR이 머지되면 이슈가 자동으로 닫힌다.
+- PR 제목과 커밋 메시지에는 번호를 쓰지 않는다. (Squash and Merge 때 PR 번호가 자동으로 붙는다.)
+- 이슈 없이 작업한 PR은 Related Issue 칸을 비워 둔다.
 
 타입: `feat` `fix` `refactor` `style` `chore` `docs` `test`
 

@@ -132,6 +132,7 @@ implementation("ai.pleos.playground:Vehicle:<버전>")
 자세한 내용은 [CONTRIBUTING.md](CONTRIBUTING.md). 요약:
 
 - `main` 하나만 쓴다. 작업 브랜치는 `type/작업내용` 으로 짧게 따서 하루 안에 합친다.
+- 이슈는 선택이다. **이슈가 있으면** 브랜치에 번호를 붙이고(`feat/12-charge-card`) PR 본문에 `Close #12`를 적는다. 없으면 번호 없이 진행한다.
 - 커밋은 `type: 작업 내용` (한국어, scope 없음). 타입: `feat` `fix` `refactor` `style` `chore` `docs` `test`
 - 작은 변경은 `main`에 바로 머지하고, 푸시 전에 `git pull --rebase` 한다.
 - 공용 파일(Gradle, 매니페스트, 공통 컴포넌트)은 PR로 올리고 상대에게 알린다.
