@@ -4,7 +4,7 @@
 Pleos Connect(Android Automotive 기반) 차량용 앱이며, 현대차그룹 차량용 앱 개발 공모전 출품작이다.
 
 - 스택: Android (Kotlin) + Pleos Connect SDK
-- 사용 SDK: Vehicle(배터리·주행거리), NaviHelper(내비 목적지), TextToSpeech / SpeechToText(음성), FusedLocation(거점 진입)
+- 사용 SDK: Vehicle(배터리·주행거리), NaviHelper(내비 목적지). TextToSpeech / SpeechToText(음성), FusedLocation(거점 진입)은 2026-11-03 기준 Pleos에서 **Coming Soon(사용 불가)** 이라 제공되면 적용한다.
 - 이 저장소는 **프론트엔드(차량용 Android 앱)만** 다룬다. 백엔드는 별도 저장소에서 개발하며, 여기서는 API를 호출하는 쪽만 만든다.
 - 기획: Notion "얼터차지 for Pleos Connect 1-pager" 참고
 
@@ -20,7 +20,7 @@ Pleos Connect(Android Automotive 기반) 차량용 앱이며, 현대차그룹 �
 
 ## 1. 환경 세팅
 
-**스크립트 한 번으로 끝난다.** (macOS / Linux. Windows는 아래 "수동 설치"를 따른다.)
+**스크립트 한 번으로 끝난다.** (**Apple Silicon Mac에서 확인**했다. Intel Mac과 Linux는 검증하지 못했고, Windows는 아래 "수동 설치"를 따른다.)
 이미지가 크므로 **와이파이에서, 디스크 여유 26GB 이상**으로 시작한다. 처음에는 이미지를 받고 푸느라 오래 멈춘 것처럼 보일 수 있다. 오류가 나지 않으면 기다린다.
 
 ### 1-1. 먼저 준비할 것 (직접 설치)
@@ -33,6 +33,8 @@ Pleos Connect(Android Automotive 기반) 차량용 앱이며, 현대차그룹 �
 | 여유 RAM 8GB 이상 | 에뮬레이터가 4GB를 쓴다. |
 
 ### 1-2. 저장소 받고 스크립트 실행
+
+저장소가 **비공개**라서, 받은 GitHub 초대를 수락하고 터미널에서 GitHub 로그인이 되어 있어야 clone된다. (`gh auth login` 또는 SSH 키)
 
 ```bash
 git clone https://github.com/2026-Hyundai-Car-Contest/altercharge-app.git
@@ -59,6 +61,15 @@ cd altercharge-app
 ```
 
 빌드하고, 에뮬레이터가 꺼져 있으면 켜고, 앱을 설치해서 실행한다. 차량 화면 오른쪽 메인 영역에 **AlterCharge**가 보이면 성공이다. 계기판 쪽 화면(0km/h, P R N D)은 정상적인 차량 에뮬레이터 화면이다.
+
+**스크립트 한눈에 보기**
+
+| 명령 | 하는 일 |
+|---|---|
+| `./scripts/setup.sh` | 환경 세팅 (처음 한 번) |
+| `./scripts/run.sh` | 빌드 + 에뮬레이터 켜기 + 설치 + 실행 |
+| `./scripts/check.sh` | 푸시 전 lint와 빌드 확인 (CI와 같은 검사) |
+| `./scripts/release.sh <팀명>` | 제출용 서명 APK를 `apk/팀명_AlterCharge_release.apk`로 만들기 (키스토어 필요) |
 
 Android Studio에서 실행하려면 `altercharge-app` 폴더를 Open 하고, 실행 기기로 `Pleos_Connect_API34`를 고른 뒤 ▶ Run 한다. 이때도 **Gradle JDK를 17로 지정**해야 한다. (Settings > Build, Execution, Deployment > Build Tools > Gradle > Gradle JDK)
 
@@ -154,6 +165,16 @@ git pull --rebase && git push -u origin feat/charge-card
 - 키스토어(`*.jks`, `*.keystore`)와 `keystore.properties`는 **저장소에 올리지 않는다.** (`.gitignore`로 제외됨)
 - 보관 담당과 공유 방법: (미정 — 정해지면 여기에 적는다. 비밀번호는 문서에 적지 않는다.)
 - APK는 한 명이 같은 키스토어로 만든다. 사람마다 다른 키로 서명하면 업데이트와 비교가 어긋난다.
+- 만드는 방법: 키스토어가 있는 사람이 저장소 루트에 `keystore.properties`(`storeFile`, `storePassword`, `keyAlias`, `keyPassword`)를 두고 `./scripts/release.sh <팀명>`을 실행한다. 서명 검증까지 해서 `apk/` 폴더에 정해진 이름으로 만든다. 만든 APK는 직접 `git add` 해서 올린다.
+
+### 심사용 README 항목 (공모전 요구: 앱 소개, 실행 방법, 테스트 환경, APK 위치)
+
+| 항목 | 내용 |
+|---|---|
+| 앱 소개 | 이 문서 상단 |
+| 실행 방법 | `./scripts/setup.sh` 후 `./scripts/run.sh` (1-2, 1-3) |
+| 테스트 환경 | Pleos Connect Emulator v2.1.0 (Automotive, Android API 34), RAM 4GB |
+| APK 위치 | `apk/팀명_앱이름_release.apk` (제출 시 추가) |
 
 ## 4. 참고 문서
 
@@ -169,6 +190,5 @@ git pull --rebase && git push -u origin feat/charge-card
 - 배터리 잔량(SOC)과 플러그·충전 상태를 읽는 정확한 API 이름 (Vehicle SDK의 `EvBattery` 도메인으로 보이며 API 참조에서 확인 필요)
 - 주행 상태(주행 중/정차)를 판단하는 API (`CarUxRestrictions`는 문서에서 확인되지 않음. `DrivingMode`, NaviHelper 이벤트 후보)
 - release 키스토어 보관 담당과 공유 방법
-- 팀원 Pleos 팀 멤버 초대(프론트 2명, 백엔드)
 - TTS, STT, FusedLocation 제공 시점(현재 Coming Soon)
-- Android 버전 확정 여부: 현재 AGP 8.7.3, Kotlin 2.0.21, Gradle 8.9, JDK 17로 빌드됨. Pleos 문서에는 JDK, AGP, Kotlin 버전이 명시돼 있지 않음
+- Intel Mac, Linux, Windows에서의 환경 세팅(검증 전)
