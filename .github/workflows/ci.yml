@@ -1,0 +1,49 @@
+name: CI
+
+# PR을 열거나 갱신할 때, 그리고 main에 푸시할 때 Gradle 빌드와 lint를 확인한다.
+# Android 프로젝트(gradlew)가 저장소에 없으면 건너뛴다.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Android 프로젝트 확인
+        id: project
+        run: |
+          if [ -f gradlew ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "gradlew가 없어 빌드를 건너뜁니다."
+          fi
+
+      - uses: actions/setup-java@v4
+        if: steps.project.outputs.exists == 'true'
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+        if: steps.project.outputs.exists == 'true'
+
+      - name: Lint
+        if: steps.project.outputs.exists == 'true'
+        run: |
+          chmod +x gradlew
+          ./gradlew lintDebug
+
+      - name: Debug 빌드
+        if: steps.project.outputs.exists == 'true'
+        run: ./gradlew assembleDebug
