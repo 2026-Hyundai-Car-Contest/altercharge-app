@@ -69,7 +69,7 @@ else
   TOP=$(unzip -Z1 "$ZIP" | sed -n '1s:/.*::p')
   PARENT="$SDK/system-images/android-34/android-automotive"
   mkdir -p "$PARENT"
-  echo "  압축 푸는 중... (몇 분 걸려요)"
+  echo "  압축 푸는 중... (용량이 커서 오래 걸려요. 오류가 없으면 기다려 주세요)"
   unzip -q -o "$ZIP" -d "$PARENT"
   rm -rf "$IMG_DIR"; mv "$PARENT/$TOP" "$IMG_DIR"
   rm -f "$ZIP"
