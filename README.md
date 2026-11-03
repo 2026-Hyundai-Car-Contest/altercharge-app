@@ -136,8 +136,8 @@ Android Studio에서 실행하려면 `altercharge-app` 폴더를 Open 하고, �
 - `main` 하나만 쓴다. 작업 브랜치는 `type/작업내용` 으로 짧게 따서 하루 안에 합친다.
 - 이슈는 선택이다. **이슈가 있으면** 브랜치에 번호를 붙이고(`feat/12-charge-card`) PR 본문에 `Close #12`를 적는다. 없으면 번호 없이 진행한다.
 - 커밋은 `type: 작업 내용` (한국어, scope 없음). 타입: `feat` `fix` `refactor` `style` `chore` `docs` `test`
-- 작은 변경은 `main`에 바로 머지하고, 푸시 전에 `git pull --rebase` 한다.
-- 공용 파일(Gradle, 매니페스트, 공통 컴포넌트)은 PR로 올리고 상대에게 알린다.
+- **모든 변경은 PR로 올리고 Squash and Merge로 합친다.** 작은 변경도 같고, `main`에 직접 푸시하지 않는다. PR 하나가 커밋 하나로 남아 기록이 깨끗해진다. 상대 승인은 기다리지 않고 확인만 한다.
+- 공용 파일(Gradle, 매니페스트, 공통 컴포넌트)을 바꿀 때는 상대에게 먼저 알린다. 푸시 전에는 `git pull --rebase` 한다.
 - 프론트 2명이므로 화면 단위로 담당을 나눠 같은 파일을 동시에 고치지 않는다.
 - 키스토어, `local.properties`, 토큰, API 키는 커밋하지 않는다.
 
@@ -146,6 +146,7 @@ git switch main && git pull --rebase
 git switch -c feat/charge-card        # 작업 시작
 git commit -m "feat: 다음 충전일 카드 구현"
 git pull --rebase && git push -u origin feat/charge-card
+# GitHub에서 PR을 열고 Squash and Merge
 ```
 
 ## 3. 공모전 제출 (접수 마감 2026-11-15)
