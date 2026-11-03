@@ -95,6 +95,7 @@ Android Studio에서 실행하려면 `altercharge-app` 폴더를 Open 하고, �
 | `JDK 17을 찾지 못했어요` | `brew install openjdk@17` 후 다시 실행 |
 | 빌드 오류에 `25.0.3` 같은 Java 버전이 나온다 | Gradle이 JDK 25로 돌고 있다. JDK 17로 바꾼다. (`run.sh`는 자동으로 17을 쓴다) |
 | `Command-line Tools가 없어요` | Android Studio > SDK Tools에서 Command-line Tools (latest) 설치 |
+| Android Studio가 "AGP/Gradle 업그레이드"를 권한다 | **무시한다.** 버전을 올리면 JDK 17, compileSdk 34 전제가 깨질 수 있다. 올려야 하면 팀에 먼저 알리고 `./scripts/check.sh`로 확인한다. |
 | 다운로드가 끊긴다 | 같은 명령을 다시 실행하면 이어받는다 |
 | 체크섬이 맞지 않는다 | `~/.cache/altercharge/`의 zip을 지우고 다시 실행 |
 | 디스크 부족 | 약 26GB 필요. 설치가 끝나면 내려받은 zip은 자동으로 지워진다 |
