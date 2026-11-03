@@ -18,114 +18,104 @@ Pleos Connect(Android Automotive 기반) 차량용 앱이며, 현대차그룹 �
 | 에뮬레이터 | 컴퓨터에서 차량 화면을 흉내 내는 가상 기기. 실차 없이 앱을 실행해 본다. |
 | SDK | 차량 데이터(배터리 등)를 읽는 라이브러리. Gradle 의존성으로 추가한다. |
 
-## 1. 환경 세팅 (처음 한 번, 약 1~2시간)
+## 1. 환경 세팅
 
-설치할 것이 많고 이미지 파일이 크다. **와이파이 환경에서, 디스크 여유 20GB 이상**을 확보하고 시작한다.
+**스크립트 한 번으로 끝난다.** (macOS / Linux. Windows는 아래 "수동 설치"를 따른다.)
+이미지가 크므로 **와이파이에서, 디스크 여유 26GB 이상**으로 시작한다. 처음에는 30분~1시간 걸린다.
 
-### 1-1. 설치 프로그램
+### 1-1. 먼저 준비할 것 (직접 설치)
 
-| 필요한 것 | 비고 |
+| 필요한 것 | 확인 / 설치 |
 |---|---|
-| [Android Studio](https://developer.android.com/studio) | **최신 버전.** 오래된 버전이면 먼저 업데이트한다. JDK는 Android Studio에 포함된 것을 쓰면 된다. |
-| Git | 터미널에서 `git --version`이 나오면 된다. |
-| 8GB 이상 여유 RAM | 에뮬레이터가 4GB를 쓴다. |
+| [Android Studio](https://developer.android.com/studio) 최신 버전 | 설치 후 **한 번 실행**해서 SDK를 받게 한다. Settings > Android SDK > SDK Tools 에서 **Android SDK Command-line Tools (latest)** 를 체크해 설치한다. |
+| **JDK 17** | `brew install openjdk@17` (Mac). Android Studio에 들어 있는 JDK 25는 Gradle 8.9와 **맞지 않아서** 쓰지 않는다. 스크립트가 JDK 17을 알아서 찾는다. |
+| Git | `git --version` |
+| 여유 RAM 8GB 이상 | 에뮬레이터가 4GB를 쓴다. |
 
-### 1-2. 저장소 받기
+### 1-2. 저장소 받고 스크립트 실행
 
 ```bash
 git clone https://github.com/2026-Hyundai-Car-Contest/altercharge-app.git
 cd altercharge-app
-git config core.hooksPath .githooks   # 커밋 메시지 검사 켜기 (꼭 실행)
+./scripts/setup.sh
 ```
 
-### 1-3. Pleos Playground 가입과 프로젝트 신청
+`setup.sh`가 하는 일 (이미 된 단계는 건너뛰므로 여러 번 실행해도 된다):
+
+1. git 훅 켜기 (커밋 메시지 형식 검사)
+2. JDK 17과 Android SDK 확인
+3. Android API 34 플랫폼 설치
+4. Pleos Connect 에뮬레이터 이미지 설치 (4.7GB 내려받기 → 체크섬 검증 → 압축 해제)
+5. 가상 기기 `Pleos_Connect_API34` 생성 (RAM 4GB, Cold boot)
+
+**라이선스는 직접 읽고 동의해야 한다.** 설치가 필요한 단계에서 Google Android SDK 라이선스와 42dot Pleos SDK 라이선스 동의 질문이 나오고, `yes`를 직접 입력해야 진행된다. 이미 읽고 동의했다면 `ACCEPT_LICENSES=yes ./scripts/setup.sh`로 질문을 건너뛸 수 있다.
+
+> **AI(Claude 등)에게 시킬 때**: "scripts/setup.sh를 실행해서 환경 세팅해 줘"라고 하면 된다. 단, 라이선스 동의는 AI가 대신하지 못하게 본인이 직접 입력한다.
+
+### 1-3. 앱 실행
+
+```bash
+./scripts/run.sh
+```
+
+빌드하고, 에뮬레이터가 꺼져 있으면 켜고, 앱을 설치해서 실행한다. 차량 화면 오른쪽 메인 영역에 **AlterCharge**가 보이면 성공이다. 계기판 쪽 화면(0km/h, P R N D)은 정상적인 차량 에뮬레이터 화면이다.
+
+Android Studio에서 실행하려면 `altercharge-app` 폴더를 Open 하고, 실행 기기로 `Pleos_Connect_API34`를 고른 뒤 ▶ Run 한다. 이때도 **Gradle JDK를 17로 지정**해야 한다. (Settings > Build, Execution, Deployment > Build Tools > Gradle > Gradle JDK)
+
+### 1-4. Pleos Playground 가입 (직접)
 
 1. [Pleos Playground](https://developers.pleos.ai/playground)에서 가입하고 로그인한다. (오른쪽 위 "로그인")
-2. [프로젝트 생성 및 SDK 사용 신청](https://document.pleos.ai/docs/pleos-only/create-my-project)을 따라 My Project를 만든다.
-3. 서버 기반 TTS(`HYBRID`, `SERVER` 모드)를 쓰려면 이 프로젝트의 자격 증명이 필요하다. **자격 증명, 비밀번호는 코드와 저장소에 절대 넣지 않는다.** 필요하면 `secrets.properties`에 두면 `.gitignore`로 제외된다.
-4. **프로젝트(`AlterCharge`)는 이미 생성돼 있다.** 팀원은 새로 만들지 않고, 가입한 이메일을 프로젝트 소유자에게 알려 팀 멤버로 초대받는다. (Playground > Workspace > My Project > 팀 관리)
-5. 아래 SDK는 신청 없이 바로 쓸 수 있다: **Vehicle State, NaviHelper**
-6. 아래 SDK는 2026-11-03 기준 **Coming Soon(신청 불가)** 이다: FusedLocation, TextToSpeech, SpeechToText, Vehicle Control. 음성과 거점 진입 감지는 제공되기 전까지 화면과 버튼 대체 방식으로 만든다.
+2. **프로젝트(`AlterCharge`)는 이미 생성돼 있다.** 새로 만들지 않고, 가입한 이메일을 프로젝트 소유자에게 알려 팀 멤버로 초대받는다. (Playground > Workspace > My Project > 팀 관리)
+3. 아래 SDK는 신청 없이 바로 쓸 수 있다: **Vehicle State, NaviHelper**
+4. 아래 SDK는 2026-11-03 기준 **Coming Soon(신청 불가)** 이다: FusedLocation, TextToSpeech, SpeechToText, Vehicle Control. 음성과 거점 진입 감지는 제공되기 전까지 화면과 버튼 대체 방식으로 만든다.
+5. 클라이언트 ID/시크릿은 서버 연동 SDK(TTS, STT)에서 필요한 값이다. **코드와 저장소에 절대 넣지 않는다.** 필요하면 `secrets.properties`에 두면 `.gitignore`로 제외된다.
 
-### 1-4. 에뮬레이터 만들기
+### 프로젝트 구성 (이미 만들어져 있음)
 
-공식 가이드: [개발 환경 구성](https://document.pleos.ai/docs/connect/guide/getting-started/application-development/setup-connect-sdk-emulator)
-
-**A. Pleos 이미지 목록 등록** — Android Studio 메뉴 **Tools > SDK Manager > SDK Update Sites** 탭에서 `+` 버튼
-
-- Name: `Pleos Connect System Image`
-- URL (Mac M1/M2/M3, Apple Silicon): `https://nexus-playground.pleos.ai/repository/raw-releases/connect-avd/2.x/crp-arm64-sys-img.xml`
-- URL (Windows, Linux, Intel Mac): `https://nexus-playground.pleos.ai/repository/raw-releases/connect-avd/2.x/crp-sys-img.xml`
-
-> Mac이 M 시리즈인지 모르겠으면 왼쪽 위 Apple 메뉴 > 이 Mac에 관하여 에서 "칩"을 확인한다.
-
-**B. 이미지 설치 (약 4.7GB)**
-
-1. SDK Manager > **SDK Platforms** 탭에서 **Android API 34**를 체크한다.
-2. 오른쪽 아래 **Show Package Details**를 켠 뒤, API 34 아래에 보이는 **Pleos Connect v2.1.0 APIs** 이미지를 체크한다.
-3. Apply를 누르면 **42dot SDK 라이선스 동의 창**이 나온다. 내용을 읽고 본인이 동의한 경우에만 진행한다.
-4. 설치가 끝나면 **Android Studio를 재시작**한다.
-
-> 이전 버전의 Pleos 이미지가 있으면 삭제하고 다시 설치하라고 문서에 나와 있다.
-
-**C. 가상 기기 만들기**
-
-1. **Tools > Device Manager > Create device**
-2. Form Factor: **Automotive** 탭에서 **Pleos Connect v2.1.0** 선택 > Next
-3. System image: **API 34 / Pleos Connect v2.1.0 APIs** 선택 > Next
-4. **Show Advanced Settings**에서 다음을 바꾼다.
-   - Default boot: **Cold**
-   - RAM: **4 GB**
-5. Finish. 목록에 생긴 기기의 ▶ 버튼으로 켠다. 처음 부팅은 몇 분 걸린다.
-
-차량 화면이 뜨면 성공이다.
-
-### 1-5. 프로젝트 열기 / 만들기
-
-- **프로젝트가 이미 저장소에 있으면**: Android Studio에서 `altercharge-app` 폴더를 연다(Open). Gradle 동기화가 끝날 때까지 기다린다.
-- **아직 없으면 (최초 1명만 만든다)**: New Project > **Car > Empty Activity**, 언어 Kotlin, Minimum SDK **API 28** 이상으로 만들고 이 폴더에 둔 뒤 푸시한다. 나머지 팀원은 이 단계를 하지 않고 clone만 한다.
-
-SDK 추가 설정(프로젝트를 만든 사람이 한 번만 한다):
-
-`settings.gradle.kts`
-
-```kotlin
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-        maven { url = uri("https://nexus-playground.pleos.ai/repository/maven-releases/") }
-    }
-}
-```
-
-`app/build.gradle.kts`
-
-```kotlin
-implementation("ai.pleos.playground:Vehicle:<버전>")
-```
-
-문서마다 버전이 2.3.1과 2.3.2로 달라서 [Vehicle SDK 문서](https://document.pleos.ai/docs/pleos-only/connect-sdk-pleos/Vehicle/intro)의 최신 버전을 쓴다.
-
-`AndroidManifest.xml`에는 **쓰는 퍼미션만** 선언한다. Vehicle API 퍼미션은 Pleos App Market과 사전 협의·승인된 범위만 사용할 수 있고, 승인 없는 퍼미션은 앱 심사 탈락 사유다.
-
-### 1-6. 실행 확인
-
-1. 위에서 만든 Automotive 에뮬레이터를 켠다.
-2. Android Studio 위쪽에서 실행 기기로 그 에뮬레이터를 고르고 ▶ Run 한다.
-3. 앱이 차량 화면에 뜨면 세팅 완료.
+- Kotlin + Jetpack Compose, `minSdk 28`(Pleos 요구사항), `compileSdk/targetSdk 34`, Gradle 8.9, AGP 8.7.3
+- Pleos Vehicle SDK `2.3.2`는 `gradle/libs.versions.toml`의 `pleosVehicle`에서 관리하고, Maven 저장소는 `settings.gradle.kts`에 등록돼 있다. 인증은 필요 없다.
+- `AndroidManifest.xml`에는 **쓰는 퍼미션만** 선언한다. Vehicle API 퍼미션은 Pleos App Market과 사전 협의·승인된 범위만 사용할 수 있고, 승인 없는 퍼미션은 앱 심사 탈락 사유다.
+- 라이브러리 버전을 올릴 때는 `compileSdk 34`에서 빌드되는지 확인한다. (예: `core-ktx 1.15`는 compileSdk 35가 필요해서 1.13.1을 쓴다.)
 
 ### 막혔을 때
 
 | 증상 | 확인할 것 |
 |---|---|
-| Pleos 이미지가 목록에 안 보인다 | Update Sites URL을 정확히 넣었는지(Mac M 시리즈는 `crp-arm64`), Show Package Details를 켰는지, Android Studio를 재시작했는지 |
-| Device Manager에 "Pleos Connect"가 없다 | Form Factor가 Automotive인지, 이미지 설치가 끝났는지 |
-| 에뮬레이터가 안 켜지거나 느리다 | RAM 4GB, Default boot Cold인지, 다른 에뮬레이터를 꺼 뒀는지 |
-| 의존성을 못 받는다(Could not resolve) | `settings.gradle.kts`에 Maven 주소가 있는지, 와이파이 연결, Maven 저장소 접근 권한 |
-| 빌드가 minSdk 오류 | Minimum SDK가 28 이상인지 |
+| `JDK 17을 찾지 못했어요` | `brew install openjdk@17` 후 다시 실행 |
+| 빌드 오류에 `25.0.3` 같은 Java 버전이 나온다 | Gradle이 JDK 25로 돌고 있다. JDK 17로 바꾼다. (`run.sh`는 자동으로 17을 쓴다) |
+| `Command-line Tools가 없어요` | Android Studio > SDK Tools에서 Command-line Tools (latest) 설치 |
+| 다운로드가 끊긴다 | 같은 명령을 다시 실행하면 이어받는다 |
+| 체크섬이 맞지 않는다 | `~/.cache/altercharge/`의 zip을 지우고 다시 실행 |
+| 디스크 부족 | 약 26GB 필요. 설치가 끝나면 내려받은 zip은 자동으로 지워진다 |
+| 앱이 화면에 안 보인다 | `./scripts/run.sh`를 다시 실행한다. (메인 화면 0번에 띄운다) |
+| 에뮬레이터가 느리다 | 다른 에뮬레이터와 무거운 앱을 끈다. RAM 4GB가 필요하다 |
 | 위로도 해결 안 됨 | 오류 메시지 전체를 팀 채널에 올린다 |
+
+<details>
+<summary>수동 설치 (Windows이거나 스크립트가 안 될 때)</summary>
+
+공식 가이드: [개발 환경 구성](https://document.pleos.ai/docs/connect/guide/getting-started/application-development/setup-connect-sdk-emulator)
+
+**A. Pleos 이미지 목록 등록** — Android Studio **Tools > SDK Manager > SDK Update Sites** 탭에서 `+`
+
+- Name: `Pleos Connect System Image`
+- URL (Mac M 시리즈): `https://nexus-playground.pleos.ai/repository/raw-releases/connect-avd/2.x/crp-arm64-sys-img.xml`
+- URL (Windows, Linux, Intel Mac): `https://nexus-playground.pleos.ai/repository/raw-releases/connect-avd/2.x/crp-sys-img.xml`
+
+**B. 이미지 설치 (약 4.7GB)**
+
+1. SDK Manager > **SDK Platforms** 탭에서 **Android API 34**를 체크한다.
+2. **Show Package Details**를 켜고 **Pleos Connect v2.1.0 APIs** 이미지를 체크한다.
+3. Apply 후 **42dot SDK 라이선스**를 읽고 동의한 경우에만 진행한다.
+4. 설치가 끝나면 Android Studio를 재시작한다.
+
+**C. 가상 기기 만들기** — **Tools > Device Manager > Create device**
+
+1. Form Factor: **Automotive** > **Pleos Connect v2.1.0** 선택
+2. System image: **API 34 / Pleos Connect v2.1.0 APIs**
+3. Show Advanced Settings: Default boot **Cold**, RAM **4 GB**
+
+</details>
 
 ## 2. 협업 규칙 (기간이 짧아 해커톤처럼 빠르게)
 
