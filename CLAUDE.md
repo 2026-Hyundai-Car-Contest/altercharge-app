@@ -11,6 +11,8 @@ Pleos Connect SDK + Android(Kotlin) 기반 전기차 충전 일정 앱. 공모�
 - 규칙의 원본은 `CONTRIBUTING.md`다. `main` 하나에 짧은 작업 브랜치(`type/작업내용`), 커밋은 `type: 작업 내용`(한국어, scope 없음).
 - 커밋 메시지와 PR 본문에 `Co-Authored-By: Claude`, "Generated with Claude Code" 등 AI 작성 표시를 넣지 않는다. PR 본문에는 실제 변경 내용만 쓴다.
 - `main`에 직접 푸시하지 않는다. 모든 변경은 짧은 브랜치와 PR로 올려 Squash and Merge로 합친다. 공용 파일(Gradle, 매니페스트, 공통 컴포넌트)을 바꿀 때는 상대에게 먼저 알린다.
+- `.githooks/pre-push`가 `main` 직접 푸시를 막는다. **AI는 `ALLOW_MAIN_PUSH=1`로 우회하지 않는다.** PR 병합(Squash)은 사용자가 허용한 경우에만 한다.
+- 리뷰어 후보는 `.github/workflows/auto-assign.yml`의 `CANDIDATES`에 있고, 바꿀 때도 작업 브랜치와 PR로 올린다.
 - 커밋 전에 `./gradlew lintDebug assembleDebug`가 통과하는지 확인한다.
 - 키스토어, `local.properties`, 토큰, API 키, Pleos 클라이언트 ID/시크릿은 커밋하지 않는다.
 - 푸시와 PR 생성은 사용자가 요청할 때만 한다.

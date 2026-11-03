@@ -46,6 +46,20 @@ fix: 배터리 잔량이 없을 때 앱이 종료되는 오류 수정
 - 브랜치는 하루 안에 합치고, 푸시 전에 `git pull --rebase` 한다.
 - 빌드가 깨진 채로 `main`에 두지 않는다. 푸시 전에 `./scripts/check.sh`(lint와 빌드)를 돌리고, 화면을 바꿨다면 `./scripts/run.sh`로 에뮬레이터에서 확인한다.
 
+## 자동으로 되는 것
+
+| 무엇 | 언제 |
+|---|---|
+| 커밋 메시지 형식, AI 표시 검사 (`commit-msg` 훅) | 커밋할 때 (로컬) |
+| `main` 직접 푸시 차단 (`pre-push` 훅) | 푸시할 때 (로컬) |
+| 빌드와 lint (CI) | PR을 열거나 `main`에 푸시할 때 |
+| 담당자 지정, 리뷰어 요청(프론트 두 명이 서로) | 이슈나 PR을 열 때 |
+| 라벨, 브랜치 이름·PR 제목 검사 | PR을 열거나 제목을 고칠 때 (실패해도 병합은 가능) |
+| 디버그 APK 보관 | `main`에 병합될 때 (Actions 결과물 `app-debug-apk`, 30일) |
+| 병합 후 브랜치 삭제 | PR 병합 후 |
+
+CI 결과는 GitHub 저장소의 **Actions 탭**에서 본다. 리뷰어 후보는 `.github/workflows/auto-assign.yml`의 `CANDIDATES`에서 관리한다.
+
 ## 제출용 APK
 
 - 제출용 release APK는 `apk/팀명_앱이름_release.apk`로 둔다. 한 명이 같은 키스토어로 만들어 올린다. (`./scripts/release.sh <팀명>`이 이 이름과 위치로 만들어 준다.)

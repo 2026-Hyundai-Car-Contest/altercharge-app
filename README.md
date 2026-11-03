@@ -88,6 +88,23 @@ Android Studio에서 실행하려면 `altercharge-app` 폴더를 Open 하고, �
 - `AndroidManifest.xml`에는 **쓰는 퍼미션만** 선언한다. Vehicle API 퍼미션은 Pleos App Market과 사전 협의·승인된 범위만 사용할 수 있고, 승인 없는 퍼미션은 앱 심사 탈락 사유다.
 - 라이브러리 버전을 올릴 때는 `compileSdk 34`에서 빌드되는지 확인한다. (예: `core-ktx 1.15`는 compileSdk 35가 필요해서 1.13.1을 쓴다.)
 
+### 폴더 구조
+
+```
+altercharge-app/
+├─ app/src/main/
+│  ├─ java/com/altercharge/app/   # Kotlin 코드 (지금은 MainActivity.kt 하나)
+│  ├─ res/values/                 # 문자열, 테마
+│  └─ AndroidManifest.xml         # 퍼미션 선언  ← 공용 파일
+├─ app/build.gradle.kts           # 앱 모듈 설정  ← 공용 파일
+├─ gradle/libs.versions.toml      # 라이브러리 버전 ← 공용 파일
+├─ settings.gradle.kts            # 저장소 설정   ← 공용 파일
+├─ scripts/                       # setup, run, check, release
+└─ .github/                       # 이슈·PR 템플릿, 자동화(CI)
+```
+
+화면과 코드의 패키지 구조는 아직 정하지 않았다. 기획과 디자인이 확정되고 첫 화면이 나오면 팀이 합의해서 여기에 적는다. 폴더는 미리 만들지 않고 파일이 생길 때 같이 만든다.
+
 ### 막혔을 때
 
 | 증상 | 확인할 것 |
@@ -137,7 +154,10 @@ Android Studio에서 실행하려면 `altercharge-app` 폴더를 Open 하고, �
 - 이슈는 선택이다. **이슈가 있으면** 브랜치에 번호를 붙이고(`feat/12-charge-card`) PR 본문에 `Close #12`를 적는다. 없으면 번호 없이 진행한다.
 - 커밋은 `type: 작업 내용` (한국어, scope 없음). 타입: `feat` `fix` `refactor` `style` `chore` `docs` `test`
 - **모든 변경은 PR로 올리고 Squash and Merge로 합친다.** 작은 변경도 같고, `main`에 직접 푸시하지 않는다. PR 하나가 커밋 하나로 남아 기록이 깨끗해진다. 상대 승인은 기다리지 않고 확인만 한다.
-- 공용 파일(Gradle, 매니페스트, 공통 컴포넌트)을 바꿀 때는 상대에게 먼저 알린다. 푸시 전에는 `git pull --rebase` 한다.
+- 공용 파일(Gradle, 매니페스트, 공통 컴포넌트)을 바꿀 때는 상대에게 먼저 알린다. 푸시 전에는 `git pull --rebase` 하고 `./scripts/check.sh`를 돌린다.
+- `main` 직접 푸시는 `.githooks/pre-push` 훅이 막는다. (GitHub 무료 요금제의 비공개 저장소는 브랜치 보호를 쓸 수 없다. 정말 필요한 경우에만 `ALLOW_MAIN_PUSH=1 git push`)
+- 자동으로 되는 것: PR을 열면 **담당자 지정, 리뷰어 요청(프론트 두 명이 서로), 라벨, 브랜치 이름·제목 검사, 빌드와 lint(CI)** 가 돈다. 병합하면 브랜치가 지워지고 `main`의 디버그 APK가 Actions 결과물로 남는다.
+- CI 결과와 APK는 GitHub 저장소의 **Actions 탭**에서 본다. 병합된 `main` 실행 화면 아래 **Artifacts → `app-debug-apk`** 에서 APK를 받는다. (30일 보관)
 - 프론트 2명이므로 화면 단위로 담당을 나눠 같은 파일을 동시에 고치지 않는다.
 - 키스토어, `local.properties`, 토큰, API 키는 커밋하지 않는다.
 
@@ -193,4 +213,5 @@ git pull --rebase && git push -u origin feat/charge-card
 - 주행 상태(주행 중/정차)를 판단하는 API (`CarUxRestrictions`는 문서에서 확인되지 않음. `DrivingMode`, NaviHelper 이벤트 후보)
 - release 키스토어 보관 담당과 공유 방법
 - TTS, STT, FusedLocation 제공 시점(현재 Coming Soon)
+- 프론트와 백엔드의 API 규격(다음 충전일, 자리 현황, 대안 충전소 응답 형식)과 **다음 충전일 계산을 앱에서 할지 서버에서 할지**. 서버를 호출하는 코드를 넣을 때는 매니페스트에 `INTERNET` 퍼미션을 추가한다.
 - Intel Mac, Linux, Windows에서의 환경 세팅(검증 전)
