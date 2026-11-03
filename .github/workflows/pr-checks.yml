@@ -1,0 +1,63 @@
+name: PR Checks
+
+# PR 브랜치 이름과 제목 형식을 검사하고, 브랜치 타입에 맞는 라벨을 붙인다.
+# 브랜치 보호가 없으므로 이 검사는 막지 않고 알려주는 용도다.
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request
+            const branch = pr.head.ref
+            const title = pr.title
+            const types = ['feat', 'fix', 'refactor', 'style', 'chore', 'docs', 'test']
+            const errors = []
+
+            const branchPattern = new RegExp(`^(${types.join('|')})\\/[a-z0-9]+([a-z0-9-]*[a-z0-9])?$`)
+            if (!branchPattern.test(branch)) {
+              errors.push(
+                `브랜치 이름이 컨벤션에 맞지 않아요: "${branch}"\n` +
+                `형식: type/작업내용 (예: feat/charge-card, fix/soc-null-crash)`
+              )
+            }
+
+            const titlePattern = new RegExp(`^(${types.join('|')}): .+`)
+            if (!titlePattern.test(title)) {
+              errors.push(
+                `PR 제목이 컨벤션에 맞지 않아요: "${title}"\n` +
+                `형식: type: 작업 내용 (예: feat: 다음 충전일 카드 구현)`
+              )
+            }
+
+            const labelMap = {
+              feat: 'feature',
+              fix: 'bug',
+              refactor: 'refactor',
+              style: 'style',
+              chore: 'chore',
+              docs: 'documentation',
+              test: 'test',
+            }
+            const label = labelMap[branch.split('/')[0]]
+            if (label) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                labels: [label],
+              })
+            }
+
+            if (errors.length > 0) {
+              core.setFailed(errors.join('\n\n'))
+            }
