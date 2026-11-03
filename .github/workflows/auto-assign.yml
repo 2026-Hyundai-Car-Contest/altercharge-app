@@ -20,7 +20,7 @@ jobs:
         with:
           script: |
             // 리뷰어 후보(GitHub 아이디). 작성자 본인은 자동으로 제외된다.
-            const CANDIDATES = ['karnelll']
+            const CANDIDATES = ['karnelll', 'swelll0']
             const REVIEWER_COUNT = 1
 
             const isPR = !!context.payload.pull_request
