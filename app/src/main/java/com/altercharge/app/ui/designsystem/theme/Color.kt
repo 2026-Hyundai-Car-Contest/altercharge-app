@@ -13,6 +13,9 @@ import androidx.compose.ui.graphics.Color
  */
 @Immutable
 data class AlterColors(
+    /** 다크 모드 여부. 컴포넌트가 모드별 전용 색을 고를 때 쓴다. */
+    val isDark: Boolean,
+
     // 파란색 팔레트 (basic/blue/blue_50~900). 500이 기준색
     val blue50: Color,
     val blue100: Color,
@@ -67,6 +70,7 @@ data class AlterColors(
 )
 
 val LightAlterColors = AlterColors(
+    isDark = false,
     blue50 = Color(0xFFF1F5FD),
     blue100 = Color(0xFFDCE5F9),
     blue200 = Color(0xFFB8CBF4),
@@ -102,6 +106,7 @@ val LightAlterColors = AlterColors(
 )
 
 val DarkAlterColors = AlterColors(
+    isDark = true,
     blue50 = Color(0xFF162036),
     blue100 = Color(0xFF1A294A),
     blue200 = Color(0xFF1E325C),

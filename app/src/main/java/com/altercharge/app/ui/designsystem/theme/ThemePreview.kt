@@ -16,9 +16,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
-/** 디자인 값 확인용 미리보기. Figma Style Guide와 나란히 놓고 비교한다. */
+/** 디자인 값 확인용 모음. Figma Style Guide와 나란히 놓고 비교한다. 미리보기와 디버그 확인 화면에서 같이 쓴다. */
 @Composable
-private fun DesignTokensSheet() {
+fun DesignTokensSheet() {
     val colors = AlterTheme.colors
     val type = AlterTheme.typography
     Column(
