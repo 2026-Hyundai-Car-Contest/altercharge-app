@@ -18,6 +18,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -143,7 +146,9 @@ private fun LandscapeLayout(
         }
         // 하이파이 상황 15: 페이드는 화면 아래 끝에 붙고(아래 여백까지 덮음) 왼쪽 열만 가린다.
         // 끝까지 내리면 마지막 내용이 가려지지 않게 숨긴다.
-        if (leftColumnScrollable && leftScrollState.canScrollForward) {
+        // 스크롤 위치가 바뀔 때마다 전체를 다시 그리지 않도록, 끝 도달 여부가 바뀔 때만 읽는다.
+        val showLeftFade by remember(leftScrollState) { derivedStateOf { leftScrollState.canScrollForward } }
+        if (leftColumnScrollable && showLeftFade) {
             ScrollFade(
                 Modifier
                     .align(Alignment.BottomStart)
@@ -229,7 +234,8 @@ private fun PortraitLayout(
             }
         }
         // 끝까지 내리면 마지막 내용이 가려지지 않게 숨긴다.
-        if (scrollState.canScrollForward) {
+        val showFade by remember(scrollState) { derivedStateOf { scrollState.canScrollForward } }
+        if (showFade) {
             ScrollFade(
                 Modifier
                     .align(Alignment.BottomCenter)
