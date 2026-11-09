@@ -10,7 +10,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.altercharge.app.ui.designsystem.component.DriveState
 import com.altercharge.app.ui.designsystem.component.PlaceholderBox
+import com.altercharge.app.ui.designsystem.component.StatusBar
+import com.altercharge.app.ui.designsystem.component.StatusBarUiState
 import com.altercharge.app.ui.designsystem.layout.AlterChargeLayout
 import com.altercharge.app.ui.designsystem.theme.AlterChargeTheme
 import com.altercharge.app.ui.designsystem.theme.AlterPadding
@@ -38,7 +41,7 @@ class DesignCatalogActivity : ComponentActivity() {
                         )
                         "statusbar" -> StatusBarCatalog(Modifier.padding(AlterPadding.XLarge))
                         "layout" -> AlterChargeLayout(
-                            statusBar = { PlaceholderBox("status_bar", Modifier.height(56.dp)) },
+                            statusBar = { StatusBar(StatusBarUiState(DriveState.PARKED, socPercent = 32, rangeKm = 98, temperatureC = 12)) },
                             l1 = { PlaceholderBox("L1 판정", Modifier.height(368.dp)) },
                             l2 = { PlaceholderBox("L2 주행 기록") },
                             c = { PlaceholderBox("C 차량 상태") },
