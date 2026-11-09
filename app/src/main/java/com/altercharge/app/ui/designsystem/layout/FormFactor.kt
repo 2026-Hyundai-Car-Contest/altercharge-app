@@ -32,6 +32,11 @@ enum class FormFactor(
     val landscape: AreaSpec,
     val portrait: AreaSpec,
     val landscapeSpans: ColumnSpans = Spans363,
+    /**
+     * 가로에서 L2를 펼쳤을 때 왼쪽 열 스크롤을 허용하는지.
+     * S-17은 하이파이 상황 15가 왼쪽 열만 스크롤한다. WF는 Layout Rules가 "스크롤 없음"이다.
+     */
+    val landscapeLeftScrollable: Boolean = true,
 ) {
     S17(
         landscape = AreaSpec(1700.dp, 1184.dp, margin = 48.dp, gutter = 24.dp, vertical = 32.dp, columns = 12),
@@ -51,8 +56,10 @@ enum class FormFactor(
         landscape = AreaSpec(1256.dp, 800.dp, margin = 32.dp, gutter = 16.dp, vertical = 24.dp, columns = 12),
         // 세로는 시안에 "세로 없음 · 참고"로만 있다.
         portrait = AreaSpec(628.dp, 800.dp, margin = 24.dp, gutter = 16.dp, vertical = 24.dp, columns = 4),
-        // TODO 서희님: WF 가로는 스크롤 없음 · L2 미니 카드 제외 · 충전소 2개 (Layout Rules)
+        // WF 가로 (Layout Rules): L 4 · C 4 · R 4, 스크롤 없음.
+        // TODO 카드 작업: WF 가로는 L2 미니 카드 제외 · 충전소 목록 2개. 틀은 슬롯만 두고 카드 쪽에서 처리한다.
         landscapeSpans = ColumnSpans(left = 4, center = 4, right = 4),
+        landscapeLeftScrollable = false,
     ),
     ;
 
