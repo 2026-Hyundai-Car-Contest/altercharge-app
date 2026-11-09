@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    C 차량 상태 카드 (card_vehicle_status) 문구. 담당: 서희님
+    Figma: 15상황 보드 455:58776 (01~12), KO 보드 439:21152
+    portrait_* 는 세로 카드에서만 쓰는 짧은 헤드라인이다. 세로 시안에서 문구가 다른 상황만 따로 둔다.
+-->
+<resources>
+    <!-- 헤드라인 (두 줄). %1$s = 운전자 이름 또는 예약 시각 -->
+    <string name="card_vehicle_status_headline_charge_recommended">%1$s님, 출발 전\n충전을 권장해요</string>
+    <string name="card_vehicle_status_headline_ready">%1$s님의 차는\n출발 준비 완료</string>
+    <string name="card_vehicle_status_headline_charging">%1$s님의 차는\n충전 중</string>
+    <string name="card_vehicle_status_headline_charging_low">배터리를\n채우고 있어요</string>
+    <string name="card_vehicle_status_headline_charging_critical">배터리가 부족해\n충전을 진행 중</string>
+    <string name="card_vehicle_status_headline_charged">%1$s님의 차는\n충전 완료</string>
+    <string name="card_vehicle_status_headline_paused">충전 일시정지\n곧 다시 시작해요</string>
+    <string name="card_vehicle_status_headline_scheduled">%1$s\n충전 예약 완료</string>
+    <string name="card_vehicle_status_headline_critical_unplugged">배터리 부족\n충전 필요</string>
+    <string name="card_vehicle_status_headline_depleted">배터리 방전\n긴급 출동을 요청하세요</string>
+    <string name="card_vehicle_status_headline_charge_error">충전 오류\n점검이 필요해요</string>
+    <string name="card_vehicle_status_headline_no_data">차량 정보를\n불러오지 못했어요</string>
+
+    <!-- 세로 카드 헤드라인 (가로와 다른 것만) -->
+    <string name="card_vehicle_status_portrait_headline_charge_recommended">출발 전\n충전 권장</string>
+    <string name="card_vehicle_status_portrait_headline_charging_critical">배터리 부족\n충전 중</string>
+    <string name="card_vehicle_status_portrait_headline_paused">충전 일시정지\n곧 재개</string>
+    <string name="card_vehicle_status_portrait_headline_depleted">배터리 방전\n긴급 출동 필요</string>
+    <string name="card_vehicle_status_portrait_headline_charge_error">충전 오류\n점검 필요</string>
+    <string name="card_vehicle_status_portrait_headline_no_data">차량 정보\n불러오기 실패</string>
+
+    <!-- 연결 칩 (chip_status) -->
+    <string name="card_vehicle_status_chip_connected">연결됨</string>
+    <string name="card_vehicle_status_chip_unplugged">연결 안 됨</string>
+    <string name="card_vehicle_status_chip_standby">예약 대기</string>
+    <string name="card_vehicle_status_chip_error">오류</string>
+    <string name="card_vehicle_status_chip_offline">오프라인</string>
+
+    <!-- 배터리 블록 -->
+    <string name="card_vehicle_status_battery">배터리</string>
+    <string name="card_vehicle_status_percent_unit" translatable="false" formatted="false">%</string>
+    <!-- 숫자는 굵게 강조된다. %1$s = 시간, %2$s = 분 -->
+    <string name="card_vehicle_status_time_left_hours">%1$s시간 %2$s분 남았어요</string>
+    <string name="card_vehicle_status_time_left_minutes">%1$s분 남았어요</string>
+    <string name="card_vehicle_status_status_charge_recommended">충전을 권장해요</string>
+    <string name="card_vehicle_status_status_not_connected">충전기 연결 안 됨</string>
+    <string name="card_vehicle_status_status_charged">충전이 완료됐어요</string>
+    <string name="card_vehicle_status_status_paused_grid_demand">전력 수요 조절로 일시정지</string>
+    <string name="card_vehicle_status_status_scheduled">예약 충전 대기 중</string>
+    <string name="card_vehicle_status_status_depleted">지금은 주행할 수 없어요</string>
+    <string name="card_vehicle_status_status_fault_communication">충전기 통신 오류 · E-21</string>
+    <string name="card_vehicle_status_status_last_updated">마지막 업데이트 %1$s</string>
+
+    <!-- 정보 타일 (라벨 / 값 / 단위) -->
+    <string name="card_vehicle_status_tile_range">주행 가능</string>
+    <string name="card_vehicle_status_tile_nearest_station">가까운 충전소</string>
+    <string name="card_vehicle_status_tile_last_charge">마지막 충전</string>
+    <string name="card_vehicle_status_tile_full_at">충전 완료</string>
+    <string name="card_vehicle_status_tile_auto_resume">자동 재개</string>
+    <string name="card_vehicle_status_tile_emergency">긴급 충전</string>
+    <string name="card_vehicle_status_tile_emergency_value">호출</string>
+    <string name="card_vehicle_status_tile_cause">원인</string>
+    <string name="card_vehicle_status_tile_cause_communication">통신 오류</string>
+    <string name="card_vehicle_status_tile_action">조치</string>
+    <string name="card_vehicle_status_tile_action_reconnect">재연결</string>
+    <string name="card_vehicle_status_tile_retry">다시 시도</string>
+    <string name="card_vehicle_status_unit_km" translatable="false">km</string>
+    <string name="card_vehicle_status_unit_expected">예정</string>
+    <string name="card_vehicle_status_unit_done">완료</string>
+    <string name="card_vehicle_status_unit_24h">24시간</string>
+    <string name="card_vehicle_status_unit_then_retry">후 재시도</string>
+    <string name="card_vehicle_status_unit_seconds_later">초 후</string>
+
+    <!-- 값을 모를 때 -->
+    <string name="card_vehicle_status_value_unknown" translatable="false">–</string>
+    <string name="card_vehicle_status_soc_unknown" translatable="false">—</string>
+
+    <!-- 차량 이미지 자리 (접근성 설명) -->
+    <string name="card_vehicle_status_vehicle_image">차량 이미지</string>
+</resources>

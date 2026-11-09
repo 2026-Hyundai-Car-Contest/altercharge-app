@@ -1,74 +1,202 @@
 package com.altercharge.app.ui.card.vehiclestatus
 
 import androidx.compose.runtime.Immutable
-import com.altercharge.app.ui.card.common.ChargeVerdict
 
 /**
- * C 카드가 보여주는 상황. 15상황 보드(455:58776)의 01~12번이다.
- * 13~15번은 R1 · R2 · L2 쪽 상황이라 여기 없다.
+ * 충전 상태. Figma card_vehicle_status 속성 charging (366:39011 상태 매트릭스).
  */
-enum class VehicleSituation {
-    /** 01 주차 · 충전 권장 */
-    CHARGE_RECOMMENDED,
-
-    /** 02 주차 · 출발 준비 완료 */
-    READY,
-
-    /** 03 충전 중 */
+enum class ChargingState {
+    /** 충전 중 */
     CHARGING,
 
-    /** 04 충전 중 · 배터리 부족 */
-    CHARGING_LOW,
+    /** 충전 완료 (100% 또는 목표 도달) */
+    COMPLETED,
 
-    /** 05 충전 중 · 배터리 위험 */
-    CHARGING_CRITICAL,
-
-    /** 06 충전 완료 */
-    CHARGED,
-
-    /** 07 충전 일시정지 */
+    /** 충전 일시정지 */
     PAUSED,
 
-    /** 08 예약 충전 */
+    /** 예약 충전 대기 */
     SCHEDULED,
 
-    /** 09 배터리 위험 · 미연결 */
+    /** 충전 오류 */
+    FAULT,
+
+    /** 충전기에 연결 안 됨 (주차 · 주행) */
+    UNPLUGGED,
+}
+
+/**
+ * 배터리 구간. Figma 속성 battery, 배터리 구간 표 (377:11454).
+ *
+ * TODO 기획 확인: 구간 경계는 디자이너가 테스트 기준으로 잡은 값이다(제조사 정책 확인 필요).
+ * Figma "확인할 것"에 적힌 대로, 부족 · 위험 전환 기준(SOC 20% 이하 또는 남은 시간 30분 미만)도 기획 확인이 필요하다.
+ */
+enum class BatteryLevel {
+    /** 30~100% */
+    NORMAL,
+
+    /** 15~29% */
+    LOW,
+
+    /** 1~14% */
+    CRITICAL,
+
+    /** 0% */
+    EMPTY,
+
+    /** 값 없음 */
+    UNKNOWN,
+    ;
+
+    companion object {
+        private const val LOW_BELOW = 30
+        private const val CRITICAL_BELOW = 15
+
+        fun fromSoc(socPercent: Int?): BatteryLevel = when {
+            socPercent == null -> UNKNOWN
+            socPercent <= 0 -> EMPTY
+            socPercent < CRITICAL_BELOW -> CRITICAL
+            socPercent < LOW_BELOW -> LOW
+            else -> NORMAL
+        }
+    }
+}
+
+/**
+ * C 카드가 보여주는 상황. 15상황 보드(455:58776)의 01~12번이고, 상태 매트릭스의 유효 조합 12개와 같다.
+ * 카드가 charging과 배터리 구간으로 고른다. 13~15번은 R1 · R2 · L2 쪽 상황이라 여기 없다.
+ */
+enum class VehicleSituation {
+    /** 01 주차 · 충전 권장 (unplugged × low) */
+    CHARGE_RECOMMENDED,
+
+    /** 02 주차 · 출발 준비 완료 (unplugged × normal) */
+    READY,
+
+    /** 03 충전 중 (charging × normal) */
+    CHARGING,
+
+    /** 04 충전 중 · 배터리 부족 (charging × low) */
+    CHARGING_LOW,
+
+    /** 05 충전 중 · 배터리 위험 (charging × critical) */
+    CHARGING_CRITICAL,
+
+    /** 06 충전 완료 (completed) */
+    CHARGED,
+
+    /** 07 충전 일시정지 (paused) */
+    PAUSED,
+
+    /** 08 예약 충전 (scheduled) */
+    SCHEDULED,
+
+    /** 09 배터리 위험 · 미연결 (unplugged × critical) */
     CRITICAL_UNPLUGGED,
 
-    /** 10 배터리 방전 */
+    /** 10 배터리 방전 (unplugged × empty) */
     DEPLETED,
 
-    /** 11 충전 오류 */
+    /** 11 충전 오류 (fault) */
     CHARGE_ERROR,
 
-    /** 12 차량 정보 없음 */
+    /** 12 차량 정보 없음 (battery = unknown) */
     NO_DATA,
 }
 
-/** 충전기 연결 칩 */
-enum class PlugState { PLUGGED, UNPLUGGED, UNKNOWN }
+/** 연결 칩 (chip_status). 카드가 상황으로 고른다. */
+enum class ConnectionChip { CONNECTED, UNPLUGGED, STANDBY, ERROR, OFFLINE }
+
+/**
+ * 일시정지 사유. 시안 문구가 있는 것만 둔다.
+ * TODO 디자이너 확인: "예약 시간 외" · "차량 설정" 사유는 문구(특히 영문) 시안이 없다.
+ */
+enum class PauseReason { GRID_DEMAND }
+
+/**
+ * 충전 오류 종류. 시안 문구가 있는 것만 둔다.
+ * TODO 디자이너 확인: 충전기 고장(E-11) · 정전 · 상태 확인 불가는 영문 시안이 없다.
+ */
+enum class ChargeFault { COMMUNICATION }
 
 /**
  * C 차량 상태 카드에 넘기는 값. Figma card_vehicle_status (366:39011).
- * 숫자와 상태만 담고, 문구 · 색 · 차량 이미지는 카드가 situation과 verdict로 고른다.
- *
- * 초안이다. 타일 항목은 C 카드 구현 때 Figma 상황별 시안을 보고 확정한다.
+ * 숫자와 상태만 담고, 문구 · 색 · 칩 · 게이지는 카드가 charging과 배터리 구간으로 고른다.
+ * 시각은 이미 "21:40"처럼 표시용으로 만든 문자열이다.
  */
 @Immutable
 data class CardVehicleStatusUiState(
-    val situation: VehicleSituation,
-    /** 주차 상황(01, 02)에서 헤드라인을 고른다: 오늘 / 내일 / 여유 */
-    val verdict: ChargeVerdict,
+    /** 운전자 이름 (헤드라인에 들어간다) */
     val driverName: String,
-    val plug: PlugState,
-    /** 배터리 %. 모르면 null ("--" 표시) */
+    val charging: ChargingState,
+    /** 배터리 %. 모르면 null ("—" 표시, 12 차량 정보 없음) */
     val socPercent: Int?,
     /** 갈 수 있는 거리 km. 모르면 null */
     val rangeKm: Int?,
-    /** 충전 남은 시간, 또는 급속 80%까지 걸리는 시간 (분) */
-    val remainingMinutes: Int?,
-    /** 완충 · 완료 예정 시각 (예: "21:40") */
-    val doneAt: String?,
-    /** 예약 충전 시각 (예: "23:00") */
-    val scheduledAt: String?,
-)
+    /**
+     * 남은 시간 (분). 충전 중이면 완충까지, 미연결 위험 구간이면 시안의 "12분 남았어요".
+     * TODO 기획 확인: 미연결 위험 구간의 남은 시간이 무엇까지의 시간인지.
+     */
+    val remainingMinutes: Int? = null,
+    /** 충전 완료 시각. 충전 중 · 예약이면 예정 시각, 완료면 실제 완료 시각 */
+    val fullAt: String? = null,
+    /** 마지막 충전 완료 시각 (02 출발 준비 완료) */
+    val lastChargedAt: String? = null,
+    /** 가까운 충전소까지 거리 km (01 충전 권장) */
+    val nearestStationKm: Double? = null,
+    /** 예약 충전 시작 시각 (08 헤드라인) */
+    val scheduledAt: String? = null,
+    /** 일시정지 사유 (07) */
+    val pauseReason: PauseReason? = null,
+    /** 자동 재개 시각 (07). null이면 수동 재개 */
+    val autoResumeAt: String? = null,
+    /** 오류 종류 (11) */
+    val fault: ChargeFault? = null,
+    /** 마지막으로 값을 받은 시각 (12) */
+    val lastUpdatedAt: String? = null,
+    /** 다시 시도까지 남은 초 (12) */
+    val retryInSeconds: Int? = null,
+) {
+    val batteryLevel: BatteryLevel get() = BatteryLevel.fromSoc(socPercent)
+
+    val situation: VehicleSituation
+        get() = when (charging) {
+            ChargingState.FAULT -> VehicleSituation.CHARGE_ERROR
+            ChargingState.COMPLETED -> VehicleSituation.CHARGED
+            ChargingState.PAUSED -> VehicleSituation.PAUSED
+            ChargingState.SCHEDULED -> VehicleSituation.SCHEDULED
+            ChargingState.CHARGING -> when (batteryLevel) {
+                BatteryLevel.NORMAL -> VehicleSituation.CHARGING
+                BatteryLevel.LOW -> VehicleSituation.CHARGING_LOW
+                // TODO 디자이너 확인: 충전 중 0%는 시안이 없어 위험 구간으로 보여준다.
+                BatteryLevel.CRITICAL, BatteryLevel.EMPTY -> VehicleSituation.CHARGING_CRITICAL
+                // TODO 디자이너 확인: 충전 중인데 SOC를 모르는 경우는 시안이 없어 정보 없음으로 보여준다.
+                BatteryLevel.UNKNOWN -> VehicleSituation.NO_DATA
+            }
+            ChargingState.UNPLUGGED -> when (batteryLevel) {
+                BatteryLevel.NORMAL -> VehicleSituation.READY
+                BatteryLevel.LOW -> VehicleSituation.CHARGE_RECOMMENDED
+                BatteryLevel.CRITICAL -> VehicleSituation.CRITICAL_UNPLUGGED
+                BatteryLevel.EMPTY -> VehicleSituation.DEPLETED
+                BatteryLevel.UNKNOWN -> VehicleSituation.NO_DATA
+            }
+        }
+
+    val chip: ConnectionChip
+        get() = when (situation) {
+            VehicleSituation.CHARGING,
+            VehicleSituation.CHARGING_LOW,
+            VehicleSituation.CHARGING_CRITICAL,
+            VehicleSituation.CHARGED,
+            VehicleSituation.PAUSED,
+            -> ConnectionChip.CONNECTED
+            VehicleSituation.SCHEDULED -> ConnectionChip.STANDBY
+            VehicleSituation.CHARGE_ERROR -> ConnectionChip.ERROR
+            VehicleSituation.NO_DATA -> ConnectionChip.OFFLINE
+            VehicleSituation.CHARGE_RECOMMENDED,
+            VehicleSituation.READY,
+            VehicleSituation.CRITICAL_UNPLUGGED,
+            VehicleSituation.DEPLETED,
+            -> ConnectionChip.UNPLUGGED
+        }
+}
