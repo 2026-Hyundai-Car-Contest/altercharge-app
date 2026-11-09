@@ -5,6 +5,7 @@
     <string name="status_bar_driving">Driving</string>
     <string name="status_bar_charging">Charging</string>
     <string name="status_bar_arrived">Arrived</string>
-    <string name="status_bar_battery">%1$s%% · %2$skm</string>
+    <string name="status_bar_battery_percent">%1$s%%</string>
+    <string name="status_bar_range">%1$skm</string>
     <string name="status_bar_temperature">%1$d°</string>
 </resources>

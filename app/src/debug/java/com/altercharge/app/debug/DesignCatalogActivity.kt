@@ -22,7 +22,7 @@ import com.altercharge.app.ui.designsystem.theme.AlterTheme
  *   adb shell am start --display 0 -n com.altercharge.app/.debug.DesignCatalogActivity \
  *     --es page buttons --ez dark false
  *
- * page: tokens(디자인 값) · buttons(버튼) · layout(레이아웃 틀)
+ * page: tokens(디자인 값) · buttons(버튼) · statusbar(상단 바) · layout(레이아웃 틀)
  */
 class DesignCatalogActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,6 +36,7 @@ class DesignCatalogActivity : ComponentActivity() {
                         "buttons" -> IviButtonCatalog(
                             Modifier.background(AlterTheme.colors.surface).padding(AlterPadding.XLarge),
                         )
+                        "statusbar" -> StatusBarCatalog(Modifier.padding(AlterPadding.XLarge))
                         "layout" -> AlterChargeLayout(
                             statusBar = { PlaceholderBox("status_bar", Modifier.height(56.dp)) },
                             l1 = { PlaceholderBox("L1 판정", Modifier.height(368.dp)) },

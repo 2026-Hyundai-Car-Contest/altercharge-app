@@ -12,6 +12,11 @@
     <string name="status_bar_driving">주행 중</string>
     <string name="status_bar_charging">충전 중</string>
     <string name="status_bar_arrived">도착</string>
-    <string name="status_bar_battery">%1$s%% · %2$skm</string>
+    <!-- 기어 글자: 차량 표기라 번역하지 않는다 -->
+    <string name="status_bar_gear_parked" translatable="false">P</string>
+    <string name="status_bar_battery_percent">%1$s%%</string>
+    <string name="status_bar_range">%1$skm</string>
+    <!-- 값을 모를 때 -->
+    <string name="status_bar_value_unknown" translatable="false">--</string>
     <string name="status_bar_temperature">%1$d°</string>
 </resources>
