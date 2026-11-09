@@ -1,4 +1,4 @@
-package com.altercharge.app.ui.designsystem.theme
+package com.altercharge.app.debug
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -15,10 +15,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.altercharge.app.ui.designsystem.theme.AlterChargeTheme
+import com.altercharge.app.ui.designsystem.theme.AlterMargin
+import com.altercharge.app.ui.designsystem.theme.AlterPadding
+import com.altercharge.app.ui.designsystem.theme.AlterRadius
+import com.altercharge.app.ui.designsystem.theme.AlterShadows
+import com.altercharge.app.ui.designsystem.theme.AlterTheme
+import com.altercharge.app.ui.designsystem.theme.alterShadow
 
-/** 디자인 값 확인용 미리보기. Figma Style Guide와 나란히 놓고 비교한다. */
+/** 디자인 값 확인용 모음. Figma Style Guide와 나란히 놓고 비교한다. 미리보기와 디버그 확인 화면에서 같이 쓴다. 디버그 빌드에만 들어간다. */
 @Composable
-private fun DesignTokensSheet() {
+fun DesignTokensSheet() {
     val colors = AlterTheme.colors
     val type = AlterTheme.typography
     Column(

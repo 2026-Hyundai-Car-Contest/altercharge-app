@@ -1,40 +1,248 @@
 package com.altercharge.app.ui.designsystem.component
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.altercharge.app.ui.designsystem.theme.AlterColors
+import com.altercharge.app.ui.designsystem.theme.AlterTheme
+import com.altercharge.app.ui.designsystem.theme.AlterTypography
 
-enum class IviButtonStyle { Primary, Secondary }
+/** 버튼 위계. 화면(카드)마다 Primary는 하나만 쓴다. */
+enum class IviButtonHierarchy { Primary, Contrast, Secondary, Tonal, Ghost, Danger }
+
+/** 버튼 크기. Figma button/{large, medium, small} */
+enum class IviButtonSize(
+    val height: Dp,
+    val paddingHorizontal: Dp,
+    val gap: Dp,
+    val radius: Dp,
+    val iconSize: Dp,
+) {
+    Large(height = 100.dp, paddingHorizontal = 32.dp, gap = 12.dp, radius = 24.dp, iconSize = 36.dp),
+    Medium(height = 80.dp, paddingHorizontal = 24.dp, gap = 12.dp, radius = 20.dp, iconSize = 32.dp),
+    Small(height = 64.dp, paddingHorizontal = 16.dp, gap = 8.dp, radius = 16.dp, iconSize = 28.dp),
+}
+
+/** 차량 화면 최소 터치 영역 (button/touch_target/min) */
+private val TouchTargetMin = 76.dp
 
 /**
  * 차량용 기본 버튼. Figma ivi_button (366:38848).
  *
- * 지금은 뼈대다. 모양 · 색 · 누름 · 비활성 · 주행 중 잠금은 디자인 값 작업 때 채운다.
- * 함수 이름과 파라미터는 그대로 두니 카드에서 먼저 가져다 써도 된다.
+ * - 누름: 한 단계 진한 색 / 포커스(로터리 · 키보드): 4dp 테두리를 4dp 바깥에 그린다.
+ * - [restricted]: 주행 중 잠금. 아이콘이 자물쇠로 바뀌고 눌리지 않는다. 사유 문구는 버튼 밖에 따로 둔다.
+ * - Small(64)도 누르는 범위는 76을 확보한다. 그래서 Small은 레이아웃 높이가 76이다.
+ *
+ * @param text null이면 아이콘만 있는 버튼이다. 이때 [contentDescription]을 꼭 넣는다.
  */
 @Composable
 fun IviButton(
-    text: String,
+    text: String?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    style: IviButtonStyle = IviButtonStyle.Primary,
+    hierarchy: IviButtonHierarchy = IviButtonHierarchy.Primary,
+    size: IviButtonSize = IviButtonSize.Medium,
     enabled: Boolean = true,
+    restricted: Boolean = false,
+    leadingIcon: Painter? = null,
+    trailingIcon: Painter? = null,
+    contentDescription: String? = text,
 ) {
-    val colors = when (style) {
-        IviButtonStyle.Primary -> ButtonDefaults.buttonColors()
-        IviButtonStyle.Secondary -> ButtonDefaults.filledTonalButtonColors()
+    val palette = iviButtonPalette(hierarchy, AlterTheme.colors)
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val focused by interaction.collectIsFocusedAsState()
+    val iconOnly = text == null
+    val isGhost = hierarchy == IviButtonHierarchy.Ghost
+
+    val container = when {
+        restricted -> if (isGhost) Color.Transparent else palette.restrictedContainer
+        !enabled -> if (isGhost) Color.Transparent else palette.disabledContainer
+        pressed -> palette.pressedContainer
+        else -> palette.container
     }
-    Button(
-        onClick = onClick,
-        // 차량 화면 최소 터치 영역 76dp (Figma 기준)
-        modifier = modifier.heightIn(min = 76.dp),
-        enabled = enabled,
-        colors = colors,
+    val content = when {
+        restricted -> palette.restrictedLabel
+        !enabled -> palette.disabledLabel
+        else -> palette.label
+    }
+    val shape = RoundedCornerShape(size.radius)
+    val lockPainter = rememberVectorPainter(Icons.Filled.Lock)
+    val leading = if (restricted) lockPainter else leadingIcon
+
+    Box(
+        modifier = modifier
+            .heightIn(min = TouchTargetMin)
+            .then(if (iconOnly) Modifier.widthIn(min = TouchTargetMin) else Modifier)
+            // 글자가 있으면 글자를 읽고, 아이콘만 있을 때만 설명 문구를 붙인다.
+            .then(
+                if (iconOnly && contentDescription != null) {
+                    Modifier.semantics { this.contentDescription = contentDescription }
+                } else {
+                    Modifier
+                },
+            )
+            .clickable(
+                interactionSource = interaction,
+                indication = null,
+                enabled = enabled && !restricted,
+                role = Role.Button,
+                onClick = onClick,
+            ),
+        contentAlignment = Alignment.Center,
     ) {
-        Text(text)
+        Row(
+            modifier = Modifier
+                .height(size.height)
+                .then(if (iconOnly) Modifier.width(size.height) else Modifier)
+                .focusRing(visible = focused, color = palette.focusRing, radius = size.radius)
+                .background(container, shape)
+                .then(
+                    if (isGhost) Modifier.border(GhostOutlineWidth, palette.outline, shape) else Modifier,
+                )
+                .padding(horizontal = if (iconOnly) 0.dp else size.paddingHorizontal),
+            horizontalArrangement = Arrangement.spacedBy(size.gap, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            leading?.let { Icon(it, contentDescription = null, tint = content, modifier = Modifier.size(size.iconSize)) }
+            text?.let {
+                Text(
+                    text = it,
+                    style = size.textStyle(AlterTheme.typography),
+                    color = content,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            if (!restricted) {
+                trailingIcon?.let {
+                    Icon(it, contentDescription = null, tint = content, modifier = Modifier.size(size.iconSize))
+                }
+            }
+        }
+    }
+}
+
+// TODO 디자이너 확인: Ghost 테두리 두께는 변수에 없어 2dp로 둔다.
+private val GhostOutlineWidth = 2.dp
+
+private fun IviButtonSize.textStyle(type: AlterTypography): TextStyle = when (this) {
+    IviButtonSize.Large -> type.titleSmall
+    IviButtonSize.Medium -> type.bodyMedium
+    IviButtonSize.Small -> type.bodySmall
+}
+
+/**
+ * 포커스 테두리: 두께 4, 버튼에서 4 바깥 (button/focus/ring_width, ring_offset)
+ * 버튼 바깥에 그리므로 부모가 잘라내면(clip, 스크롤) 안 보일 수 있다. 카드 가장자리에 둘 때 여유를 둔다.
+ */
+private fun Modifier.focusRing(visible: Boolean, color: Color, radius: Dp): Modifier =
+    if (!visible) {
+        this
+    } else {
+        drawBehind {
+            val stroke = 4.dp.toPx()
+            val inset = 4.dp.toPx() + stroke / 2
+            drawRoundRect(
+                color = color,
+                topLeft = Offset(-inset, -inset),
+                size = Size(size.width + inset * 2, size.height + inset * 2),
+                cornerRadius = CornerRadius(radius.toPx() + inset),
+                style = Stroke(stroke),
+            )
+        }
+    }
+
+private data class IviButtonPalette(
+    val container: Color,
+    val pressedContainer: Color,
+    val label: Color,
+    val outline: Color = Color.Transparent,
+    val disabledContainer: Color,
+    val disabledLabel: Color,
+    val restrictedContainer: Color,
+    val restrictedLabel: Color,
+    val focusRing: Color,
+)
+
+/**
+ * 버튼 색. Figma 05 Components › button 변수의 라이트(366:38848) · 다크(439:16558) 값.
+ * 라이트 Ghost 누름은 변수에 없어서 다크와 같은 규칙(면 한 단계 높임)으로 basic_100을 쓴다.
+ */
+private fun iviButtonPalette(hierarchy: IviButtonHierarchy, colors: AlterColors): IviButtonPalette {
+    val isDark = colors.isDark
+    // 디자인 값에 이미 있는 색은 그대로 쓴다. 버튼에만 쓰는 색만 아래에 숫자로 둔다.
+    val disabledContainer = colors.buttonDisabledContainer
+    val disabledLabel = colors.buttonDisabledLabel
+    val restrictedLabel = if (isDark) Color(0xA3FFFFFF) else Color(0xA3131417)
+    val focusRing = if (isDark) Color(0xFF799AE3) else Color(0xFF2A4FA1)
+    fun palette(container: Long, pressed: Long, label: Long, outline: Long? = null) = IviButtonPalette(
+        container = Color(container),
+        pressedContainer = Color(pressed),
+        label = Color(label),
+        outline = outline?.let { Color(it) } ?: Color.Transparent,
+        disabledContainer = disabledContainer,
+        disabledLabel = disabledLabel,
+        restrictedContainer = disabledContainer,
+        restrictedLabel = restrictedLabel,
+        focusRing = focusRing,
+    )
+    return if (isDark) {
+        when (hierarchy) {
+            IviButtonHierarchy.Primary -> palette(0xFF3562C4, 0xFF557DD3, 0xFFFFFFFF)
+            IviButtonHierarchy.Contrast -> palette(0xFFFFFFFF, 0xFFEDEEF2, 0xFF131417)
+                .copy(container = colors.buttonContrastContainer, label = colors.buttonContrastLabel)
+            IviButtonHierarchy.Secondary -> palette(0xFF313236, 0xFF44464E, 0xFFFFFFFF)
+            IviButtonHierarchy.Tonal -> palette(0xFF162036, 0xFF1A294A, 0xFFFFFFFF)
+            IviButtonHierarchy.Ghost -> palette(0x00000000, 0xFF313236, 0xFF799AE3, outline = 0xFF686A72)
+            IviButtonHierarchy.Danger -> palette(0xFFFF4C28, 0xFFDF4323, 0xFFFFFFFF)
+        }
+    } else {
+        when (hierarchy) {
+            IviButtonHierarchy.Primary -> palette(0xFF3B6FE0, 0xFF325FC0, 0xFFFFFFFF)
+            IviButtonHierarchy.Contrast -> palette(0xFF131417, 0xFF313236, 0xFFFFFFFF)
+                .copy(container = colors.buttonContrastContainer, label = colors.buttonContrastLabel)
+            IviButtonHierarchy.Secondary -> palette(0xFFEDEEF2, 0xFFE0E1E6, 0xFF131417)
+            IviButtonHierarchy.Tonal -> palette(0xFFF1F5FD, 0xFFDCE5F9, 0xFF131417)
+            IviButtonHierarchy.Ghost -> palette(0x00000000, 0xFFEDEEF2, 0xFF2A4FA1, outline = 0xFFC7C9CE)
+            IviButtonHierarchy.Danger -> palette(0xFFFE3D16, 0xFFE73612, 0xFFFFFFFF)
+        }
     }
 }
