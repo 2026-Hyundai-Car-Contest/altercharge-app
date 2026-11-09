@@ -32,6 +32,7 @@ import com.altercharge.app.ui.designsystem.theme.AlterChargeTheme
  * 세로는 부모가 스크롤이라 높이가 무한대가 된다. 그래서 세로 슬롯은 틀이 높이를 정해 준다.
  *
  * @param leftColumnScrollable 가로에서 L2를 펼쳤을 때(상황 15) 왼쪽 열만 스크롤한다.
+ *   이때 l1 · l2 슬롯은 높이 제약이 무한대라 안에서 fillMaxHeight나 weight를 쓰면 안 된다.
  */
 @Composable
 fun AlterChargeLayout(
@@ -122,7 +123,10 @@ private fun ColumnScope.FillRest(content: @Composable () -> Unit) {
     Box(Modifier.weight(1f).fillMaxWidth()) { content() }
 }
 
-/** 세로 슬롯 높이. S-17 세로 하이파이 기준 (C 652, 1행 368, 2행 576). */
+/**
+ * 세로 슬롯 높이. S-17 세로 하이파이 기준 (C 652, 1행 368, 2행 576).
+ * 다른 폼팩터 세로는 시안이 없어 같은 값을 쓴다. 시안이 나오면 AreaSpec으로 옮긴다.
+ */
 private val PortraitCHeight = 652.dp
 private val PortraitRow1Height = 368.dp
 private val PortraitRow2Height = 576.dp
@@ -151,7 +155,7 @@ private fun PortraitLayout(
             Box(Modifier.weight(1f).height(PortraitRow1Height)) { r1() }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(spec.gutter)) {
-            // L2는 펼치면(상황 15) 길어지므로 최소 높이만 준다.
+            // L2는 펼치면(상황 15) 길어지므로 최소 높이만 준다. R2는 576 그대로 두고 아래는 비운다(의도).
             Box(Modifier.weight(1f).heightIn(min = PortraitRow2Height)) { l2() }
             Box(Modifier.weight(1f).height(PortraitRow2Height)) { r2() }
         }

@@ -8,7 +8,6 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -18,7 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -35,16 +33,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.altercharge.app.ui.designsystem.theme.AlterChargeTheme
-import com.altercharge.app.ui.designsystem.theme.AlterMargin
-import com.altercharge.app.ui.designsystem.theme.AlterPadding
+import com.altercharge.app.ui.designsystem.theme.AlterColors
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
 import com.altercharge.app.ui.designsystem.theme.AlterTypography
 
@@ -89,7 +85,7 @@ fun IviButton(
     trailingIcon: Painter? = null,
     contentDescription: String? = text,
 ) {
-    val palette = iviButtonPalette(hierarchy, AlterTheme.colors.isDark)
+    val palette = iviButtonPalette(hierarchy, AlterTheme.colors)
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val focused by interaction.collectIsFocusedAsState()
@@ -115,11 +111,19 @@ fun IviButton(
         modifier = modifier
             .heightIn(min = TouchTargetMin)
             .then(if (iconOnly) Modifier.widthIn(min = TouchTargetMin) else Modifier)
-            .semantics { contentDescription?.let { this.contentDescription = it } }
+            // 글자가 있으면 글자를 읽고, 아이콘만 있을 때만 설명 문구를 붙인다.
+            .then(
+                if (iconOnly && contentDescription != null) {
+                    Modifier.semantics { this.contentDescription = contentDescription }
+                } else {
+                    Modifier
+                },
+            )
             .clickable(
                 interactionSource = interaction,
                 indication = null,
                 enabled = enabled && !restricted,
+                role = Role.Button,
                 onClick = onClick,
             ),
         contentAlignment = Alignment.Center,
@@ -165,7 +169,10 @@ private fun IviButtonSize.textStyle(type: AlterTypography): TextStyle = when (th
     IviButtonSize.Small -> type.bodySmall
 }
 
-/** 포커스 테두리: 두께 4, 버튼에서 4 바깥 (button/focus/ring_width, ring_offset) */
+/**
+ * 포커스 테두리: 두께 4, 버튼에서 4 바깥 (button/focus/ring_width, ring_offset)
+ * 버튼 바깥에 그리므로 부모가 잘라내면(clip, 스크롤) 안 보일 수 있다. 카드 가장자리에 둘 때 여유를 둔다.
+ */
 private fun Modifier.focusRing(visible: Boolean, color: Color, radius: Dp): Modifier =
     if (!visible) {
         this
@@ -199,9 +206,11 @@ private data class IviButtonPalette(
  * 버튼 색. Figma 05 Components › button 변수의 라이트(366:38848) · 다크(439:16558) 값.
  * 라이트 Ghost 누름은 변수에 없어서 다크와 같은 규칙(면 한 단계 높임)으로 basic_100을 쓴다.
  */
-private fun iviButtonPalette(hierarchy: IviButtonHierarchy, isDark: Boolean): IviButtonPalette {
-    val disabledContainer = if (isDark) Color(0xFF44464E) else Color(0xFFE0E1E6)
-    val disabledLabel = if (isDark) Color(0x52FFFFFF) else Color(0x52131417)
+private fun iviButtonPalette(hierarchy: IviButtonHierarchy, colors: AlterColors): IviButtonPalette {
+    val isDark = colors.isDark
+    // 디자인 값에 이미 있는 색은 그대로 쓴다. 버튼에만 쓰는 색만 아래에 숫자로 둔다.
+    val disabledContainer = colors.buttonDisabledContainer
+    val disabledLabel = colors.buttonDisabledLabel
     val restrictedLabel = if (isDark) Color(0xA3FFFFFF) else Color(0xA3131417)
     val focusRing = if (isDark) Color(0xFF799AE3) else Color(0xFF2A4FA1)
     fun palette(container: Long, pressed: Long, label: Long, outline: Long? = null) = IviButtonPalette(
@@ -219,6 +228,7 @@ private fun iviButtonPalette(hierarchy: IviButtonHierarchy, isDark: Boolean): Iv
         when (hierarchy) {
             IviButtonHierarchy.Primary -> palette(0xFF3562C4, 0xFF557DD3, 0xFFFFFFFF)
             IviButtonHierarchy.Contrast -> palette(0xFFFFFFFF, 0xFFEDEEF2, 0xFF131417)
+                .copy(container = colors.buttonContrastContainer, label = colors.buttonContrastLabel)
             IviButtonHierarchy.Secondary -> palette(0xFF313236, 0xFF44464E, 0xFFFFFFFF)
             IviButtonHierarchy.Tonal -> palette(0xFF162036, 0xFF1A294A, 0xFFFFFFFF)
             IviButtonHierarchy.Ghost -> palette(0x00000000, 0xFF313236, 0xFF799AE3, outline = 0xFF686A72)
@@ -228,49 +238,11 @@ private fun iviButtonPalette(hierarchy: IviButtonHierarchy, isDark: Boolean): Iv
         when (hierarchy) {
             IviButtonHierarchy.Primary -> palette(0xFF3B6FE0, 0xFF325FC0, 0xFFFFFFFF)
             IviButtonHierarchy.Contrast -> palette(0xFF131417, 0xFF313236, 0xFFFFFFFF)
+                .copy(container = colors.buttonContrastContainer, label = colors.buttonContrastLabel)
             IviButtonHierarchy.Secondary -> palette(0xFFEDEEF2, 0xFFE0E1E6, 0xFF131417)
             IviButtonHierarchy.Tonal -> palette(0xFFF1F5FD, 0xFFDCE5F9, 0xFF131417)
             IviButtonHierarchy.Ghost -> palette(0x00000000, 0xFFEDEEF2, 0xFF2A4FA1, outline = 0xFFC7C9CE)
             IviButtonHierarchy.Danger -> palette(0xFFFE3D16, 0xFFE73612, 0xFFFFFFFF)
         }
-    }
-}
-
-/** 버튼 전체 모음. 미리보기와 디버그 확인 화면에서 같이 쓴다. */
-@Composable
-fun IviButtonCatalog(modifier: Modifier = Modifier) {
-    val label = "여기로 안내"
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(AlterMargin.Large)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(AlterMargin.Normal)) {
-            IviButtonHierarchy.entries.forEach {
-                IviButton(label, onClick = {}, hierarchy = it, size = IviButtonSize.Large)
-            }
-        }
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(AlterMargin.Normal),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IviButtonSize.entries.forEach { IviButton(label, onClick = {}, size = it) }
-            IviButton(label, onClick = {}, enabled = false)
-            IviButton(label, onClick = {}, restricted = true)
-            IviButton(label, onClick = {}, hierarchy = IviButtonHierarchy.Ghost, enabled = false)
-            IviButton(null, onClick = {}, hierarchy = IviButtonHierarchy.Ghost, size = IviButtonSize.Small, contentDescription = "닫기", leadingIcon = rememberVectorPainter(Icons.Filled.Close))
-        }
-    }
-}
-
-@Preview(name = "IviButton · 라이트", widthDp = 1400)
-@Composable
-private fun IviButtonLightPreview() {
-    AlterChargeTheme(darkTheme = false) {
-        IviButtonCatalog(Modifier.background(AlterTheme.colors.surface).padding(AlterPadding.XLarge))
-    }
-}
-
-@Preview(name = "IviButton · 다크", widthDp = 1400)
-@Composable
-private fun IviButtonDarkPreview() {
-    AlterChargeTheme(darkTheme = true) {
-        IviButtonCatalog(Modifier.background(AlterTheme.colors.surface).padding(AlterPadding.XLarge))
     }
 }

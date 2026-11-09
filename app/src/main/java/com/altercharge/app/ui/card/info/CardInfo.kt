@@ -27,7 +27,7 @@ private fun CardInfoPreview() {
             state = CardInfoUiState(
                 verdict = ChargeVerdict.TODAY,
                 daysUntilCharge = 0,
-                placeName = "명일 신동아 아파트",
+                placeName = "예시 아파트",
             ),
             modifier = Modifier.height(368.dp),
         )

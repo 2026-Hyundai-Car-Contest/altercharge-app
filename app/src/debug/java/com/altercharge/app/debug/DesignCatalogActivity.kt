@@ -10,13 +10,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.altercharge.app.ui.designsystem.component.IviButtonCatalog
 import com.altercharge.app.ui.designsystem.component.PlaceholderBox
 import com.altercharge.app.ui.designsystem.layout.AlterChargeLayout
 import com.altercharge.app.ui.designsystem.theme.AlterChargeTheme
 import com.altercharge.app.ui.designsystem.theme.AlterPadding
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
-import com.altercharge.app.ui.designsystem.theme.DesignTokensSheet
 
 /**
  * 디자인 시스템 확인용 화면. 디버그 빌드에만 들어간다.
