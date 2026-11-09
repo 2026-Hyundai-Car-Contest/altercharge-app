@@ -213,41 +213,36 @@ private data class IviButtonPalette(
  */
 private fun iviButtonPalette(hierarchy: IviButtonHierarchy, colors: AlterColors): IviButtonPalette {
     val isDark = colors.isDark
-    // 디자인 값에 이미 있는 색은 그대로 쓴다. 버튼에만 쓰는 색만 아래에 숫자로 둔다.
+    // 디자인 값에 있는 색은 토큰으로 쓴다. 토큰에 없는 버튼 전용 색만 숫자로 둔다.
     val disabledContainer = colors.buttonDisabledContainer
-    val disabledLabel = colors.buttonDisabledLabel
-    val restrictedLabel = if (isDark) Color(0xA3FFFFFF) else Color(0xA3131417)
-    val focusRing = if (isDark) Color(0xFF799AE3) else Color(0xFF2A4FA1)
     fun palette(container: Color, pressed: Color, label: Color, outline: Color = Color.Transparent) = IviButtonPalette(
         container = container,
         pressedContainer = pressed,
         label = label,
         outline = outline,
         disabledContainer = disabledContainer,
-        disabledLabel = disabledLabel,
+        disabledLabel = colors.buttonDisabledLabel,
         restrictedContainer = disabledContainer,
-        restrictedLabel = restrictedLabel,
-        focusRing = focusRing,
+        restrictedLabel = colors.textTertiary,
+        focusRing = colors.blue700,
     )
-    return if (isDark) {
-        when (hierarchy) {
-            IviButtonHierarchy.Primary -> palette(Color(0xFF3562C4), Color(0xFF557DD3), Color(0xFFFFFFFF))
-            IviButtonHierarchy.Contrast ->
-                palette(colors.buttonContrastContainer, Color(0xFFEDEEF2), colors.buttonContrastLabel)
-            IviButtonHierarchy.Secondary -> palette(Color(0xFF313236), Color(0xFF44464E), Color(0xFFFFFFFF))
-            IviButtonHierarchy.Tonal -> palette(Color(0xFF162036), Color(0xFF1A294A), Color(0xFFFFFFFF))
-            IviButtonHierarchy.Ghost -> palette(Color(0x00000000), Color(0xFF313236), Color(0xFF799AE3), outline = Color(0xFF686A72))
-            IviButtonHierarchy.Danger -> palette(Color(0xFFFF4C28), Color(0xFFDF4323), Color(0xFFFFFFFF))
-        }
-    } else {
-        when (hierarchy) {
-            IviButtonHierarchy.Primary -> palette(Color(0xFF3B6FE0), Color(0xFF325FC0), Color(0xFFFFFFFF))
-            IviButtonHierarchy.Contrast ->
-                palette(colors.buttonContrastContainer, Color(0xFF313236), colors.buttonContrastLabel)
-            IviButtonHierarchy.Secondary -> palette(Color(0xFFEDEEF2), Color(0xFFE0E1E6), Color(0xFF131417))
-            IviButtonHierarchy.Tonal -> palette(Color(0xFFF1F5FD), Color(0xFFDCE5F9), Color(0xFF131417))
-            IviButtonHierarchy.Ghost -> palette(Color(0x00000000), Color(0xFFEDEEF2), Color(0xFF2A4FA1), outline = Color(0xFFC7C9CE))
-            IviButtonHierarchy.Danger -> palette(Color(0xFFFE3D16), Color(0xFFE73612), Color(0xFFFFFFFF))
-        }
+    return when (hierarchy) {
+        IviButtonHierarchy.Primary -> palette(colors.blue500, colors.blue600, Color.White)
+        // 눌림은 반대 모드의 surfaceHigh (버튼 전용)
+        IviButtonHierarchy.Contrast -> palette(
+            colors.buttonContrastContainer,
+            if (isDark) Color(0xFFEDEEF2) else Color(0xFF313236),
+            colors.buttonContrastLabel,
+        )
+        IviButtonHierarchy.Secondary -> palette(colors.surfaceHigh, colors.surfaceAccent, colors.textPrimary)
+        IviButtonHierarchy.Tonal -> palette(colors.blue50, colors.blue100, colors.textPrimary)
+        // 테두리는 basic_300 (버튼 전용, 다크는 basic_600)
+        IviButtonHierarchy.Ghost -> palette(
+            Color.Transparent,
+            colors.surfaceHigh,
+            colors.blue700,
+            outline = if (isDark) Color(0xFF686A72) else Color(0xFFC7C9CE),
+        )
+        IviButtonHierarchy.Danger -> palette(colors.negative, if (isDark) Color(0xFFDF4323) else Color(0xFFE73612), Color.White)
     }
 }

@@ -66,7 +66,7 @@ private val BatteryGap = 6.dp
 private val ConnectivityIconSize = 24.dp
 private val ConnectivityGap = 12.dp
 
-/** 기획 확정: 연결 아이콘과 시간은 실제 값 대신 더미로 표시한다 (시안 값). */
+/** 기획 확정: 연결 아이콘과 시간은 실제 값 대신 더미로 표시한다 (시안 값). TODO 실제 시각을 연결하면 지운다. */
 private const val DummyTime = "14:05"
 
 /** 기어 원 안 글자. 시안 기준 흰색 고정 (라이트/다크 같음) */
