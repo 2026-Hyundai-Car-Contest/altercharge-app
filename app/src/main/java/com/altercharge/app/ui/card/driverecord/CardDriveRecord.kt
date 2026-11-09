@@ -122,8 +122,9 @@ private val TileDividerThickness = 1.dp
 private val ChartOutlineWidth = 1.dp
 
 /**
- * 카드 전용 색. 디자인 시스템 AlterColors에 같은 값이 없는 card_drive_record 변수.
- * 라이트/다크 값은 Figma 변수(366:38510 라이트, 375:9932 다크) 그대로다.
+ * 카드 전용 색. Figma card_drive_record 변수(366:38510 라이트, 375:9932 다크) 그대로다.
+ * 라이트 값 일부는 AlterColors와 같지만 다크에서 짝이 다른 토큰이라(예: track = 라이트 background / 다크 surfaceHigh)
+ * 토큰으로 바꾸지 않고 카드 변수로 둔다.
  */
 private data class DriveRecordColors(
     /** period/range */
@@ -384,7 +385,8 @@ private fun ChartWeek(state: CardDriveRecordUiState, chartHeight: Dp) {
         }
         // 평균선: 지난 요일과 오늘 평균. 막대가 모두 0이면 위치를 정할 수 없어 그리지 않는다
         if (weekMax > 0) {
-            val averageY = labelAreaHeight + barMaxHeight * (state.averageKm.toFloat() / weekMax)
+            // 평균이 그 주 최대값보다 커도(데이터 오류) 차트 밖으로 나가지 않게 막는다
+            val averageY = labelAreaHeight + barMaxHeight * (state.averageKm.toFloat() / weekMax).coerceIn(0f, 1f)
             AverageLine(
                 averageKm = state.averageKm,
                 modifier = Modifier
