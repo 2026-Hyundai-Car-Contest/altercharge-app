@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="card_info_eyebrow">When to charge</string>
+    <string name="card_info_title_today">Today</string>
+    <string name="card_info_title_tomorrow">Tomorrow</string>
+    <string name="card_info_title_within_three_days">Within 3 days</string>
+</resources>

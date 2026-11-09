@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- L1 카드 장소 줄 아이콘. Figma card_info row_place의 Loading 아이콘(37:19879) 그대로. 색은 코드에서 입힌다. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="25.4984"
+    android:viewportHeight="25.4996">
+    <path
+        android:pathData="M12.75,4.35L12.75,0.75M12.75,24.7496L12.75,21.1496M21.1484,12.7496L24.7484,12.7496M0.75,12.7496L4.35,12.7496M18.6875,6.81016L21.2331,4.26457M4.26562,21.2359L6.81121,18.6904M6.8125,6.81016L4.26692,4.26457M21.2344,21.2359L18.6888,18.6904"
+        android:strokeWidth="1.5"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>
