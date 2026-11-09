@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- L2 주간 주행 기록 카드 영문. EN 보드(439:19470) 문구 그대로 -->
+<resources>
+    <string name="card_drive_record_period_this_week">This week</string>
+    <string name="card_drive_record_period_date_pattern">MMM d</string>
+
+    <string name="card_drive_record_title">This week’s driving</string>
+    <string name="card_drive_record_summary_average">Daily avg %1$d km</string>
+    <string name="card_drive_record_summary_diff_more">%1$d km more than last week</string>
+
+    <string name="card_drive_record_average_chip">Avg %1$d km</string>
+    <string name="card_drive_record_weekday_mon">Mon</string>
+    <string name="card_drive_record_weekday_tue">Tue</string>
+    <string name="card_drive_record_weekday_wed">Wed</string>
+    <string name="card_drive_record_weekday_thu">Thu</string>
+    <string name="card_drive_record_weekday_fri">Fri</string>
+    <string name="card_drive_record_weekday_sat">Sat</string>
+    <string name="card_drive_record_weekday_sun">Sun</string>
+    <string name="card_drive_record_weekday_today">Today</string>
+
+    <string name="card_drive_record_tile_daily_average">Daily avg</string>
+    <string name="card_drive_record_tile_weekly_total">Weekly total</string>
+    <string name="card_drive_record_tile_last_charge">Last charge</string>
+    <string name="card_drive_record_tile_since_charge">Since charge</string>
+    <!-- TODO 디자이너 확인: 보드에는 "days ago"만 있다. 1일일 때 단수형은 임시 -->
+    <plurals name="card_drive_record_unit_days_ago">
+        <item quantity="one">day ago</item>
+        <item quantity="other">days ago</item>
+    </plurals>
+
+    <!-- TODO 디자이너 확인: 접근성 라벨 영문은 보드에 없어 임시로 넣었다 -->
+    <string name="card_drive_record_previous_week">Previous week</string>
+    <string name="card_drive_record_next_week">Next week</string>
+    <string name="card_drive_record_expand">Show more</string>
+    <string name="card_drive_record_collapse">Show less</string>
+</resources>
