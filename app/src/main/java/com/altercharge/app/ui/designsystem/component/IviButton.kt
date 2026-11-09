@@ -213,11 +213,11 @@ private fun iviButtonPalette(hierarchy: IviButtonHierarchy, colors: AlterColors)
     val disabledLabel = colors.buttonDisabledLabel
     val restrictedLabel = if (isDark) Color(0xA3FFFFFF) else Color(0xA3131417)
     val focusRing = if (isDark) Color(0xFF799AE3) else Color(0xFF2A4FA1)
-    fun palette(container: Long, pressed: Long, label: Long, outline: Long? = null) = IviButtonPalette(
-        container = Color(container),
-        pressedContainer = Color(pressed),
-        label = Color(label),
-        outline = outline?.let { Color(it) } ?: Color.Transparent,
+    fun palette(container: Color, pressed: Color, label: Color, outline: Color = Color.Transparent) = IviButtonPalette(
+        container = container,
+        pressedContainer = pressed,
+        label = label,
+        outline = outline,
         disabledContainer = disabledContainer,
         disabledLabel = disabledLabel,
         restrictedContainer = disabledContainer,
@@ -226,23 +226,23 @@ private fun iviButtonPalette(hierarchy: IviButtonHierarchy, colors: AlterColors)
     )
     return if (isDark) {
         when (hierarchy) {
-            IviButtonHierarchy.Primary -> palette(0xFF3562C4, 0xFF557DD3, 0xFFFFFFFF)
-            IviButtonHierarchy.Contrast -> palette(0xFFFFFFFF, 0xFFEDEEF2, 0xFF131417)
-                .copy(container = colors.buttonContrastContainer, label = colors.buttonContrastLabel)
-            IviButtonHierarchy.Secondary -> palette(0xFF313236, 0xFF44464E, 0xFFFFFFFF)
-            IviButtonHierarchy.Tonal -> palette(0xFF162036, 0xFF1A294A, 0xFFFFFFFF)
-            IviButtonHierarchy.Ghost -> palette(0x00000000, 0xFF313236, 0xFF799AE3, outline = 0xFF686A72)
-            IviButtonHierarchy.Danger -> palette(0xFFFF4C28, 0xFFDF4323, 0xFFFFFFFF)
+            IviButtonHierarchy.Primary -> palette(Color(0xFF3562C4), Color(0xFF557DD3), Color(0xFFFFFFFF))
+            IviButtonHierarchy.Contrast ->
+                palette(colors.buttonContrastContainer, Color(0xFFEDEEF2), colors.buttonContrastLabel)
+            IviButtonHierarchy.Secondary -> palette(Color(0xFF313236), Color(0xFF44464E), Color(0xFFFFFFFF))
+            IviButtonHierarchy.Tonal -> palette(Color(0xFF162036), Color(0xFF1A294A), Color(0xFFFFFFFF))
+            IviButtonHierarchy.Ghost -> palette(Color(0x00000000), Color(0xFF313236), Color(0xFF799AE3), outline = Color(0xFF686A72))
+            IviButtonHierarchy.Danger -> palette(Color(0xFFFF4C28), Color(0xFFDF4323), Color(0xFFFFFFFF))
         }
     } else {
         when (hierarchy) {
-            IviButtonHierarchy.Primary -> palette(0xFF3B6FE0, 0xFF325FC0, 0xFFFFFFFF)
-            IviButtonHierarchy.Contrast -> palette(0xFF131417, 0xFF313236, 0xFFFFFFFF)
-                .copy(container = colors.buttonContrastContainer, label = colors.buttonContrastLabel)
-            IviButtonHierarchy.Secondary -> palette(0xFFEDEEF2, 0xFFE0E1E6, 0xFF131417)
-            IviButtonHierarchy.Tonal -> palette(0xFFF1F5FD, 0xFFDCE5F9, 0xFF131417)
-            IviButtonHierarchy.Ghost -> palette(0x00000000, 0xFFEDEEF2, 0xFF2A4FA1, outline = 0xFFC7C9CE)
-            IviButtonHierarchy.Danger -> palette(0xFFFE3D16, 0xFFE73612, 0xFFFFFFFF)
+            IviButtonHierarchy.Primary -> palette(Color(0xFF3B6FE0), Color(0xFF325FC0), Color(0xFFFFFFFF))
+            IviButtonHierarchy.Contrast ->
+                palette(colors.buttonContrastContainer, Color(0xFF313236), colors.buttonContrastLabel)
+            IviButtonHierarchy.Secondary -> palette(Color(0xFFEDEEF2), Color(0xFFE0E1E6), Color(0xFF131417))
+            IviButtonHierarchy.Tonal -> palette(Color(0xFFF1F5FD), Color(0xFFDCE5F9), Color(0xFF131417))
+            IviButtonHierarchy.Ghost -> palette(Color(0x00000000), Color(0xFFEDEEF2), Color(0xFF2A4FA1), outline = Color(0xFFC7C9CE))
+            IviButtonHierarchy.Danger -> palette(Color(0xFFFE3D16), Color(0xFFE73612), Color(0xFFFFFFFF))
         }
     }
 }
