@@ -38,10 +38,10 @@ enum class FormFactor(
         portrait = AreaSpec(840.dp, 1184.dp, margin = 32.dp, gutter = 20.dp, vertical = 32.dp, columns = 4),
     ),
 
-    // TODO 디자이너 확인: Layout Rules에 W-Standard 여백 값이 없어서 W-Extended 값을 임시로 쓴다.
+    // 디자이너 확정: pleos Layout › layout/connect_w_standard. W-Extended와 app_padding(위아래 여백)만 다르다.
     W_STANDARD(
-        landscape = AreaSpec(1640.dp, 810.dp, margin = 40.dp, gutter = 20.dp, vertical = 32.dp, columns = 12),
-        portrait = AreaSpec(800.dp, 810.dp, margin = 32.dp, gutter = 20.dp, vertical = 32.dp, columns = 4),
+        landscape = AreaSpec(1640.dp, 810.dp, margin = 40.dp, gutter = 20.dp, vertical = 24.dp, columns = 12),
+        portrait = AreaSpec(800.dp, 810.dp, margin = 32.dp, gutter = 20.dp, vertical = 24.dp, columns = 4),
     ),
     W_EXTENDED(
         landscape = AreaSpec(1640.dp, 1400.dp, margin = 40.dp, gutter = 20.dp, vertical = 32.dp, columns = 12),

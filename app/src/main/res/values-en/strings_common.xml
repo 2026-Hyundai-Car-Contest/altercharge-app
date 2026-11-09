@@ -8,4 +8,9 @@
     <string name="status_bar_battery_percent">%1$s%%</string>
     <string name="status_bar_range">%1$skm</string>
     <string name="status_bar_temperature">%1$d°</string>
+
+    <!-- 값 상태 (디자이너 확정): 불러오는 중 / 제공되지 않거나 확인할 수 없음 -->
+    <!-- TODO 디자이너 확인: 영문 표기는 디자인 공유 후 맞춘다 -->
+    <string name="common_value_loading">Checking</string>
+    <string name="common_value_unavailable">No data</string>
 </resources>

@@ -13,16 +13,36 @@ private val LocalAlterColors = staticCompositionLocalOf { LightAlterColors }
 private val LocalAlterTypography = staticCompositionLocalOf { AlterTypography() }
 
 /**
+ * 라이트/다크 선택. 기획 확정: 지금은 [SYSTEM](차량 시스템 설정을 따름).
+ * 1차 이후 설정 화면에서 다크 · 라이트 · 시스템을 고르면 이 값만 넘기면 된다.
+ */
+enum class ThemeMode { SYSTEM, LIGHT, DARK }
+
+/** [ThemeMode]로 테마를 고른다. 앱 진입점에서는 이 함수를 쓴다. */
+@Composable
+fun AlterChargeTheme(
+    themeMode: ThemeMode = ThemeMode.SYSTEM,
+    content: @Composable () -> Unit,
+) {
+    val darkTheme = when (themeMode) {
+        ThemeMode.SYSTEM -> isSystemInDarkTheme()
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
+    }
+    AlterChargeTheme(darkTheme = darkTheme, content = content)
+}
+
+/**
  * 앱 전체 테마. 화면과 카드는 모두 이 테마 안에서 그린다.
  *
  * 카드에서는 AlterTheme.colors / AlterTheme.typography와 AlterRadius · AlterMargin · AlterPadding,
  * AlterShadows를 쓴다. 색이나 크기를 숫자로 직접 쓰지 않는다.
  *
- * TODO 기획 확인: 라이트/다크 전환 규칙. 지금은 시스템 설정을 따른다.
+ * 미리보기처럼 라이트/다크를 직접 정할 때 쓴다.
  */
 @Composable
 fun AlterChargeTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean,
     content: @Composable () -> Unit,
 ) {
     val colors = if (darkTheme) DarkAlterColors else LightAlterColors

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.AlterCharge" parent="android:Theme.Material.NoActionBar" />
+    <!-- 라이트: Compose 화면이 그려지기 전 창 배경이 검게 깜빡이지 않게 밝은 테마를 쓴다. 다크는 values-night -->
+    <style name="Theme.AlterCharge" parent="android:Theme.Material.Light.NoActionBar" />
 </resources>

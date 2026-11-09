@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 다크 (시스템 설정이 다크일 때) -->
+    <style name="Theme.AlterCharge" parent="android:Theme.Material.NoActionBar" />
+</resources>
