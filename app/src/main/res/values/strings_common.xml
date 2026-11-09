@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    공통 문구와 디자인 시스템 컴포넌트 문구. 담당: 서희님
+    카드 문구는 카드별 파일(strings_card_<카드명>.xml)에 각 담당이 넣는다.
+    이름 규칙: <카드명 또는 컴포넌트명>_<요소>, 공통은 common_
+-->
+<resources>
+    <string name="app_name" translatable="false">AlterCharge</string>
+
+    <!-- 상단 바 (status_bar) -->
+    <string name="status_bar_parked">주차 중</string>
+    <string name="status_bar_driving">주행 중</string>
+    <string name="status_bar_charging">충전 중</string>
+    <string name="status_bar_arrived">도착</string>
+    <string name="status_bar_battery">%1$s%% · %2$skm</string>
+    <string name="status_bar_temperature">%1$d°</string>
+</resources>

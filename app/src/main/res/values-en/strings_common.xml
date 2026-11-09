@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 상단 바 (status_bar) -->
+    <string name="status_bar_parked">Parked</string>
+    <string name="status_bar_driving">Driving</string>
+    <string name="status_bar_charging">Charging</string>
+    <string name="status_bar_arrived">Arrived</string>
+    <string name="status_bar_battery">%1$s%% · %2$skm</string>
+    <string name="status_bar_temperature">%1$d°</string>
+</resources>
