@@ -25,6 +25,27 @@ data class CardDriveRecordUiState(
     val diffFromLastWeekKm: Int?,
     val hasPreviousWeek: Boolean,
     val hasNextWeek: Boolean,
-    /** 펼침 상태 (상황 15) */
+    /** 펼침 상태 (상황 15). 화면에 들어올 때는 접힘으로 시작한다(시안 규칙) */
     val expanded: Boolean,
 )
+
+/**
+ * 카드 모드. Figma card_drive_record의 mode 변형.
+ * 모드마다 접힘 상태 카드 높이가 정해져 있고, 그래프(chart_week) 높이는 펼쳐도 그대로다.
+ */
+enum class CardDriveRecordMode {
+    /** S-17 가로 383×648 */
+    Landscape,
+
+    /** W-Extended 가로 375×816 */
+    LandscapeTall,
+
+    /** S-17 · W-Extended 세로 378×576 */
+    Portrait,
+
+    /** WF 가로 387×455 */
+    WfLandscape,
+
+    /** WF 세로 580×576 */
+    WfPortrait,
+}
