@@ -2,16 +2,22 @@ package com.altercharge.app.ui.designsystem.theme
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import com.altercharge.app.R
 
 /**
- * 서체. Figma 기준은 Asta Sans다.
- * TODO 서희님: 폰트 파일 라이선스 확인 후 res/font에 넣고 여기만 바꾼다. 그 전까지는 기본 서체.
+ * 서체. Figma 기준 Asta Sans (42dot, SIL OFL 1.1). 라이선스 전문은 assets/licenses/AstaSans-OFL.txt.
+ * 시안이 쓰는 굵기 400 · 700 · 800만 넣는다.
  */
-val AstaSans: FontFamily = FontFamily.Default
+val AstaSans: FontFamily = FontFamily(
+    Font(R.font.asta_sans_regular, FontWeight.W400),
+    Font(R.font.asta_sans_bold, FontWeight.W700),
+    Font(R.font.asta_sans_extrabold, FontWeight.W800),
+)
 
 /** Figma font_style: normal 400 · strong 700 · extra_strong 800 */
 object AlterFontWeight {
