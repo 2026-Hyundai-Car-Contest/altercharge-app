@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 상단 바 LTE 신호 (Figma status_bar ic_lte). 색은 코드에서 tint로 입힌다. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M5,15H4C3.44772,15 3,15.4477 3,16V19C3,19.5523 3.44772,20 4,20H5C5.55228,20 6,19.5523 6,19V16C6,15.4477 5.55228,15 5,15Z"
+        android:fillColor="#FF000000" />
+    <path
+        android:pathData="M10,12H9C8.44772,12 8,12.4477 8,13V19C8,19.5523 8.44772,20 9,20H10C10.5523,20 11,19.5523 11,19V13C11,12.4477 10.5523,12 10,12Z"
+        android:fillColor="#FF000000" />
+    <path
+        android:pathData="M15,8H14C13.4477,8 13,8.44772 13,9V19C13,19.5523 13.4477,20 14,20H15C15.5523,20 16,19.5523 16,19V9C16,8.44772 15.5523,8 15,8Z"
+        android:fillColor="#FF000000" />
+    <path
+        android:pathData="M20,4H19C18.4477,4 18,4.44772 18,5V19C18,19.5523 18.4477,20 19,20H20C20.5523,20 21,19.5523 21,19V5C21,4.44772 20.5523,4 20,4Z"
+        android:fillColor="#FF000000" />
+</vector>

@@ -9,6 +9,7 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -84,6 +85,8 @@ fun IviButton(
     leadingIcon: Painter? = null,
     trailingIcon: Painter? = null,
     contentDescription: String? = text,
+    /** true면 버튼 배경을 받은 폭 전체로 채운다 (카드 하단 전폭 버튼 등) */
+    fullWidth: Boolean = false,
 ) {
     val palette = iviButtonPalette(hierarchy, AlterTheme.colors)
     val interaction = remember { MutableInteractionSource() }
@@ -111,6 +114,7 @@ fun IviButton(
         modifier = modifier
             .heightIn(min = TouchTargetMin)
             .then(if (iconOnly) Modifier.widthIn(min = TouchTargetMin) else Modifier)
+            .then(if (fullWidth) Modifier.fillMaxWidth() else Modifier)
             // 글자가 있으면 글자를 읽고, 아이콘만 있을 때만 설명 문구를 붙인다.
             .then(
                 if (iconOnly && contentDescription != null) {
@@ -132,10 +136,11 @@ fun IviButton(
             modifier = Modifier
                 .height(size.height)
                 .then(if (iconOnly) Modifier.width(size.height) else Modifier)
+                .then(if (fullWidth) Modifier.fillMaxWidth() else Modifier)
                 .focusRing(visible = focused, color = palette.focusRing, radius = size.radius)
                 .background(container, shape)
                 .then(
-                    if (isGhost) Modifier.border(GhostOutlineWidth, palette.outline, shape) else Modifier,
+                    if (isGhost && !pressed) Modifier.border(GhostOutlineWidth, palette.outline, shape) else Modifier,
                 )
                 .padding(horizontal = if (iconOnly) 0.dp else size.paddingHorizontal),
             horizontalArrangement = Arrangement.spacedBy(size.gap, Alignment.CenterHorizontally),
@@ -160,8 +165,8 @@ fun IviButton(
     }
 }
 
-// TODO 디자이너 확인: Ghost 테두리 두께는 변수에 없어 2dp로 둔다.
-private val GhostOutlineWidth = 2.dp
+/** Ghost 테두리: 1.5dp, 안쪽 정렬, basic_300. 누른 동안에는 테두리 없음 (디자이너 확정) */
+private val GhostOutlineWidth = 1.5.dp
 
 private fun IviButtonSize.textStyle(type: AlterTypography): TextStyle = when (this) {
     IviButtonSize.Large -> type.titleSmall
@@ -204,7 +209,7 @@ private data class IviButtonPalette(
 
 /**
  * 버튼 색. Figma 05 Components › button 변수의 라이트(366:38848) · 다크(439:16558) 값.
- * 라이트 Ghost 누름은 변수에 없어서 다크와 같은 규칙(면 한 단계 높임)으로 basic_100을 쓴다.
+ * Ghost 누름 배경은 basic_100 (디자이너 확정).
  */
 private fun iviButtonPalette(hierarchy: IviButtonHierarchy, colors: AlterColors): IviButtonPalette {
     val isDark = colors.isDark

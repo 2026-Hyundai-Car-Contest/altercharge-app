@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import com.altercharge.app.ui.designsystem.component.DriveState
 import com.altercharge.app.ui.designsystem.component.StatusBar
 import com.altercharge.app.ui.designsystem.component.StatusBarUiState
+import com.altercharge.app.ui.designsystem.component.StatusValue
 import com.altercharge.app.ui.designsystem.theme.AlterChargeTheme
 import com.altercharge.app.ui.designsystem.theme.AlterMargin
 import com.altercharge.app.ui.designsystem.theme.AlterPadding
@@ -22,16 +23,18 @@ import com.altercharge.app.ui.designsystem.theme.AlterTheme
 fun StatusBarCatalog(modifier: Modifier = Modifier) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(AlterMargin.Large)) {
         // 기본 (시안 값)
-        StatusBar(StatusBarUiState(DriveState.PARKED, socPercent = 32, rangeKm = 98, temperatureC = 12))
-        // 값 없음: 배터리/거리 "--", 온도 숨김
-        StatusBar(StatusBarUiState(DriveState.PARKED, socPercent = null, rangeKm = null, temperatureC = null))
+        StatusBar(StatusBarUiState(DriveState.PARKED, battery = StatusValue.Ready(32), range = StatusValue.Ready(98), temperatureC = 12))
+        // 확인 중: 불러오는 중
+        StatusBar(StatusBarUiState(DriveState.PARKED, battery = StatusValue.Loading, range = StatusValue.Loading, temperatureC = 12))
+        // 정보 없음: 제공되지 않음, 온도 숨김
+        StatusBar(StatusBarUiState(DriveState.PARKED, battery = StatusValue.Unavailable, range = StatusValue.Unavailable, temperatureC = null))
         // 차량 상태별 칩 문구
-        StatusBar(StatusBarUiState(DriveState.DRIVING, socPercent = 64, rangeKm = 210, temperatureC = -3))
-        StatusBar(StatusBarUiState(DriveState.CHARGING, socPercent = 80, rangeKm = 300, temperatureC = 22))
-        StatusBar(StatusBarUiState(DriveState.ARRIVED, socPercent = 5, rangeKm = 12, temperatureC = 30))
+        StatusBar(StatusBarUiState(DriveState.DRIVING, battery = StatusValue.Ready(64), range = StatusValue.Ready(210), temperatureC = -3))
+        StatusBar(StatusBarUiState(DriveState.CHARGING, battery = StatusValue.Ready(80), range = StatusValue.Ready(300), temperatureC = 22))
+        StatusBar(StatusBarUiState(DriveState.ARRIVED, battery = StatusValue.Ready(5), range = StatusValue.Ready(12), temperatureC = 30))
         // 세로 화면 폭 (776)
         StatusBar(
-            StatusBarUiState(DriveState.PARKED, socPercent = 32, rangeKm = 98, temperatureC = 12),
+            StatusBarUiState(DriveState.PARKED, battery = StatusValue.Ready(32), range = StatusValue.Ready(98), temperatureC = 12),
             Modifier.width(PortraitPreviewWidth),
         )
     }
