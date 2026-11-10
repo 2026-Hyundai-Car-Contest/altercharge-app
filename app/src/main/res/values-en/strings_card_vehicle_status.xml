@@ -2,6 +2,7 @@
 <!--
     C 차량 상태 카드 영문. Figma EN 보드 439:22894 문구 그대로.
     TODO 디자이너 확인: 세로 카드 영문 시안이 없어 portrait_* 는 가로 영문과 같은 문구를 쓴다.
+    TODO 디자이너 확인: 충전 오류 중 커넥터 체결 불량 · 충전기 고장은 영문 시안이 없어 임시 영문이다.
 -->
 <resources>
     <string name="card_vehicle_status_headline_charge_recommended">%1$s, charge\nbefore you go</string>
@@ -40,24 +41,33 @@
     <string name="card_vehicle_status_status_scheduled">Waiting for scheduled charge</string>
     <string name="card_vehicle_status_status_depleted">Can\'t drive right now</string>
     <string name="card_vehicle_status_status_fault_communication">Charger link error · E-21</string>
+    <string name="card_vehicle_status_status_fault_connector">Connector not secured</string>
+    <string name="card_vehicle_status_status_fault_charger">Charger fault · E-11</string>
     <string name="card_vehicle_status_status_last_updated">Last updated %1$s</string>
 
     <string name="card_vehicle_status_tile_range">Range</string>
     <string name="card_vehicle_status_tile_nearest_station">Nearest station</string>
     <string name="card_vehicle_status_tile_last_charge">Last charge</string>
     <string name="card_vehicle_status_tile_full_at">Full at</string>
+    <string name="card_vehicle_status_summary_full_at">Full at %1$s</string>
     <string name="card_vehicle_status_tile_auto_resume">Auto resume</string>
     <string name="card_vehicle_status_tile_emergency">Emergency</string>
     <string name="card_vehicle_status_tile_emergency_value">Call</string>
     <string name="card_vehicle_status_tile_cause">Cause</string>
     <string name="card_vehicle_status_tile_cause_communication">Link error</string>
+    <string name="card_vehicle_status_tile_cause_connector">Connector</string>
+    <string name="card_vehicle_status_tile_cause_charger">Charger fault</string>
     <string name="card_vehicle_status_tile_action">Action</string>
     <string name="card_vehicle_status_tile_action_reconnect">Reconnect</string>
+    <string name="card_vehicle_status_tile_action_replug">Replug</string>
+    <string name="card_vehicle_status_tile_action_other_station">Use</string>
     <string name="card_vehicle_status_tile_retry">Retry</string>
     <string name="card_vehicle_status_unit_expected">est.</string>
     <string name="card_vehicle_status_unit_done">done</string>
     <string name="card_vehicle_status_unit_24h">24 h</string>
     <string name="card_vehicle_status_unit_then_retry">then retry</string>
+    <string name="card_vehicle_status_unit_replug">connector</string>
+    <string name="card_vehicle_status_unit_use">another station</string>
     <string name="card_vehicle_status_unit_seconds_later">s later</string>
 
     <string name="card_vehicle_status_vehicle_image">Vehicle image</string>

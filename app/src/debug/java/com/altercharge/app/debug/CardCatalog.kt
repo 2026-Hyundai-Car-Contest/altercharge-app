@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.altercharge.app.ui.card.driverecord.CardDriveRecord
 import com.altercharge.app.ui.card.driverecord.CardDriveRecordMode
@@ -87,9 +88,18 @@ fun LayoutCatalog() {
     )
 }
 
-/** page "cv": C 카드 상황 01~12, 가로(790×1040) 두 장씩. 위아래 · 좌우로 스크롤한다. */
+/**
+ * page "cv": C 카드 상황 01~12, 가로(790×1040) 두 장씩. 위아래 · 좌우로 스크롤한다.
+ * 12 다음에 변형(판정으로 고른 01, 충전 오류 커넥터 · 충전기)이 이어진다.
+ */
 @Composable
 fun VehicleStatusCatalog() {
+    val labeled = CardVehicleStatusSampleData.all.mapIndexed { index, state ->
+        String.format(Locale.ROOT, "%02d %s", index + 1, state.situation.name) to state
+    } + CardVehicleStatusSampleData.variants.map { state ->
+        val detail = state.fault?.name ?: "chargeRecommended=${state.chargeRecommended} · SOC ${state.socPercent}"
+        "변형 ${state.situation.name} · $detail" to state
+    }
     Column(
         modifier = Modifier
             .verticalScroll(rememberScrollState())
@@ -97,11 +107,11 @@ fun VehicleStatusCatalog() {
             .padding(AlterPadding.XLarge),
         verticalArrangement = Arrangement.spacedBy(AlterMargin.XLarge),
     ) {
-        CardVehicleStatusSampleData.all.withIndex().chunked(2).forEach { row ->
+        labeled.chunked(2).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(AlterMargin.XLarge)) {
-                row.forEach { (index, state) ->
+                row.forEach { (label, state) ->
                     Column(verticalArrangement = Arrangement.spacedBy(AlterMargin.XSmall)) {
-                        CatalogLabel(String.format(Locale.ROOT, "%02d %s", index + 1, state.situation.name))
+                        CatalogLabel(label)
                         CardVehicleStatus(
                             state = state,
                             mode = CardVehicleStatusMode.LANDSCAPE,
@@ -142,19 +152,19 @@ fun CardsCatalog() {
                 DriveRecordSample(CardDriveRecordSampleData.LastWeek, mode)
             }
         }
-        // C: 구현된 두 모드
-        CatalogLabel("C card_vehicle_status · LANDSCAPE 790×1040 · PORTRAIT 776×652")
-        Row(horizontalArrangement = Arrangement.spacedBy(AlterMargin.Large)) {
-            CardVehicleStatus(
-                state = CardVehicleStatusSampleData.Charging,
-                mode = CardVehicleStatusMode.LANDSCAPE,
-                modifier = Modifier.size(width = 790.dp, height = 1040.dp),
-            )
-            CardVehicleStatus(
-                state = CardVehicleStatusSampleData.Charging,
-                mode = CardVehicleStatusMode.PORTRAIT,
-                modifier = Modifier.size(width = 776.dp, height = 652.dp),
-            )
+        // C: 모드마다 충전 중 · 미연결 배터리 위험 (Figma variant charging · unplugged/critical)
+        CardVehicleStatusMode.entries.forEach { mode ->
+            val size = VehicleStatusSizes.getValue(mode)
+            CatalogLabel("C card_vehicle_status · ${mode.name} · ${size.width.value.toInt()}×${size.height.value.toInt()}")
+            Row(horizontalArrangement = Arrangement.spacedBy(AlterMargin.Large)) {
+                listOf(CardVehicleStatusSampleData.Charging, CardVehicleStatusSampleData.CriticalUnplugged).forEach { state ->
+                    CardVehicleStatus(
+                        state = state,
+                        mode = mode,
+                        modifier = Modifier.size(width = size.width, height = size.height),
+                    )
+                }
+            }
         }
     }
 }
@@ -192,4 +202,14 @@ private val DriveRecordWidths: Map<CardDriveRecordMode, Dp> = mapOf(
     CardDriveRecordMode.PORTRAIT to 378.dp,
     CardDriveRecordMode.WF_LANDSCAPE to 387.dp,
     CardDriveRecordMode.WF_PORTRAIT to 580.dp,
+)
+
+/** C 모드별 시안 크기 (Figma 스펙 시트 366:39011 인스턴스) */
+private val VehicleStatusSizes: Map<CardVehicleStatusMode, DpSize> = mapOf(
+    CardVehicleStatusMode.LANDSCAPE to DpSize(790.dp, 1040.dp),
+    CardVehicleStatusMode.LANDSCAPE_TALL to DpSize(770.dp, 1256.dp),
+    CardVehicleStatusMode.PORTRAIT to DpSize(776.dp, 652.dp),
+    CardVehicleStatusMode.PORTRAIT_TALL to DpSize(736.dp, 816.dp),
+    CardVehicleStatusMode.WF_LANDSCAPE to DpSize(387.dp, 751.dp),
+    CardVehicleStatusMode.WF_PORTRAIT to DpSize(580.dp, 666.dp),
 )

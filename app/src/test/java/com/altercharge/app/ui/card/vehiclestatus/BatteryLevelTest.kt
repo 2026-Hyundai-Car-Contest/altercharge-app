@@ -10,11 +10,12 @@ class BatteryLevelTest {
         val cases = listOf(
             null to BatteryLevel.UNKNOWN,
             0 to BatteryLevel.EMPTY,
+            // REQ_VS_001: 0 방전 / 1~20 위험 / 21~30 부족 / 31~100 정상
             1 to BatteryLevel.CRITICAL,
-            14 to BatteryLevel.CRITICAL,
-            15 to BatteryLevel.LOW,
-            29 to BatteryLevel.LOW,
-            30 to BatteryLevel.NORMAL,
+            20 to BatteryLevel.CRITICAL,
+            21 to BatteryLevel.LOW,
+            30 to BatteryLevel.LOW,
+            31 to BatteryLevel.NORMAL,
             100 to BatteryLevel.NORMAL,
         )
         cases.forEach { (soc, expected) ->
