@@ -577,11 +577,13 @@ private fun CompactLayout(
                         labelStyle = typography.labelMedium,
                         socStyle = compactSocStyle(typography.numericHero),
                     )
+                    // 미연결 variant(598:57512)는 range 문구를 숨기고 게이지만 SOC 줄 아래에 맞춘다
                     BatteryDetail(
                         content = content,
                         statusStyle = typography.titleSmall,
                         horizontalAlignment = Alignment.End,
                         gap = AlterMargin.XSmall,
+                        showStatus = state.charging != ChargingState.UNPLUGGED,
                     )
                 }
             }
@@ -669,11 +671,12 @@ private val PortraitPanelOverlap = 24.dp
 /** 세로 헤드라인 줄 · tall 헤드라인 · tall 타일 줄 좌우 여백 */
 private val WideSidePadding = 40.dp
 
+/** 세로 충전기 쪽: 원 253, 세로 가운데에서 10.5 위 · 오른쪽 여백 19 (backdrop top = 50% - 10.5). 차 242×153 세로 가운데 */
 private val PortraitStageCharging = StageImageSpec(
     backdropSize = 253.dp,
-    backdropAlignment = Alignment.TopEnd,
+    backdropAlignment = Alignment.CenterEnd,
     backdropOffsetX = (-19).dp,
-    backdropOffsetY = (-21).dp,
+    backdropOffsetY = (-10.5).dp,
     imageWidth = 242.dp,
     imageHeight = 153.dp,
     imageAlignment = Alignment.CenterEnd,

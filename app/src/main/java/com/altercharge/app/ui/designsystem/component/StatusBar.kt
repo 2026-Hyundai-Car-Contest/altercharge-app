@@ -33,6 +33,8 @@ import com.altercharge.app.ui.designsystem.theme.AlterMargin
 import com.altercharge.app.ui.designsystem.theme.AlterPadding
 import com.altercharge.app.ui.designsystem.theme.AlterRadius
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
+import com.altercharge.app.ui.designsystem.theme.DarkAlterColors
+import com.altercharge.app.ui.designsystem.theme.LightAlterColors
 
 /**
  * 차량 상태. 상단 바 칩의 원 안 기호와 문구를 정한다.
@@ -95,7 +97,7 @@ private const val DummyTime = "14:05"
 
 /**
  * 상태 원 색 (Figma 05 Components status_bar/gear/{parked, charging, arrived, icon, arrived_icon}). 상단 바에서만 쓰는 값이라 여기 둔다.
- * parked는 blue_500(L #3B6FE0 / D #3562C4)과 같다.
+ * parked는 blue_500(L #3B6FE0 / D #3562C4)을 참조한다.
  */
 private data class GearPalette(
     val parked: Color,
@@ -108,7 +110,7 @@ private data class GearPalette(
 )
 
 private val GearPaletteLight = GearPalette(
-    parked = Color(0xFF3B6FE0),
+    parked = LightAlterColors.blue500,
     charging = Color(0xFF00B975),
     arrived = Color(0xFF131417),
     icon = Color(0xFFFFFFFF),
@@ -116,7 +118,7 @@ private val GearPaletteLight = GearPalette(
 )
 
 private val GearPaletteDark = GearPalette(
-    parked = Color(0xFF3562C4),
+    parked = DarkAlterColors.blue500,
     charging = Color(0xFF00B975),
     arrived = Color(0xFFFFFFFF),
     icon = Color(0xFFFFFFFF),

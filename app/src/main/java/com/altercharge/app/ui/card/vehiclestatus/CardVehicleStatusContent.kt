@@ -297,11 +297,10 @@ internal fun gaugeLevel(socPercent: Int?): Int {
 }
 
 /**
- * 세로 카드 % 단위 색 (card_vehicle_status/soc/unit, 라이트 #8DABED = blue_300).
+ * 세로 카드 % 단위 색 (card_vehicle_status/soc/unit = blue_300: 라이트 #8DABED · 다크 #243F79, EN 다크 07 세로 457:78886).
  * 상태 색을 따라가지 않는다: 위험 · 빨강 숫자일 때도 시안 %는 이 색이다 (세로 05 455:61892, landscape_tall 미연결 366:37704).
- * TODO 디자이너 확인: 다크 값이 시안에 없어 다크 팔레트에서 밝기가 비슷한 blue_700을 쓴다.
  */
-internal fun portraitSocUnitColor(colors: AlterColors): Color = if (colors.isDark) colors.blue700 else colors.blue300
+internal fun portraitSocUnitColor(colors: AlterColors): Color = colors.blue300
 
 /** template의 %n$s 자리를 args로 채우고, 채운 글자에만 emphasis를 준다. */
 internal fun emphasizeArgs(
