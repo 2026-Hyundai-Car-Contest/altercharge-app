@@ -1,3 +1,10 @@
 package com.altercharge.app.ui.card.station
 
-enum class CardStationUiState {}
+data class CardStationUiState(
+    var chipTone: ChipTone
+) {
+    enum class ChipTone {
+        ACCENT,
+        NEUTRAL
+    }
+}
