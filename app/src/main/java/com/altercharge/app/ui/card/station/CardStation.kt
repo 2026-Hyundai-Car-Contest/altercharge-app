@@ -283,18 +283,3 @@ val samplePreviewUiState = CardStationUiState(
     myChargingCount = 3
 )
 
-@Preview(name = "R1 - 충전소 카드(Light/KO)", widthDp = 383, heightDp = 368, locale = "ko")
-@Composable
-private fun CardStationPreview() {
-    AlterChargeTheme() {
-        CardStation(state = samplePreviewUiState, modifier = Modifier)
-    }
-}
-
-@Preview(name = "R1 - 충전소 카드(Dark)", widthDp = 383, heightDp = 368, locale = "ko")
-@Composable
-private fun CardStationPreviewDark() {
-    AlterChargeTheme(darkTheme = true) {
-        CardStation(state = samplePreviewUiState, modifier = Modifier)
-    }
-}
