@@ -17,15 +17,11 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Paint
@@ -37,9 +33,6 @@ import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.PathParser
-import androidx.compose.ui.layout.LayoutCoordinates
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
@@ -102,15 +95,11 @@ fun CardInfo(
     val status = state.toStatus()
     val spec = mode.spec()
     val shape = RoundedCornerShape(CardRadius)
-    // 제목 글자 영역(카드 기준). 번개가 제목과 겹치지 않게 위치를 정할 때 그리기 단계에서만 읽는다.
-    var titleBounds by remember { mutableStateOf(Rect.Zero) }
-    var cardCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
 
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(mode.height)
-            .onPlaced { cardCoordinates = it }
             .alterShadow(CardShadow, CardRadius)
             .clip(shape)
             .background(CardBackground)
@@ -119,7 +108,6 @@ fun CardInfo(
         BoltGraphic(
             status = status,
             spec = spec,
-            titleBounds = { titleBounds },
             fillColor = AlterTheme.colors.blue500,
             modifier = Modifier.matchParentSize(),
         )
@@ -146,12 +134,6 @@ fun CardInfo(
                     color = AlterTheme.colors.blue500,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.onGloballyPositioned { title ->
-                        val card = cardCoordinates
-                        if (card != null && card.isAttached) {
-                            titleBounds = card.localBoundingBoxOf(title, clipBounds = false)
-                        }
-                    },
                 )
             }
             Row(
@@ -209,12 +191,14 @@ private class ModeSpec(
     val headerMaxWidth: Dp,
     val placeMaxWidth: Dp,
     val isWf: Boolean,
-    /** 번개가 카드 오른쪽 밖으로 나가는 비율 (번개 너비 기준). 제목과 겹치면 더 오른쪽으로 비킨다 */
-    val boltRightOverflow: Float,
-    /** 번개 높이 = 카드 높이 × 이 값 */
-    val boltHeightRatio: Float,
-    /** 번개 위쪽 위치 = 카드 높이 × 이 값 (음수면 위로 넘친다) */
-    val boltTopRatio: Float,
+    /**
+     * 번개(bolt_track) 영역. Figma 인스턴스 값 그대로(오늘·내일 기준).
+     * 이미지는 오른쪽 고정이라, 카드 오른쪽 끝에서 번개 왼쪽까지 거리([boltFromRight])로 놓는다.
+     */
+    val boltFromRight: Dp,
+    val boltTop: Dp,
+    val boltWidth: Dp,
+    val boltHeight: Dp,
 ) {
     @Composable
     fun eyebrowStyle(): TextStyle =
@@ -230,23 +214,24 @@ private class ModeSpec(
         if (isWf) AlterTheme.typography.bodySmall else AlterTheme.typography.bodyMedium
 }
 
-// 가로는 홈에 실제로 놓이는 383 폭 시안 기준: 번개 높이 카드의 97%, 세로 가운데.
-// 나머지 모드는 네 모드 평균(높이 105.5%, 위로 2.8% 넘침)이다.
+// 번개 값은 Figma card_info mode별 인스턴스(366:38751 · 38755 · 38759 · 38763)의 bolt_track에서
+// 그림이 실제로 차지하는 영역(상자 안쪽 위아래 8.87% · 좌우 4.95%)이다.
+// boltFromRight = 카드 폭 − 번개 왼쪽 x
 private val LandscapeSpec = ModeSpec(
     AlterPadding.Large, 252.dp, 279.dp, isWf = false,
-    boltRightOverflow = 0.218f, boltHeightRatio = 0.97f, boltTopRatio = 0.015f,
+    boltFromRight = 299.0.dp, boltTop = (-9.7).dp, boltWidth = 381.9.dp, boltHeight = 387.4.dp,
 )
 private val PortraitSpec = ModeSpec(
     AlterPadding.Normal, 212.dp, 279.dp, isWf = false,
-    boltRightOverflow = 0.342f, boltHeightRatio = 1.055f, boltTopRatio = -0.028f,
+    boltFromRight = 244.6.dp, boltTop = (-9.4).dp, boltWidth = 371.6.dp, boltHeight = 376.9.dp,
 )
 private val WfLandscapeSpec = ModeSpec(
     AlterPadding.Normal, 217.dp, 262.dp, isWf = true,
-    boltRightOverflow = 0.220f, boltHeightRatio = 1.055f, boltTopRatio = -0.028f,
+    boltFromRight = 242.9.dp, boltTop = (-7.9).dp, boltWidth = 311.4.dp, boltHeight = 315.9.dp,
 )
 private val WfPortraitSpec = ModeSpec(
     AlterPadding.Normal, 290.dp, 262.dp, isWf = true,
-    boltRightOverflow = 0.088f, boltHeightRatio = 1.055f, boltTopRatio = -0.028f,
+    boltFromRight = 246.2.dp, boltTop = (-6.9).dp, boltWidth = 269.8.dp, boltHeight = 273.8.dp,
 )
 
 private fun CardInfoMode.spec(): ModeSpec = when (this) {
@@ -266,42 +251,24 @@ private const val BOLT_PATH =
 private const val BOLT_WIDTH = 383.107f
 private const val BOLT_HEIGHT = 389.74f
 
-/**
- * 번개 왼쪽 위 사선(꼭짓점 (175.8, 6.5) → (4.2, 212.5)). 제목 아래 끝 높이에서 이 선의 x로
- * 번개가 제목과 겹치는지 계산한다.
- */
-private const val BOLT_EDGE_TOP_X = 175.819f
-private const val BOLT_EDGE_TOP_Y = 6.535f
-private const val BOLT_EDGE_BOTTOM_X = 4.206f
-private const val BOLT_EDGE_BOTTOM_Y = 212.469f
 
-/** 제목 끝과 번개 사이 최소 간격 */
-private val BoltTitleGap = AlterMargin.Normal
-
-/** 번개 그림 좌표(위에서부터 y)에서 왼쪽 위 사선의 x */
-private fun boltUpperLeftEdgeX(pathY: Float): Float {
-    val y = pathY.coerceIn(BOLT_EDGE_TOP_Y, BOLT_EDGE_BOTTOM_Y)
-    val t = (y - BOLT_EDGE_TOP_Y) / (BOLT_EDGE_BOTTOM_Y - BOLT_EDGE_TOP_Y)
-    return BOLT_EDGE_TOP_X + (BOLT_EDGE_BOTTOM_X - BOLT_EDGE_TOP_X) * t
-}
 
 /**
  * 판정별 채움 수위. 번개 높이 기준 왼쪽 · 가운데 · 오른쪽 수면 높이(위에서부터)와,
- * 시안에서 판정별로 번개가 오른쪽으로 밀린 정도(번개 너비 기준).
+ * 판정별로 번개가 오른쪽으로 밀린 정도(번개 너비 기준). Figma: 오늘·내일은 같은 위치, 3일내만 53.3 (번개 너비 371.6 중 0.143).
  */
 private class BoltLevel(val left: Float, val middle: Float, val right: Float, val shift: Float)
 
 private fun CardInfoStatus.boltLevel(): BoltLevel = when (this) {
     CardInfoStatus.TODAY -> BoltLevel(left = 0.75f, middle = 0.705f, right = 0.66f, shift = 0f)
-    CardInfoStatus.TOMORROW -> BoltLevel(left = 0.43f, middle = 0.48f, right = 0.50f, shift = 0.029f)
-    CardInfoStatus.WITHIN_THREE_DAYS -> BoltLevel(left = 0.29f, middle = 0.275f, right = 0.27f, shift = 0.18f)
+    CardInfoStatus.TOMORROW -> BoltLevel(left = 0.43f, middle = 0.48f, right = 0.50f, shift = 0f)
+    CardInfoStatus.WITHIN_THREE_DAYS -> BoltLevel(left = 0.29f, middle = 0.275f, right = 0.27f, shift = 0.143f)
 }
 
 @Composable
 private fun BoltGraphic(
     status: CardInfoStatus,
     spec: ModeSpec,
-    titleBounds: () -> Rect,
     fillColor: Color,
     modifier: Modifier = Modifier,
 ) {
@@ -324,21 +291,16 @@ private fun BoltGraphic(
     }
 
     Canvas(modifier) {
-        val scale = size.height * spec.boltHeightRatio / BOLT_HEIGHT
-        val boltWidth = BOLT_WIDTH * scale
-        val top = size.height * spec.boltTopRatio
-        // 오른쪽에 붙인 위치. 카드가 좁아(가로 383 등) 제목과 겹치면 제목 오른쪽으로 비킨다.
-        val anchoredLeft = size.width - boltWidth + boltWidth * (spec.boltRightOverflow + level.shift)
-        val title = titleBounds()
-        val left = if (title.isEmpty) {
-            anchoredLeft
-        } else {
-            val edgeX = boltUpperLeftEdgeX((title.bottom - top) / scale) * scale
-            maxOf(anchoredLeft, title.right + BoltTitleGap.toPx() - edgeX)
-        }
+        // Figma 규칙: 오른쪽 고정, 글자와 겹쳐도 비키지 않는다(시안도 글자가 번개 위에 올라간다).
+        val boltWidth = spec.boltWidth.toPx()
+        val scaleX = boltWidth / BOLT_WIDTH
+        val scaleY = spec.boltHeight.toPx() / BOLT_HEIGHT
+        val scale = minOf(scaleX, scaleY)
+        val left = size.width - spec.boltFromRight.toPx() + boltWidth * level.shift
+        val top = spec.boltTop.toPx()
         withTransform({
             translate(left, top)
-            scale(scale, scale, pivot = Offset.Zero)
+            scale(scaleX, scaleY, pivot = Offset.Zero)
         }) {
             drawPath(track, BoltTrackColor)
             // 채움과 바깥 빛을 한 번에 그린다
