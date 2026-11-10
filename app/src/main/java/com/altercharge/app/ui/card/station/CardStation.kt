@@ -35,15 +35,13 @@ import com.altercharge.app.ui.designsystem.theme.AlterMargin
 import com.altercharge.app.ui.designsystem.theme.AlterPadding
 import com.altercharge.app.ui.designsystem.theme.AlterRadius
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
-private object CardStationDimens {
-    val CardRadius = 24.dp
-}
+
 @Composable
 fun CardStation(
     state: CardStationUiState,
     modifier: Modifier = Modifier
 ) {
-    val shape = RoundedCornerShape(CardStationDimens.CardRadius)
+    val shape = RoundedCornerShape(AlterRadius.XXLarge)
 
     Column(
         verticalArrangement = Arrangement.SpaceBetween,
