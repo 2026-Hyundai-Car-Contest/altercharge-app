@@ -123,6 +123,9 @@ private val AverageChipVerticalPadding = 2.dp
 /** 차트 위쪽 모서리 (chart_week rounded-top 24) */
 private val ChartWeekTopRadius = AlterRadius.XXLarge
 
+/** 펼쳤을 때 그래프가 줄어드는 높이. Figma 펼침 인스턴스 두 개가 모두 23 */
+private val ExpandedChartShrink = 23.dp
+
 /** 타일 위 구분선 두께 */
 private val TileDividerThickness = 1.dp
 
@@ -218,7 +221,7 @@ private enum class BarState { Past, Peak, Today, Future }
 /**
  * L2 주간 주행 기록 카드. Figma card_drive_record (366:38474). 담당: 서희님
  *
- * 모드별로 높이가 정해져 있고, 펼치면 상세 통계 4개가 아래에 붙어 카드가 늘어난다(그래프 높이는 그대로).
+ * 모드별로 높이가 정해져 있고, 펼치면 상세 통계 4개가 아래에 붙어 카드가 늘어난다(그래프는 Figma 펼침 인스턴스대로 23 줄어든다, 카드는 +207).
  * 부모가 높이를 무한대로 줄 수 있어서(가로에서 왼쪽 열 스크롤) 높이를 채우는 modifier는 쓰지 않는다.
  *
  * 사용 예:
@@ -247,7 +250,8 @@ fun CardDriveRecord(
     ) {
         ChartPanel(
             state = state,
-            chartHeight = mode.chartWeekHeight,
+            // Figma 펼침 인스턴스(366:38510, 상황 15 455:68432)는 그래프가 23 줄어든다(353→330, 281→258)
+            chartHeight = if (state.expanded) mode.chartWeekHeight - ExpandedChartShrink else mode.chartWeekHeight,
             onPreviousWeek = onPreviousWeek,
             onNextWeek = onNextWeek,
         )
@@ -275,6 +279,8 @@ private fun ChartPanel(
             .clip(shape)
             .background(colors.surface)
             .border(ChartOutlineWidth, colors.surfaceHigh, shape)
+            // Figma는 테두리 1이 레이아웃에 들어간다(헤더가 패널 안 21, 21에서 시작). Compose border는 자리를 차지하지 않아 따로 띄운다
+            .padding(ChartOutlineWidth)
             .padding(AlterPadding.Medium),
         verticalArrangement = Arrangement.spacedBy(AlterMargin.Normal),
     ) {
@@ -393,7 +399,8 @@ private fun ChartWeek(state: CardDriveRecordUiState, chartHeight: Dp) {
             .height(chartHeight)
             .clip(RoundedCornerShape(topStart = ChartWeekTopRadius, topEnd = ChartWeekTopRadius)),
     ) {
-        Row(Modifier.fillMaxSize()) {
+        // Figma chart_week: 막대 32 일곱 개를 양 끝에 붙여 고르게 벌린다(justify-between)
+        Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.SpaceBetween) {
             days.forEachIndexed { index, km ->
                 val barState = if (index == peakIndex) BarState.Peak else states[index]
                 DayBar(
@@ -410,7 +417,7 @@ private fun ChartWeek(state: CardDriveRecordUiState, chartHeight: Dp) {
                     } else {
                         stringResource(R.string.card_drive_record_bar_description, stringResource(WeekdayLabels[index]), km)
                     },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.width(BarWidth),
                 )
             }
         }
@@ -668,7 +675,7 @@ private fun StatTiles(state: CardDriveRecordUiState) {
                 } else {
                     null
                 },
-                emphasis = true,
+                // Figma 펼침 인스턴스는 마지막 충전도 emphasis=false(28, 타일 높이 97)다
                 modifier = Modifier.weight(1f),
             )
             val sinceCharge = state.kmSinceLastCharge
@@ -700,7 +707,8 @@ private fun TileStat(
             .drawBehind {
                 drawRect(divider, size = Size(size.width, TileDividerThickness.toPx()))
             }
-            .padding(top = AlterPadding.Normal),
+            // Figma는 위 구분선 1이 자리를 차지한다(border-top 1 + 여백 16 → 타일 97)
+            .padding(top = TileDividerThickness + AlterPadding.Normal),
         verticalArrangement = Arrangement.spacedBy(AlterMargin.XSmall),
     ) {
         Text(text = label, style = typography.labelSmall, color = colors.textTertiary, maxLines = 1)

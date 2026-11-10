@@ -7,7 +7,7 @@
     <!-- 헤더 기간 -->
     <string name="card_drive_record_period_this_week">이번 주</string>
     <!-- 기간 날짜 형식 (DateTimeFormatter 패턴). 시안: NN.N – NN.N -->
-    <string name="card_drive_record_period_date_pattern">M.d</string>
+    <string name="card_drive_record_period_date_pattern">MM.dd</string>
     <string name="card_drive_record_period_range" translatable="false">%1$s – %2$s</string>
 
     <!-- 요약 -->

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -110,7 +111,9 @@ fun CardVehicleStatus(
     val content = buildContent(state, mode)
     val shape = RoundedCornerShape(CardRadius)
     // 다크 모드는 그림자 대신 면 색으로 높이를 나타낸다 (AlterShadows 설명).
-    val shadowModifier = if (colors.isDark) Modifier else Modifier.alterShadow(CardShadow, CardRadius)
+    // 세로 시안은 shadow/level_1 한 겹뿐이다(가로만 0 24 64 한 겹이 더 있다)
+    val shadow = if (mode == CardVehicleStatusMode.PORTRAIT) AlterShadows.Level1 else CardShadow
+    val shadowModifier = if (colors.isDark) Modifier else Modifier.alterShadow(shadow, CardRadius)
 
     Box(
         modifier = modifier
@@ -209,7 +212,7 @@ private fun LandscapeLayout(
                             content.tiles.forEach { tile ->
                                 InfoTile(
                                     tile = tile,
-                                    valueStyle = typography.numericMedium,
+                                    valueStyle = landscapeTileValueStyle(typography.numericMedium),
                                     unitStyle = LandscapeTileUnitStyle,
                                     drawDivider = !singleTile,
                                 )
@@ -270,24 +273,29 @@ private fun PortraitLayout(
                 .weight(1f),
             stage = {
                 Stage(chip = state.chip) {
+                    // Figma 세로 stage는 variant가 둘이다(상황 보드 455:58776 세로 01~12).
+                    // 둘 다 패널이 겹친 부분까지 포함한 스테이지 기준이고, 차 자리는 세로 가운데 · 오른쪽 여백 24.
+                    val stageSpec = if (content.landscapeImage == VehicleImageKind.CHARGING) {
+                        PortraitStageCharging
+                    } else {
+                        PortraitStageUnplugged
+                    }
                     Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(end = AlterPadding.Large),
+                        modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.CenterEnd,
                     ) {
-                        // 차 뒤 원형 배경 (backdrop)
                         Box(
                             modifier = Modifier
-                                .padding(bottom = PortraitPanelOverlap)
-                                .size(PortraitBackdropSize)
+                                .align(stageSpec.backdropAlignment)
+                                .offset(x = stageSpec.backdropOffsetX, y = stageSpec.backdropOffsetY)
+                                .size(stageSpec.backdropSize)
                                 .background(colors.surfaceHigh, CircleShape),
                         )
                         vehicleImage(
                             VehicleImageKind.TOP_VIEW,
                             Modifier
-                                .padding(end = PortraitImageInset, bottom = PortraitPanelOverlap)
-                                .size(width = PortraitImageWidth, height = PortraitImageHeight),
+                                .padding(end = AlterPadding.Large)
+                                .size(width = stageSpec.imageWidth, height = stageSpec.imageHeight),
                         )
                     }
                 }
@@ -321,7 +329,13 @@ private fun PortraitLayout(
                             horizontalAlignment = Alignment.End,
                             verticalArrangement = Arrangement.spacedBy(PortraitBatteryDetailGap),
                         ) {
-                            BatteryGauge(level = content.gaugeLevel, fill = content.accent)
+                            // 세로 시안은 gauge/outline · gauge/cell_empty(#EDEEF2) 변수를 쓴다: 테두리가 한 단계 연하고 빈 칸에 2 테두리
+                            BatteryGauge(
+                                level = content.gaugeLevel,
+                                fill = content.accent,
+                                outline = colors.surfaceHigh,
+                                emptyCellBorder = colors.surfaceHigh,
+                            )
                             StatusText(
                                 status = content.status,
                                 numberStyle = typography.titleSmall.copy(
@@ -503,22 +517,35 @@ private fun RowScope.Soc(
 
 /** 배터리 게이지 (battery_gauge). level = 채운 칸 수 0~4. */
 @Composable
-private fun BatteryGauge(level: Int, fill: Color) {
+private fun BatteryGauge(
+    level: Int,
+    fill: Color,
+    outline: Color = AlterTheme.colors.surfaceAccent,
+    emptyCellBorder: Color? = null,
+) {
     val colors = AlterTheme.colors
     Row(verticalAlignment = Alignment.CenterVertically) {
         Row(
             modifier = Modifier
-                .border(GaugeOutlineWidth, colors.surfaceAccent, RoundedCornerShape(AlterRadius.Large))
+                .border(GaugeOutlineWidth, outline, RoundedCornerShape(AlterRadius.Large))
+                // Figma는 테두리 2가 자리를 차지한다(2 + 여백 8 → 159×60). Compose border는 자리를 안 차지해 따로 띄운다
+                .padding(GaugeOutlineWidth)
                 .padding(AlterPadding.XSmall),
             horizontalArrangement = Arrangement.spacedBy(AlterMargin.XXSmall),
         ) {
             repeat(GaugeCells) { index ->
+                val cellShape = RoundedCornerShape(AlterRadius.Medium)
+                val filled = index < level
                 Box(
                     modifier = Modifier
                         .size(width = GaugeCellWidth, height = GaugeCellHeight)
-                        .background(
-                            if (index < level) fill else colors.surfaceAccent,
-                            RoundedCornerShape(AlterRadius.Medium),
+                        .background(if (filled) fill else colors.surfaceAccent, cellShape)
+                        .then(
+                            if (!filled && emptyCellBorder != null) {
+                                Modifier.border(GaugeOutlineWidth, emptyCellBorder, cellShape)
+                            } else {
+                                Modifier
+                            },
                         ),
                 )
             }
@@ -584,7 +611,8 @@ private fun RowScope.InfoTile(
         modifier = Modifier
             .weight(1f)
             .then(if (drawDivider) Modifier.tileDivider(colors.surfaceAccent) else Modifier)
-            .padding(top = AlterPadding.Normal),
+            // Figma는 위 구분선 1이 자리를 차지한다(border-top 1 + 여백 16)
+            .padding(top = TileDividerWidth + AlterPadding.Normal),
         verticalArrangement = Arrangement.spacedBy(AlterMargin.XSmall),
     ) {
         Text(
@@ -923,10 +951,34 @@ private val PortraitPanelOverlap = 24.dp
 private val PortraitHeadlinePadding = 40.dp
 
 /** 세로 스테이지: 원형 배경과 위에서 본 차 이미지 크기 */
-private val PortraitBackdropSize = 253.dp
-private val PortraitImageWidth = 242.dp
-private val PortraitImageHeight = 153.dp
-private val PortraitImageInset = 6.dp
+private class PortraitStageSpec(
+    val backdropSize: Dp,
+    val backdropAlignment: Alignment,
+    val backdropOffsetX: Dp,
+    val backdropOffsetY: Dp,
+    val imageWidth: Dp,
+    val imageHeight: Dp,
+)
+
+/** 충전기 연결 · 대기 · 오류 (03 · 05 · 08 · 11): 원 253, 스테이지 오른쪽에서 19 안 · 위로 21 나감. 차 242×153 */
+private val PortraitStageCharging = PortraitStageSpec(
+    backdropSize = 253.dp,
+    backdropAlignment = Alignment.TopEnd,
+    backdropOffsetX = (-19).dp,
+    backdropOffsetY = (-21).dp,
+    imageWidth = 242.dp,
+    imageHeight = 153.dp,
+)
+
+/** 미연결 · 오프라인 (01 · 02 · 09 · 12): 원 217.6, 세로 가운데 · 오른쪽 밖으로 15.17. 차 139×115(115×139를 -90도) */
+private val PortraitStageUnplugged = PortraitStageSpec(
+    backdropSize = 217.6.dp,
+    backdropAlignment = Alignment.CenterEnd,
+    backdropOffsetX = 15.17.dp,
+    backdropOffsetY = 0.dp,
+    imageWidth = 139.dp,
+    imageHeight = 115.dp,
+)
 
 /** battery_tile/gap */
 private val PortraitBatteryDetailGap = 12.dp
@@ -966,6 +1018,9 @@ private val LandscapeTileUnitStyle = TextStyle(
     letterSpacing = AlterLetterSpacing,
     lineHeightStyle = AlterLineHeightStyle,
 )
+
+/** 가로 타일 값: numeric/medium 40에 줄 높이만 1.2배(48). Figma tile_range · tile_* 값 */
+private fun landscapeTileValueStyle(base: TextStyle): TextStyle = base.copy(lineHeight = 48.sp)
 
 /** 세로 SOC 숫자 80 (디자인 값에 없는 크기, 굵기 · 자간은 numericHero와 같다) */
 private fun portraitSocStyle(base: TextStyle): TextStyle = base.copy(fontSize = 80.sp, lineHeight = 120.sp)
