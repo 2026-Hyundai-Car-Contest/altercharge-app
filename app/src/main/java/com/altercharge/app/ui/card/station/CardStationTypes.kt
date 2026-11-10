@@ -1,0 +1,41 @@
+package com.altercharge.app.ui.card.station
+
+import androidx.annotation.DrawableRes
+
+enum class ChipTone {
+    ACCENT,
+    NEUTRAL
+}
+
+enum class ChargerStatus {
+    AVAILABLE,          // 사용 가능
+    UNDER_INSPECTION    // 점검 중
+}
+
+// 텍스트와 아이콘으로 분리하고 다시 충전유형과 전압으로 분리
+sealed class ChargeInfoTag {
+    abstract val text: String
+    abstract val type: ChargeInfoType
+
+    data class Text(
+        override val text: String,
+        override val type: ChargeInfoType
+    ) : ChargeInfoTag()
+
+    data class Icon(
+        @DrawableRes val resId: Int,
+        override val text: String,
+        override val type: ChargeInfoType
+    ) : ChargeInfoTag()
+}
+
+enum class ChargeInfoType {
+    CHARGING_TYPE, // 급속, 완속
+    POWER          // 100kW, 200kW
+}
+
+enum class ChargingType {
+    AC,       // 완속
+    DC,       // 급속
+    ULTRA_FAST // 초급속
+}
