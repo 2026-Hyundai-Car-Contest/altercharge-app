@@ -2,10 +2,10 @@ package com.altercharge.app.ui.card.vehiclestatus
 
 /**
  * C 카드 샘플 값. 상황 01~12 하나씩. 미리보기 · 디버그 카탈로그 · 화면 개발 중 임시 데이터로 쓴다.
- * 실데이터가 아니다 (이름은 "운전자").
+ * 실데이터가 아니다 (이름은 MVP 고정 이름 "성진", Figma 시안과 같음, REQ_JD_003).
  */
 internal object CardVehicleStatusSampleData {
-    private const val NAME = "운전자"
+    private const val NAME = "성진"
 
     /** 01 주차 · 충전 권장 */
     val ChargeRecommended = CardVehicleStatusUiState(

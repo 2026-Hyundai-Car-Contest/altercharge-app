@@ -21,4 +21,6 @@
     <!-- 값 상태 (디자이너 확정): 불러오는 중 / 제공되지 않거나 확인할 수 없음 -->
     <string name="common_value_loading">확인 중</string>
     <string name="common_value_unavailable">정보 없음</string>
+    <!-- MVP 고정 사용자 이름 (REQ_JD_003, Figma 시안 예시 이름과 같게). C 카드 헤드라인에 넣는다 -->
+    <string name="common_driver_name">성진</string>
 </resources>

@@ -13,4 +13,6 @@
     <!-- TODO 디자이너 확인: 영문 표기는 디자인 공유 후 맞춘다 -->
     <string name="common_value_loading">Checking</string>
     <string name="common_value_unavailable">No data</string>
+    <!-- MVP 고정 사용자 이름 (REQ_JD_003, Figma 시안 예시 이름과 같게). C 카드 헤드라인에 넣는다 -->
+    <string name="common_driver_name">Sungjin</string>
 </resources>
