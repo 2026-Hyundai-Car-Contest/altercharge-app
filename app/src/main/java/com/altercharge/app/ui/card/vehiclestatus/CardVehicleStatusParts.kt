@@ -233,7 +233,7 @@ internal fun BatteryDetail(
             outline = colors.surfaceHigh,
             emptyCellBorder = colors.surfaceHigh,
         )
-        if (showStatus) {
+        if (showStatus && content.status != StatusLine.None) {
             StatusText(
                 status = content.status,
                 numberStyle = statusStyle.copy(fontWeight = AlterFontWeight.Normal, color = colors.textPrimary),
@@ -444,6 +444,7 @@ internal fun StatusText(
             textAlign = TextAlign.End,
             maxLines = 1,
         )
+        StatusLine.None -> Unit
         is StatusLine.TimeLeft -> Text(
             text = emphasizeArgs(status.template, status.args, numberStyle.toSpanStyle(), unitStyle.toSpanStyle()),
             modifier = modifier,

@@ -33,6 +33,9 @@ internal sealed interface StatusLine {
 
     /** template의 %1$s, %2$s 자리에 args가 들어가고, 그 숫자만 강조된다. */
     data class TimeLeft(val template: String, val args: List<String>) : StatusLine
+
+    /** 상태 문구 없음. 09 배터리 위험 · 미연결은 남은 시간 문구를 빼기로 함(기획 · 디자이너 확정, 2026-11-10) */
+    data object None : StatusLine
 }
 
 @Immutable
@@ -168,8 +171,9 @@ internal fun buildContent(state: CardVehicleStatusUiState, mode: CardVehicleStat
         VehicleSituation.CHARGING,
         VehicleSituation.CHARGING_LOW,
         VehicleSituation.CHARGING_CRITICAL,
-        VehicleSituation.CRITICAL_UNPLUGGED,
         -> timeLeft(state.remainingMinutes, unknown)
+        // 09는 상태 문구 없음 (StatusLine.None 설명 참고)
+        VehicleSituation.CRITICAL_UNPLUGGED -> StatusLine.None
         VehicleSituation.CHARGED -> StatusLine.Plain(stringResource(R.string.card_vehicle_status_status_charged))
         VehicleSituation.PAUSED -> StatusLine.Plain(
             when (state.pauseReason) {
