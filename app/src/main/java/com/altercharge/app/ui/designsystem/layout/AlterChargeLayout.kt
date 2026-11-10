@@ -42,7 +42,8 @@ import com.altercharge.app.ui.designsystem.theme.AlterTheme
  *   S-17 높이 합: 32 + 80(상태 바 56 + 빈칸 24) + 1040 + 32 = 1184.
  *   본문 시작 y = 112 (Layout Rules · 상단 영역, 하이파이 body 455:58813과 같다).
  * - 세로: 상태 바 → C → L1 | R1 → L2 | R2, 세로 스크롤 (15상황 하이파이 455:58776 기준).
- *   아래에 scroll_fade(높이 200, W-Standard 48)를 덮는다.
+ *   아래에 scroll_fade(높이 200, W-Standard 48)를 덮는다. WF 세로는 C → L1 → R1 → L2 → R2 한 열이다.
+ *   세로 여백 · 간격은 폼팩터별 하이파이 화면 값을 따른다 ([PortraitSpec]).
  *
  * 세로는 부모가 스크롤이라 높이가 무한대가 된다. 그래서 세로 슬롯은 틀이 높이를 정해 준다.
  *
@@ -76,7 +77,7 @@ fun AlterChargeLayout(
                     statusBar, l1, l2, c, r1, r2,
                 )
             } else {
-                PortraitLayout(spec, PortraitRows.of(formFactor), statusBar, l1, l2, c, r1, r2)
+                PortraitLayout(PortraitSpec.of(formFactor, spec), statusBar, l1, l2, c, r1, r2)
             }
         }
     }
@@ -192,37 +193,65 @@ private fun ScrollFade(modifier: Modifier) {
 }
 
 /**
- * 세로 슬롯 높이와 하단 페이드 높이. S-17 세로 하이파이 기준 (C 652, 1행 368, 2행 576, 페이드 200 · 461:14853).
- * TODO 디자이너 확인: 1행 칸은 368인데 L1 card_info 세로 모드 높이는 358이라 칸 아래 10이 빈다.
+ * 세로 배치 값. 규칙 표(pleos Layout)와 하이파이 화면이 다르면 하이파이 화면 값을 따른다.
  *
- * 세로 위치(S-17 하이파이): 상태 바 y 32 → C y 108 → 1행 y 780 → 2행 y 1168.
- * 세로는 앱 바 자리가 80이 아니라 상태 바 56 + 거터 20이다(본문 y 108). 하이파이를 따른다.
+ * - 기본(S-17 · W-Extended): S-17 세로 하이파이 기준. 여백 · 간격은 AreaSpec, C 652, 1행 368, 2행 576, 페이드 200 (461:14853).
+ *   위치: 상태 바 y 32 → C y 108 → 1행 y 780 → 2행 y 1168 (앱 바 자리 80이 아니라 상태 바 56 + 거터 20).
+ *   TODO 디자이너 확인: 1행 칸은 368인데 L1 card_info 세로 모드 높이는 358이라 칸 아래 10이 빈다.
+ * - W-Standard: 화면 altercharge/home/24_6_connect_w_standard/portrait (452:53649, 800×810) 값.
+ *   이 화면은 layout 변수가 연결돼 있지 않아 pleos 값(margin 32 · gutter 20 · app_padding 24) 대신 화면 값을 쓴다:
+ *   좌우 12 · 위 16 · 세로 간격 16 · 행 안 가로 간격 20(378 + 20 + 378) · C 776×338(portrait_compact, Q&A Q3) ·
+ *   1행 368 · 2행 576 · scroll_fade 48 (461:14702). 16 + 56 + 16 + 338 + 16 + 368 = 810으로 L1 · R1이 첫 화면에 들어온다.
+ * - WF: 화면 altercharge/home/18_5_waterfall/portrait (452:54321, 648×800) 값. 한 열 배치:
+ *   좌우 32 · 위 16 · 간격 16 · 상태 바 584×56 → C 666 → L1 260 → R1 368 → L2 576 → R2 576 · scroll_fade 200 (461:14704).
  *
  * 접힘선 규칙(Layout Rules · 첫 화면 행동): 첫 화면에 L1과 "여기로 안내"(R1)가 보여야 한다.
- * 순서는 C → L1 | R1 그대로 둔다. S-17(1184) · W-Extended(1400)는 1행이 접힘선 위에서 끝난다.
- * W-Standard(높이 810)는 디자이너 Q&A Q3에 따라 C를 portrait_compact(338)로 줄이고 페이드를 48로 낮춘다
- * (화면 altercharge/home/24_6_connect_w_standard/portrait 452:53649: C 338 · scroll_fade 461:14702 높이 48).
- * WF 세로 화면(452:54321)은 C 666 · L1 260 한 줄 배치라 이 틀과 다르다. TODO WF 세로 배치는 카드 작업 때 맞춘다.
+ * 순서는 하이파이대로 C가 먼저다. S-17(1184) · W-Extended(1400) · W-Standard(810)는 1행이 접힘선 위에서 끝난다.
  */
-private data class PortraitRows(
+private data class PortraitSpec(
+    /** 좌우 여백 */
+    val margin: Dp,
+    /** 위아래 여백 */
+    val vertical: Dp,
+    /** 세로 간격 (상태 바 → C → 행 사이) */
+    val gap: Dp,
+    /** 2열 행 안 가로 간격 */
+    val rowGutter: Dp,
+    /** true면 C → L1 → R1 → L2 → R2 한 열 */
+    val singleColumn: Boolean = false,
     val cHeight: Dp,
+    /** 2열: 1행(L1 | R1) 높이. 한 열: R1 높이 */
     val row1Height: Dp = 368.dp,
+    /** 한 열에서 L1 높이 */
+    val l1Height: Dp = row1Height,
+    /** 2행(L2 | R2) 높이. L2는 펼치면 길어져 최소 높이로 쓴다 */
     val row2Height: Dp = 576.dp,
     val fadeHeight: Dp = 200.dp,
 ) {
     companion object {
-        private val Default = PortraitRows(cHeight = 652.dp)
-        private val WStandard = PortraitRows(cHeight = 338.dp, fadeHeight = 48.dp)
+        private val WStandard = PortraitSpec(
+            margin = 12.dp, vertical = 16.dp, gap = 16.dp, rowGutter = 20.dp,
+            cHeight = 338.dp, fadeHeight = 48.dp,
+        )
+        private val Wf = PortraitSpec(
+            margin = 32.dp, vertical = 16.dp, gap = 16.dp, rowGutter = 16.dp,
+            singleColumn = true, cHeight = 666.dp, l1Height = 260.dp,
+        )
 
-        fun of(formFactor: FormFactor): PortraitRows =
-            if (formFactor == FormFactor.W_STANDARD) WStandard else Default
+        fun of(formFactor: FormFactor, area: AreaSpec): PortraitSpec = when (formFactor) {
+            FormFactor.W_STANDARD -> WStandard
+            FormFactor.WF -> Wf
+            FormFactor.S17, FormFactor.W_EXTENDED -> PortraitSpec(
+                margin = area.margin, vertical = area.vertical, gap = area.gutter, rowGutter = area.gutter,
+                cHeight = 652.dp,
+            )
+        }
     }
 }
 
 @Composable
 private fun PortraitLayout(
-    spec: AreaSpec,
-    rows: PortraitRows,
+    spec: PortraitSpec,
     statusBar: @Composable () -> Unit,
     l1: @Composable () -> Unit,
     l2: @Composable () -> Unit,
@@ -237,18 +266,26 @@ private fun PortraitLayout(
                 .fillMaxSize()
                 .verticalScroll(scrollState)
                 .padding(horizontal = spec.margin, vertical = spec.vertical),
-            verticalArrangement = Arrangement.spacedBy(spec.gutter),
+            verticalArrangement = Arrangement.spacedBy(spec.gap),
         ) {
             Box(Modifier.fillMaxWidth().height(StatusBarSlotHeight)) { statusBar() }
-            Box(Modifier.fillMaxWidth().height(rows.cHeight)) { c() }
-            Row(horizontalArrangement = Arrangement.spacedBy(spec.gutter)) {
-                Box(Modifier.weight(1f).height(rows.row1Height)) { l1() }
-                Box(Modifier.weight(1f).height(rows.row1Height)) { r1() }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(spec.gutter)) {
-                // L2는 펼치면(상황 15) 길어지므로 최소 높이만 준다. R2는 576 그대로 두고 아래는 비운다(의도).
-                Box(Modifier.weight(1f).heightIn(min = rows.row2Height)) { l2() }
-                Box(Modifier.weight(1f).height(rows.row2Height)) { r2() }
+            Box(Modifier.fillMaxWidth().height(spec.cHeight)) { c() }
+            if (spec.singleColumn) {
+                Box(Modifier.fillMaxWidth().height(spec.l1Height)) { l1() }
+                Box(Modifier.fillMaxWidth().height(spec.row1Height)) { r1() }
+                Box(Modifier.fillMaxWidth().heightIn(min = spec.row2Height)) { l2() }
+                Box(Modifier.fillMaxWidth().height(spec.row2Height)) { r2() }
+            } else {
+                // 칸 안은 위 정렬이라 L1(358)이 1행(368)보다 낮으면 아래가 빈다 (하이파이와 같다).
+                Row(horizontalArrangement = Arrangement.spacedBy(spec.rowGutter)) {
+                    Box(Modifier.weight(1f).height(spec.row1Height)) { l1() }
+                    Box(Modifier.weight(1f).height(spec.row1Height)) { r1() }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(spec.rowGutter)) {
+                    // L2는 펼치면(상황 15) 길어지므로 최소 높이만 준다. R2는 576 그대로 두고 아래는 비운다(의도).
+                    Box(Modifier.weight(1f).heightIn(min = spec.row2Height)) { l2() }
+                    Box(Modifier.weight(1f).height(spec.row2Height)) { r2() }
+                }
             }
         }
         // 끝까지 내리면 마지막 내용이 가려지지 않게 숨긴다.
@@ -258,7 +295,7 @@ private fun PortraitLayout(
                 Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .height(rows.fadeHeight),
+                    .height(spec.fadeHeight),
             )
         }
     }
@@ -285,6 +322,12 @@ private fun AlterChargeLayoutPortraitPreview() {
 @Preview(name = "W-Standard 세로", widthDp = 800, heightDp = 810)
 @Composable
 private fun AlterChargeLayoutWStandardPortraitPreview() {
+    AlterChargeTheme { PreviewSlots() }
+}
+
+@Preview(name = "WF 세로", widthDp = 648, heightDp = 800)
+@Composable
+private fun AlterChargeLayoutWfPortraitPreview() {
     AlterChargeTheme { PreviewSlots() }
 }
 
