@@ -1,6 +1,7 @@
 package com.altercharge.app.ui.designsystem.layout
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -16,7 +17,9 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.derivedStateOf
@@ -28,7 +31,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.altercharge.app.ui.designsystem.component.PlaceholderBox
 import com.altercharge.app.ui.designsystem.theme.AlterChargeTheme
 import com.altercharge.app.ui.designsystem.theme.AlterMargin
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
@@ -281,12 +283,25 @@ private fun AlterChargeLayoutWfPreview() {
 private fun PreviewSlots(leftColumnScrollable: Boolean = false) {
     AlterChargeLayout(
         leftColumnScrollable = leftColumnScrollable,
-        statusBar = { PlaceholderBox("status_bar", Modifier.height(56.dp)) },
-        l1 = { PlaceholderBox("L1", Modifier.height(368.dp)) },
+        statusBar = { PreviewSlot("status_bar", Modifier.height(56.dp)) },
+        l1 = { PreviewSlot("L1", Modifier.height(368.dp)) },
         // 상황 15: 펼친 L2 높이 855
-        l2 = { PlaceholderBox("L2", if (leftColumnScrollable) Modifier.height(855.dp) else Modifier) },
-        c = { PlaceholderBox("C") },
-        r1 = { PlaceholderBox("R1", Modifier.height(368.dp)) },
-        r2 = { PlaceholderBox("R2") },
+        l2 = { PreviewSlot("L2", if (leftColumnScrollable) Modifier.height(855.dp) else Modifier) },
+        c = { PreviewSlot("C") },
+        r1 = { PreviewSlot("R1", Modifier.height(368.dp)) },
+        r2 = { PreviewSlot("R2") },
     )
+}
+
+/** 미리보기 슬롯 자리 표시 (디버그 카탈로그의 PlaceholderBox와 같은 모양) */
+@Composable
+private fun PreviewSlot(label: String, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .border(1.dp, AlterTheme.colors.surfaceAccent, RoundedCornerShape(16.dp))
+            .padding(16.dp),
+    ) {
+        Text(label, color = AlterTheme.colors.textTertiary)
+    }
 }

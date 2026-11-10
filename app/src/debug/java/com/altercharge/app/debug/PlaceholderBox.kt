@@ -1,4 +1,4 @@
-package com.altercharge.app.ui.designsystem.component
+package com.altercharge.app.debug
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -12,7 +12,7 @@ import androidx.compose.ui.unit.dp
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
 
 /**
- * 아직 구현 전인 카드 자리를 표시하는 임시 상자. 미리보기와 개발 중 화면 확인용이다.
+ * 아직 구현 전인 카드 자리를 표시하는 임시 상자. 디버그 카탈로그 전용이라 릴리스 APK에는 들어가지 않는다.
  * 카드가 다 만들어지면 지운다.
  */
 @Composable

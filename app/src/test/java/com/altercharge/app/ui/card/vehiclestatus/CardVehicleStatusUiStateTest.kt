@@ -116,4 +116,30 @@ class CardVehicleStatusUiStateTest {
             CardVehicleStatusSampleData.all.map { it.situation },
         )
     }
+
+    // BatteryLevel (CardVehicleStatusUiState.kt)
+
+    @Test
+    fun 배터리_구간_fromSoc_경계값() {
+        val cases = listOf(
+            null to BatteryLevel.UNKNOWN,
+            0 to BatteryLevel.EMPTY,
+            // REQ_VS_001: 0 방전 / 1~20 위험 / 21~30 부족 / 31~100 정상
+            1 to BatteryLevel.CRITICAL,
+            20 to BatteryLevel.CRITICAL,
+            21 to BatteryLevel.LOW,
+            30 to BatteryLevel.LOW,
+            31 to BatteryLevel.NORMAL,
+            100 to BatteryLevel.NORMAL,
+        )
+        cases.forEach { (soc, expected) ->
+            assertEquals("soc=$soc", expected, BatteryLevel.fromSoc(soc))
+        }
+    }
+
+    @Test
+    fun 배터리_구간_fromSoc_범위_밖() {
+        assertEquals(BatteryLevel.EMPTY, BatteryLevel.fromSoc(-5))
+        assertEquals(BatteryLevel.NORMAL, BatteryLevel.fromSoc(120))
+    }
 }

@@ -174,8 +174,13 @@ private val CardInfoStatus.titleRes: Int
 
 // 카드 고유 값 (Figma card_info/* 변수, 라이트/다크 같은 값)
 private val CardBackground = Color(0xFF020417)
+
+/** card_info/container/radius. 카드 변수라 AlterRadius에 없다 (C 카드의 32도 카드별 변수) */
 private val CardRadius = 32.dp
+
+/** card_info/container/shadow (0 12 32, #000000 32%). 다른 카드 · AlterShadows와 값이 달라 카드에 둔다 */
 private val CardShadow = listOf(ShadowLayer(offsetY = 12.dp, blur = 32.dp, color = Color(0x52000000)))
+
 private val EyebrowColor = Color.White.copy(alpha = 0.64f)
 private val PlaceColor = Color.White
 private val PlaceIconSize = 24.dp
