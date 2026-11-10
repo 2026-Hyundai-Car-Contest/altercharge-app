@@ -87,9 +87,18 @@ fun LayoutCatalog() {
     )
 }
 
-/** page "cv": C 카드 상황 01~12, 가로(790×1040) 두 장씩. 위아래 · 좌우로 스크롤한다. */
+/**
+ * page "cv": C 카드 상황 01~12, 가로(790×1040) 두 장씩. 위아래 · 좌우로 스크롤한다.
+ * 12 다음에 변형(판정으로 고른 01, 충전 오류 커넥터 · 충전기)이 이어진다.
+ */
 @Composable
 fun VehicleStatusCatalog() {
+    val labeled = CardVehicleStatusSampleData.all.mapIndexed { index, state ->
+        String.format(Locale.ROOT, "%02d %s", index + 1, state.situation.name) to state
+    } + CardVehicleStatusSampleData.variants.map { state ->
+        val detail = state.fault?.name ?: "chargeRecommended=${state.chargeRecommended} · SOC ${state.socPercent}"
+        "변형 ${state.situation.name} · $detail" to state
+    }
     Column(
         modifier = Modifier
             .verticalScroll(rememberScrollState())
@@ -97,11 +106,11 @@ fun VehicleStatusCatalog() {
             .padding(AlterPadding.XLarge),
         verticalArrangement = Arrangement.spacedBy(AlterMargin.XLarge),
     ) {
-        CardVehicleStatusSampleData.all.withIndex().chunked(2).forEach { row ->
+        labeled.chunked(2).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(AlterMargin.XLarge)) {
-                row.forEach { (index, state) ->
+                row.forEach { (label, state) ->
                     Column(verticalArrangement = Arrangement.spacedBy(AlterMargin.XSmall)) {
-                        CatalogLabel(String.format(Locale.ROOT, "%02d %s", index + 1, state.situation.name))
+                        CatalogLabel(label)
                         CardVehicleStatus(
                             state = state,
                             mode = CardVehicleStatusMode.LANDSCAPE,

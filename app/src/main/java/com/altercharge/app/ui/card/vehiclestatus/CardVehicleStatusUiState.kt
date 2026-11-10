@@ -1,6 +1,7 @@
 package com.altercharge.app.ui.card.vehiclestatus
 
 import androidx.compose.runtime.Immutable
+import com.altercharge.app.domain.judgment.RECOMMEND_SOC_PERCENT
 
 /**
  * 충전 상태. Figma card_vehicle_status 속성 charging (366:39011 상태 매트릭스).
@@ -27,18 +28,16 @@ enum class ChargingState {
 
 /**
  * 배터리 구간. Figma 속성 battery, 배터리 구간 표 (377:11454).
- *
- * TODO 기획 확인: 구간 경계는 디자이너가 테스트 기준으로 잡은 값이다(제조사 정책 확인 필요).
- * Figma "확인할 것"에 적힌 대로, 부족 · 위험 전환 기준(SOC 20% 이하 또는 남은 시간 30분 미만)도 기획 확인이 필요하다.
+ * 경계는 기능명세서 REQ_VS_001: 0% 방전, 1~20% 위험, 21~30% 부족, 31~100% 정상.
  */
 enum class BatteryLevel {
-    /** 30~100% */
+    /** 31~100% */
     NORMAL,
 
-    /** 15~29% */
+    /** 21~30% */
     LOW,
 
-    /** 1~14% */
+    /** 1~20% */
     CRITICAL,
 
     /** 0% */
@@ -49,14 +48,17 @@ enum class BatteryLevel {
     ;
 
     companion object {
-        private const val LOW_BELOW = 30
-        private const val CRITICAL_BELOW = 15
+        /** 이 값(%) 이하면 위험 */
+        private const val CRITICAL_MAX = 20
+
+        /** 이 값(%) 이하면 부족 */
+        private const val LOW_MAX = 30
 
         fun fromSoc(socPercent: Int?): BatteryLevel = when {
             socPercent == null -> UNKNOWN
             socPercent <= 0 -> EMPTY
-            socPercent < CRITICAL_BELOW -> CRITICAL
-            socPercent < LOW_BELOW -> LOW
+            socPercent <= CRITICAL_MAX -> CRITICAL
+            socPercent <= LOW_MAX -> LOW
             else -> NORMAL
         }
     }
@@ -64,13 +66,14 @@ enum class BatteryLevel {
 
 /**
  * C 카드가 보여주는 상황. 15상황 보드(455:58776)의 01~12번이고, 상태 매트릭스의 유효 조합 12개와 같다.
- * 카드가 charging과 배터리 구간으로 고른다. 13~15번은 R1 · R2 · L2 쪽 상황이라 여기 없다.
+ * 카드가 charging과 배터리 구간으로 고르고, 미연결 01 · 02만 충전 권장 판정(REQ_ST_005)으로 고른다.
+ * 13~15번은 R1 · R2 · L2 쪽 상황이라 여기 없다.
  */
 enum class VehicleSituation {
-    /** 01 주차 · 충전 권장 (unplugged × low) */
+    /** 01 주차 · 충전 권장 (unplugged, 충전 권장 판정) */
     CHARGE_RECOMMENDED,
 
-    /** 02 주차 · 출발 준비 완료 (unplugged × normal) */
+    /** 02 주차 · 출발 준비 완료 (unplugged, 충전 권장 아님) */
     READY,
 
     /** 03 충전 중 (charging × normal) */
@@ -109,15 +112,23 @@ enum class ConnectionChip { CONNECTED, UNPLUGGED, STANDBY, ERROR, OFFLINE }
 
 /**
  * 일시정지 사유. 시안 문구가 있는 것만 둔다.
- * TODO 디자이너 확인: "예약 시간 외" · "차량 설정" 사유는 문구(특히 영문) 시안이 없다.
+ * 사유 · 자동 재개 시각 표시는 MVP 제외(REQ_VS_007)라 사유를 더 늘리지 않는다. 일시정지 상태 자체는 보여 준다.
  */
 enum class PauseReason { GRID_DEMAND }
 
 /**
- * 충전 오류 종류. 시안 문구가 있는 것만 둔다.
- * TODO 디자이너 확인: 충전기 고장(E-11) · 정전 · 상태 확인 불가는 영문 시안이 없다.
+ * 충전 오류 종류. 기능명세서 REQ_EX_002의 3가지이고, 원인과 조치를 카드 타일로 보여 준다.
  */
-enum class ChargeFault { COMMUNICATION }
+enum class ChargeFault {
+    /** 통신 오류. 조치: 재연결 후 재시도 */
+    COMMUNICATION,
+
+    /** 커넥터 체결 불량. 조치: 커넥터 다시 꽂기 */
+    CONNECTOR,
+
+    /** 충전기 고장. 조치: 다른 충전소 이용 */
+    CHARGER,
+}
 
 /**
  * C 차량 상태 카드에 넘기는 값. Figma card_vehicle_status (366:39011).
@@ -144,11 +155,11 @@ data class CardVehicleStatusUiState(
     val lastChargedAt: String? = null,
     /** 가까운 충전소까지 거리 km (01 충전 권장) */
     val nearestStationKm: Double? = null,
-    /** 예약 충전 시작 시각 (08 헤드라인) */
+    /** 예약 충전 시작 시각 (08 헤드라인). 예약 시각 표시는 MVP 제외(REQ_VS_008)라 목업 값만 넣는다 */
     val scheduledAt: String? = null,
-    /** 일시정지 사유 (07) */
+    /** 일시정지 사유 (07). MVP 제외(REQ_VS_007), 목업 값만 넣는다 */
     val pauseReason: PauseReason? = null,
-    /** 자동 재개 시각 (07). null이면 수동 재개 */
+    /** 자동 재개 시각 (07). null이면 수동 재개. MVP 제외(REQ_VS_007), 목업 값만 넣는다 */
     val autoResumeAt: String? = null,
     /** 오류 종류 (11) */
     val fault: ChargeFault? = null,
@@ -156,6 +167,12 @@ data class CardVehicleStatusUiState(
     val lastUpdatedAt: String? = null,
     /** 다시 시도까지 남은 초 (12) */
     val retryInSeconds: Int? = null,
+    /**
+     * 충전 권장 판정 (REQ_ST_005). 미연결일 때 01 충전 권장 · 02 출발 준비 완료를 이 값으로 고른다.
+     * 판정 결과(Judgment.chargeRecommended)를 넘긴다. 넘기지 않으면 배터리 30% 이하만 본다.
+     * 위험(09) · 방전(10) · 정보 없음(12)은 배터리 구간이 먼저다.
+     */
+    val chargeRecommended: Boolean = socPercent != null && socPercent <= RECOMMEND_SOC_PERCENT,
 ) {
     val batteryLevel: BatteryLevel get() = BatteryLevel.fromSoc(socPercent)
 
@@ -174,8 +191,8 @@ data class CardVehicleStatusUiState(
                 BatteryLevel.UNKNOWN -> VehicleSituation.NO_DATA
             }
             ChargingState.UNPLUGGED -> when (batteryLevel) {
-                BatteryLevel.NORMAL -> VehicleSituation.READY
-                BatteryLevel.LOW -> VehicleSituation.CHARGE_RECOMMENDED
+                BatteryLevel.NORMAL, BatteryLevel.LOW ->
+                    if (chargeRecommended) VehicleSituation.CHARGE_RECOMMENDED else VehicleSituation.READY
                 BatteryLevel.CRITICAL -> VehicleSituation.CRITICAL_UNPLUGGED
                 BatteryLevel.EMPTY -> VehicleSituation.DEPLETED
                 BatteryLevel.UNKNOWN -> VehicleSituation.NO_DATA

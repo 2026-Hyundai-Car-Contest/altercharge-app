@@ -120,6 +120,25 @@ internal object CardVehicleStatusSampleData {
         retryInSeconds = 30,
     )
 
+    /** 01 충전 권장 · 배터리는 정상이지만 버틸 일수가 1일 이하라 판정이 충전 권장 (REQ_ST_005) */
+    val ChargeRecommendedByDays = CardVehicleStatusUiState(
+        driverName = NAME,
+        charging = ChargingState.UNPLUGGED,
+        socPercent = 45,
+        rangeKm = 160,
+        nearestStationKm = 1.2,
+        chargeRecommended = true,
+    )
+
+    /** 11 충전 오류 · 커넥터 체결 불량 */
+    val ChargeErrorConnector = ChargeError.copy(fault = ChargeFault.CONNECTOR)
+
+    /** 11 충전 오류 · 충전기 고장 */
+    val ChargeErrorCharger = ChargeError.copy(fault = ChargeFault.CHARGER)
+
+    /** 01~12 대표 샘플 밖의 변형 (판정 연결 · 오류 종류) */
+    val variants: List<CardVehicleStatusUiState> = listOf(ChargeRecommendedByDays, ChargeErrorConnector, ChargeErrorCharger)
+
     /** 01~12 순서 */
     val all: List<CardVehicleStatusUiState> = listOf(
         ChargeRecommended, Ready, Charging, ChargingLow, ChargingCritical, Charged,

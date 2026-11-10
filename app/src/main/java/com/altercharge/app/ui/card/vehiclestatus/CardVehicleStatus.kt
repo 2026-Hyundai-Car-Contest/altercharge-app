@@ -715,7 +715,7 @@ private fun buildContent(state: CardVehicleStatusUiState, mode: CardVehicleStatu
         VehicleSituation.SCHEDULED,
         -> Tile(fullAtLabel, state.fullAt ?: unknown, expected)
         VehicleSituation.CHARGED -> Tile(fullAtLabel, state.fullAt ?: unknown, done)
-        // TODO 디자이너 확인: 수동 재개(autoResumeAt 없음)일 때 타일 문구("수동 재개 필요") 영문 시안이 없어 "–"로 둔다.
+        // 자동 재개 시각은 MVP 제외(REQ_VS_007). 목업 값이 없으면(수동 재개 포함) "–"로 둔다.
         VehicleSituation.PAUSED -> Tile(
             label = stringResource(R.string.card_vehicle_status_tile_auto_resume),
             value = state.autoResumeAt ?: unknown,
@@ -735,18 +735,18 @@ private fun buildContent(state: CardVehicleStatusUiState, mode: CardVehicleStatu
         )
     }
     val tiles = if (situation == VehicleSituation.CHARGE_ERROR) {
-        // 11 충전 오류: 원인 · 조치 타일
-        // TODO 디자이너 확인: 통신 오류 외 원인(고장 · 정전 · 상태 확인 불가)은 영문 시안이 없어 통신 오류 문구만 있다.
+        // 11 충전 오류: 원인 · 조치 타일 (REQ_EX_002). 종류를 모르면 값은 "–"
+        val fault = state.fault?.let { faultText(it) }
         listOf(
             Tile(
                 label = stringResource(R.string.card_vehicle_status_tile_cause),
-                value = stringResource(R.string.card_vehicle_status_tile_cause_communication),
+                value = fault?.cause ?: unknown,
                 unit = null,
             ),
             Tile(
                 label = stringResource(R.string.card_vehicle_status_tile_action),
-                value = stringResource(R.string.card_vehicle_status_tile_action_reconnect),
-                unit = stringResource(R.string.card_vehicle_status_unit_then_retry),
+                value = fault?.action ?: unknown,
+                unit = fault?.actionUnit,
             ),
         )
     } else {
@@ -800,18 +800,16 @@ private fun buildContent(state: CardVehicleStatusUiState, mode: CardVehicleStatu
         VehicleSituation.PAUSED -> StatusLine.Plain(
             when (state.pauseReason) {
                 PauseReason.GRID_DEMAND -> stringResource(R.string.card_vehicle_status_status_paused_grid_demand)
-                // TODO 디자이너 확인: 사유를 모를 때 문구가 시안에 없다.
+                // 일시정지 사유는 MVP 제외(REQ_VS_007). 값이 없으면 "–"
                 null -> unknown
             },
         )
         VehicleSituation.SCHEDULED -> StatusLine.Plain(stringResource(R.string.card_vehicle_status_status_scheduled))
         VehicleSituation.DEPLETED -> StatusLine.Plain(stringResource(R.string.card_vehicle_status_status_depleted))
         VehicleSituation.CHARGE_ERROR -> StatusLine.Plain(
-            when (state.fault) {
-                ChargeFault.COMMUNICATION -> stringResource(R.string.card_vehicle_status_status_fault_communication)
+            state.fault?.let { faultText(it).status }
                 // TODO 디자이너 확인: 오류 종류를 모를 때 문구가 시안에 없다.
-                null -> unknown
-            },
+                ?: unknown,
         )
         VehicleSituation.NO_DATA -> StatusLine.Plain(
             stringResource(R.string.card_vehicle_status_status_last_updated, state.lastUpdatedAt ?: unknown),
@@ -832,6 +830,35 @@ private fun buildContent(state: CardVehicleStatusUiState, mode: CardVehicleStatu
         tiles = tiles,
         portraitTiles = portraitTiles,
         landscapeImage = landscapeImage,
+    )
+}
+
+/** 충전 오류 문구: 상태 줄 · 원인 타일 · 조치 타일(값 + 단위) */
+private class FaultText(val status: String, val cause: String, val action: String, val actionUnit: String)
+
+/**
+ * 오류 종류별 문구 (REQ_EX_002).
+ * TODO 디자이너 확인: 커넥터 체결 불량은 시안이 없어 명세서 문구로 임시로 둔다. 충전기 고장 · 커넥터 체결 불량은 영문 시안이 없다.
+ */
+@Composable
+private fun faultText(fault: ChargeFault): FaultText = when (fault) {
+    ChargeFault.COMMUNICATION -> FaultText(
+        status = stringResource(R.string.card_vehicle_status_status_fault_communication),
+        cause = stringResource(R.string.card_vehicle_status_tile_cause_communication),
+        action = stringResource(R.string.card_vehicle_status_tile_action_reconnect),
+        actionUnit = stringResource(R.string.card_vehicle_status_unit_then_retry),
+    )
+    ChargeFault.CONNECTOR -> FaultText(
+        status = stringResource(R.string.card_vehicle_status_status_fault_connector),
+        cause = stringResource(R.string.card_vehicle_status_tile_cause_connector),
+        action = stringResource(R.string.card_vehicle_status_tile_action_replug),
+        actionUnit = stringResource(R.string.card_vehicle_status_unit_replug),
+    )
+    ChargeFault.CHARGER -> FaultText(
+        status = stringResource(R.string.card_vehicle_status_status_fault_charger),
+        cause = stringResource(R.string.card_vehicle_status_tile_cause_charger),
+        action = stringResource(R.string.card_vehicle_status_tile_action_other_station),
+        actionUnit = stringResource(R.string.card_vehicle_status_unit_use),
     )
 }
 

@@ -59,6 +59,57 @@ class CardVehicleStatusUiStateTest {
     }
 
     @Test
+    fun 미연결_01_02는_충전_권장_판정으로_고른다() {
+        // 기본값: 배터리 30% 이하면 충전 권장 (REQ_ST_005)
+        assertEquals(VehicleSituation.CHARGE_RECOMMENDED, state(ChargingState.UNPLUGGED, 30).situation)
+        assertEquals(VehicleSituation.READY, state(ChargingState.UNPLUGGED, 31).situation)
+        // 판정 결과를 넘기면 배터리 구간보다 판정이 먼저다
+        val recommendedAt80 = state(ChargingState.UNPLUGGED, 80).copy(chargeRecommended = true)
+        assertEquals(VehicleSituation.CHARGE_RECOMMENDED, recommendedAt80.situation)
+        assertEquals(ConnectionChip.UNPLUGGED, recommendedAt80.chip)
+        assertEquals(
+            VehicleSituation.READY,
+            state(ChargingState.UNPLUGGED, 25).copy(chargeRecommended = false).situation,
+        )
+    }
+
+    @Test
+    fun 미연결_위험_방전_정보없음은_배터리_구간이_먼저() {
+        listOf(true, false).forEach { recommended ->
+            fun make(soc: Int?) = state(ChargingState.UNPLUGGED, soc).copy(chargeRecommended = recommended)
+            assertEquals(VehicleSituation.CRITICAL_UNPLUGGED, make(20).situation)
+            assertEquals(VehicleSituation.CRITICAL_UNPLUGGED, make(1).situation)
+            assertEquals(VehicleSituation.DEPLETED, make(0).situation)
+            assertEquals(VehicleSituation.NO_DATA, make(null).situation)
+        }
+    }
+
+    @Test
+    fun 충전_중_구간_경계() {
+        assertEquals(VehicleSituation.CHARGING, state(ChargingState.CHARGING, 31).situation)
+        assertEquals(VehicleSituation.CHARGING_LOW, state(ChargingState.CHARGING, 30).situation)
+        assertEquals(VehicleSituation.CHARGING_LOW, state(ChargingState.CHARGING, 21).situation)
+        assertEquals(VehicleSituation.CHARGING_CRITICAL, state(ChargingState.CHARGING, 20).situation)
+    }
+
+    @Test
+    fun 오류_종류와_상관없이_11() {
+        ChargeFault.entries.forEach { fault ->
+            val s = state(ChargingState.FAULT, null).copy(fault = fault)
+            assertEquals(fault.name, VehicleSituation.CHARGE_ERROR, s.situation)
+            assertEquals(fault.name, ConnectionChip.ERROR, s.chip)
+        }
+    }
+
+    @Test
+    fun 변형_샘플() {
+        assertEquals(
+            listOf(VehicleSituation.CHARGE_RECOMMENDED, VehicleSituation.CHARGE_ERROR, VehicleSituation.CHARGE_ERROR),
+            CardVehicleStatusSampleData.variants.map { it.situation },
+        )
+    }
+
+    @Test
     fun 샘플_데이터는_01부터_12_순서() {
         assertEquals(
             VehicleSituation.entries.toList(),
