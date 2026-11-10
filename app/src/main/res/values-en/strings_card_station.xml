@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="card_station_availability_possible">%1$s free</string>
+  <string name="card_station_availability_impossibility">Out of service</string>
+
+  <string name="card_station_charging_type_slow">Slow</string>
+  <string name="card_station_charging_type_fast">Fast</string>
+
+  <string name="card_station_visit_count">%1$d visits</string>
+</resources>

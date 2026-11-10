@@ -1,6 +1,6 @@
 package com.altercharge.app.ui.card.station
 
-import android.R
+import com.altercharge.app.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -105,7 +105,7 @@ fun CardStation(
                         color = AlterTheme.colors.textPrimary
                     )
                     Text(
-                        text = "방문 ${state.myChargingCount}회",
+                        text = stringResource(R.string.card_station_visit_count, state.myChargingCount),
                         color = AlterTheme.colors.textTertiary
                     )
                 }
@@ -150,8 +150,19 @@ Row(
             contentDescription = null
         )
     }
+    val displayText = when (chargeInfoTag.type) {
+        ChargeInfoType.CHARGING_TYPE -> {
+            when (chargeInfoTag.text) {
+                "완속" -> stringResource(R.string.card_station_charging_type_slow)
+                "급속" -> stringResource(R.string.card_station_charging_type_fast)
+                else -> chargeInfoTag.text
+            }
+        }
+
+        ChargeInfoType.POWER -> chargeInfoTag.text
+    }
     Text(
-        text = chargeInfoTag.text,
+        text = displayText,
         color = AlterTheme.colors.textPrimary,
         fontSize = 20.sp,
         lineHeight = 30.sp,
@@ -167,7 +178,9 @@ fun ChargerAvailability(
     chargerStatus: ChargerStatus,
     modifier: Modifier = Modifier
 ) {
-    val chargerAvailableText = if(chargerStatus == ChargerStatus.AVAILABLE) "${occupiedChargerCount}/${availableChargerCount}기" else "점검중"
+    val chargerAvailableText =
+        if(chargerStatus == ChargerStatus.AVAILABLE) stringResource(R.string.card_station_availability_possible, "${occupiedChargerCount}/${availableChargerCount}")
+        else stringResource(R.string.card_station_availability_impossibility)
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -263,14 +276,14 @@ val samplePreviewUiState = CardStationUiState(
     chargerStatus = ChargerStatus.UNDER_INSPECTION,
     stationName = "연희 사러가 마트",
     chargerInfo = listOf(
-        ChargeInfoTag.Icon(resId = R.drawable.ic_secure,"급속"),
-        ChargeInfoTag.Text("100Kw")
+        ChargeInfoTag.Icon(resId = R.drawable.ic_status_lte,"급속", type = ChargeInfoType.CHARGING_TYPE),
+        ChargeInfoTag.Text("100Kw", type = ChargeInfoType.POWER)
     ),
     distance = 1.8,
     myChargingCount = 3
 )
 
-@Preview(name = "R1 - 충전소 카드(Light)", widthDp = 383, heightDp = 368)
+@Preview(name = "R1 - 충전소 카드(Light/KO)", widthDp = 383, heightDp = 368, locale = "ko")
 @Composable
 private fun CardStationPreview() {
     AlterChargeTheme() {
@@ -278,7 +291,7 @@ private fun CardStationPreview() {
     }
 }
 
-@Preview(name = "R1 - 충전소 카드(Dark)", widthDp = 383, heightDp = 368)
+@Preview(name = "R1 - 충전소 카드(Dark)", widthDp = 383, heightDp = 368, locale = "ko")
 @Composable
 private fun CardStationPreviewDark() {
     AlterChargeTheme(darkTheme = true) {
