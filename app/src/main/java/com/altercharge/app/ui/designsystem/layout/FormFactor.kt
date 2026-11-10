@@ -54,8 +54,9 @@ enum class FormFactor(
     ),
     WF(
         landscape = AreaSpec(1256.dp, 800.dp, margin = 32.dp, gutter = 16.dp, vertical = 24.dp, columns = 12),
-        // 세로는 시안에 "세로 없음 · 참고"로만 있다.
-        portrait = AreaSpec(628.dp, 800.dp, margin = 24.dp, gutter = 16.dp, vertical = 24.dp, columns = 4),
+        // 디자이너 확정(Q&A Q4): pleos Layout › layout/connect_wf/portrait/* columns 4 · margin 32 · gutter 16 · app_padding 24.
+        // 폭 648은 화면 altercharge/home/18_5_waterfall/portrait (452:54321). 카드 폭 648 - 32 × 2 = 584.
+        portrait = AreaSpec(648.dp, 800.dp, margin = 32.dp, gutter = 16.dp, vertical = 24.dp, columns = 4),
         // WF 가로 (Layout Rules): L 4 · C 4 · R 4, 스크롤 없음.
         // TODO 카드 작업: WF 가로는 L2 미니 카드 제외 · 충전소 목록 2개. 틀은 슬롯만 두고 카드 쪽에서 처리한다.
         landscapeSpans = ColumnSpans(left = 4, center = 4, right = 4),
