@@ -198,9 +198,10 @@ private class ModeSpec(
     val isWf: Boolean,
     /**
      * 번개(bolt_track) 영역. Figma 인스턴스 값 그대로(오늘·내일 기준).
-     * 이미지는 오른쪽 고정이라, 카드 오른쪽 끝에서 번개 왼쪽까지 거리([boltFromRight])로 놓는다.
+     * 번개는 왼쪽 x가 고정이다([boltLeft]). 카드 폭이 달라도 같은 자리에 있고, 좁으면 오른쪽이 더 잘린다
+     * (가로 450 · 383 인스턴스 모두 bolt_track x 130, WF 세로 580 · 584 모두 x 319).
      */
-    val boltFromRight: Dp,
+    val boltLeft: Dp,
     val boltTop: Dp,
     val boltWidth: Dp,
     val boltHeight: Dp,
@@ -221,25 +222,25 @@ private class ModeSpec(
 
 // 번개 값은 Figma card_info mode별 인스턴스(366:38751 · 38755 · 38759 · 38763)의 bolt_track에서
 // 그림이 실제로 차지하는 영역(상자 안쪽 위아래 8.87% · 좌우 4.95%)이다.
-// boltFromRight = 카드 폭 − 번개 왼쪽 x
+// boltLeft = bolt_track x + 상자 폭 × 4.95%
 private val LandscapeSpec = ModeSpec(
     AlterPadding.Large, 252.dp, 279.dp, isWf = false,
-    boltFromRight = 299.0.dp, boltTop = (-9.7).dp, boltWidth = 381.9.dp, boltHeight = 387.4.dp,
+    boltLeft = 151.0.dp, boltTop = (-9.7).dp, boltWidth = 381.9.dp, boltHeight = 387.4.dp,
 )
 // 세로 제목 영역 232 (개발자 Q&A Q5: 212 → 232, 영문 "Tomorrow" 213이 잘리지 않게)
 private val PortraitSpec = ModeSpec(
     AlterPadding.Normal, 232.dp, 279.dp, isWf = false,
-    boltFromRight = 244.6.dp, boltTop = (-9.4).dp, boltWidth = 371.6.dp, boltHeight = 376.9.dp,
+    boltLeft = 133.4.dp, boltTop = (-9.4).dp, boltWidth = 371.6.dp, boltHeight = 376.9.dp,
 )
 private val WfLandscapeSpec = ModeSpec(
     AlterPadding.Normal, 217.dp, 262.dp, isWf = true,
-    boltFromRight = 242.9.dp, boltTop = (-7.9).dp, boltWidth = 311.4.dp, boltHeight = 315.9.dp,
+    boltLeft = 144.1.dp, boltTop = (-7.9).dp, boltWidth = 311.4.dp, boltHeight = 315.9.dp,
 )
 // WF 세로는 카드 폭이 584(Q&A Q4, 화면 인스턴스 452:54383)이고 번개는 왼쪽 x 319 그대로라
-// 584 기준 오른쪽 거리 = 584 − (319 + 14.8)
+// bolt_track x 319 + 14.8
 private val WfPortraitSpec = ModeSpec(
     AlterPadding.Normal, 290.dp, 262.dp, isWf = true,
-    boltFromRight = 250.2.dp, boltTop = (-6.9).dp, boltWidth = 269.8.dp, boltHeight = 273.8.dp,
+    boltLeft = 333.8.dp, boltTop = (-6.9).dp, boltWidth = 269.8.dp, boltHeight = 273.8.dp,
 )
 
 private fun CardInfoMode.spec(): ModeSpec = when (this) {
@@ -299,12 +300,12 @@ private fun BoltGraphic(
     }
 
     Canvas(modifier) {
-        // Figma 규칙: 오른쪽 고정, 글자와 겹쳐도 비키지 않는다(시안도 글자가 번개 위에 올라간다).
+        // Figma 규칙: 왼쪽 x 고정, 글자와 겹쳐도 비키지 않는다.
         val boltWidth = spec.boltWidth.toPx()
         val scaleX = boltWidth / BOLT_WIDTH
         val scaleY = spec.boltHeight.toPx() / BOLT_HEIGHT
         val scale = minOf(scaleX, scaleY)
-        val left = size.width - spec.boltFromRight.toPx() + boltWidth * level.shift
+        val left = spec.boltLeft.toPx() + boltWidth * level.shift
         val top = spec.boltTop.toPx()
         withTransform({
             translate(left, top)
