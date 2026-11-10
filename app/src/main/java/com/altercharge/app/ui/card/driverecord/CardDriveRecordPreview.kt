@@ -108,7 +108,7 @@ private fun LandscapeTallPreview() =
 private fun WfLandscapePreview() =
     PreviewCard(CardDriveRecordSampleData.ThisWeek, CardDriveRecordMode.WF_LANDSCAPE, darkTheme = true)
 
-@Preview(name = "WF 세로 · 펼침 · 라이트", widthDp = 596)
+@Preview(name = "WF 세로 · 펼침 · 라이트", widthDp = 600)
 @Composable
 private fun WfPortraitPreview() =
     PreviewCard(CardDriveRecordSampleData.ThisWeek.copy(expanded = true), CardDriveRecordMode.WF_PORTRAIT, darkTheme = false)

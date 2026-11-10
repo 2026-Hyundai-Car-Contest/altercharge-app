@@ -85,7 +85,8 @@ fun CardDriveRecord(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(AlterRadius.XXLarge))
-            .background(colors.background)
+            // card_drive_record/container/background → common/container/background_subtle (다크 #1D1E21)
+            .background(colors.containerBackgroundSubtle)
             .padding(AlterPadding.XSmall),
         verticalArrangement = Arrangement.spacedBy(AlterMargin.Medium),
     ) {

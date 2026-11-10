@@ -6,10 +6,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -47,20 +49,32 @@ import com.altercharge.app.ui.designsystem.theme.alterShadow
  * - PORTRAIT: S-17 세로 776×652 (가로로 넓은 카드)
  * - PORTRAIT_TALL: W-Extended 세로 736×816 (366:39032)
  * - WF_LANDSCAPE: WF 가로 387×751, 상태 블록을 세로로 쌓는다 (366:39036)
- * - WF_PORTRAIT: WF 세로 580×666 (366:39040)
+ * - WF_PORTRAIT: WF 세로 584×666 (366:39040, 화면 인스턴스 452:54353. Q&A Q4로 580 → 584, 안쪽은 모두 폭 채움)
+ * - PORTRAIT_COMPACT: W-Standard 세로 776×338 (598:57477 · 598:57512). 첫 화면에 L1 · R1이 들어오도록
+ *   왼쪽에 헤드라인 + 배터리, 오른쪽에 차량 stage 300을 두고 정보 타일은 뺀다 (개발자 Q&A Q3)
  */
-enum class CardVehicleStatusMode { LANDSCAPE, LANDSCAPE_TALL, PORTRAIT, PORTRAIT_TALL, WF_LANDSCAPE, WF_PORTRAIT }
+enum class CardVehicleStatusMode {
+    LANDSCAPE,
+    LANDSCAPE_TALL,
+    PORTRAIT,
+    PORTRAIT_TALL,
+    WF_LANDSCAPE,
+    WF_PORTRAIT,
+    PORTRAIT_COMPACT,
+}
 
 /**
- * 레이아웃 정보로 mode를 고른다.
- * TODO 디자이너 확인: W-Standard(높이 810)는 시안이 없어 같은 방향의 S-17 모드로 대신한다.
+ * 레이아웃 정보로 mode를 고른다. W-Standard 세로는 PORTRAIT_COMPACT.
+ * TODO 디자이너 확인: W-Standard 가로(높이 810)는 시안이 없어 S-17 가로 모드로 대신한다.
  */
 fun cardVehicleStatusModeFor(info: AppLayoutInfo): CardVehicleStatusMode = when (info.formFactor) {
     FormFactor.WF ->
         if (info.isLandscape) CardVehicleStatusMode.WF_LANDSCAPE else CardVehicleStatusMode.WF_PORTRAIT
     FormFactor.W_EXTENDED ->
         if (info.isLandscape) CardVehicleStatusMode.LANDSCAPE_TALL else CardVehicleStatusMode.PORTRAIT_TALL
-    FormFactor.S17, FormFactor.W_STANDARD ->
+    FormFactor.W_STANDARD ->
+        if (info.isLandscape) CardVehicleStatusMode.LANDSCAPE else CardVehicleStatusMode.PORTRAIT_COMPACT
+    FormFactor.S17 ->
         if (info.isLandscape) CardVehicleStatusMode.LANDSCAPE else CardVehicleStatusMode.PORTRAIT
 }
 
@@ -106,7 +120,8 @@ fun CardVehicleStatus(
             .semantics(mergeDescendants = true) {}
             .then(shadowModifier)
             .clip(shape)
-            .background(colors.surface, shape)
+            // card_vehicle_status/container/background → common/container/background (다크 #1D1E21, 개발자 Q&A Q2)
+            .background(colors.containerBackground, shape)
             .padding(AlterMargin.XSmall),
     ) {
         when (mode) {
@@ -116,6 +131,7 @@ fun CardVehicleStatus(
             CardVehicleStatusMode.PORTRAIT_TALL -> TallLayout(state, content, vehicleImage, PortraitTall)
             CardVehicleStatusMode.WF_LANDSCAPE -> WfLandscapeLayout(state, content, vehicleImage)
             CardVehicleStatusMode.WF_PORTRAIT -> WfPortraitLayout(state, content, vehicleImage)
+            CardVehicleStatusMode.PORTRAIT_COMPACT -> CompactLayout(state, content, vehicleImage)
         }
     }
 }
@@ -235,12 +251,10 @@ private fun PortraitLayout(
             horizontalArrangement = Arrangement.spacedBy(AlterMargin.Large),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // TODO 디자이너 확인: 칸이 카드 폭 절반이라 긴 이름 · 영문(07 등)은 줄이 많아진다.
-            //   임시로 단어 단위로 줄을 바꾸고 3줄에서 말줄임한다. 긴 이름 · 영문 기준 시안이 나오면 맞춘다.
-            Headline(
+            // 2줄을 넘으면 60 → 56 → 48 → 40으로 줄인다 (개발자 Q&A Q1)
+            AutoShrinkHeadline(
                 text = content.portraitHeadline,
-                maxLines = PORTRAIT_HEADLINE_MAX_LINES,
-                lineBreak = PortraitHeadlineLineBreak,
+                styles = portraitHeadlineStyles(),
                 modifier = Modifier.weight(1f),
             )
             Row(
@@ -315,13 +329,22 @@ private fun TallLayout(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(AlterMargin.Normal),
     ) {
-        Headline(
-            text = content.headline,
-            maxLines = LANDSCAPE_HEADLINE_MAX_LINES,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = AlterPadding.Large, start = WideSidePadding, end = WideSidePadding),
-        )
+        val headlineModifier = Modifier
+            .fillMaxWidth()
+            .padding(top = AlterPadding.Large, start = WideSidePadding, end = WideSidePadding)
+        if (spec.autoShrinkHeadline) {
+            AutoShrinkHeadline(
+                text = content.headline,
+                styles = portraitHeadlineStyles(),
+                modifier = headlineModifier,
+            )
+        } else {
+            Headline(
+                text = content.headline,
+                maxLines = LANDSCAPE_HEADLINE_MAX_LINES,
+                modifier = headlineModifier,
+            )
+        }
         StageWithPanel(
             overlap = spec.panelOverlap,
             modifier = Modifier
@@ -444,7 +467,7 @@ private fun WfLandscapeLayout(
     }
 }
 
-/** WF 세로 (580). 배터리 값 · 게이지 줄 아래에 요약 한 줄. */
+/** WF 세로 (584). 배터리 값 · 게이지 줄 아래에 요약 한 줄. */
 @Composable
 private fun WfPortraitLayout(
     state: CardVehicleStatusUiState,
@@ -508,6 +531,75 @@ private fun WfPortraitLayout(
     }
 }
 
+/**
+ * W-Standard 세로 776×338 (598:57477 충전 중 · 598:57512 미연결).
+ * 왼쪽 status_block(헤드라인 + 배터리 타일), 오른쪽 stage 300. 정보 타일은 없다.
+ */
+@Composable
+private fun CompactLayout(
+    state: CardVehicleStatusUiState,
+    content: CardContent,
+    vehicleImage: @Composable (VehicleImageKind, Modifier) -> Unit,
+) {
+    val typography = AlterTheme.typography
+    Row(
+        modifier = Modifier.fillMaxSize(),
+        horizontalArrangement = Arrangement.spacedBy(AlterMargin.Normal),
+    ) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(),
+            verticalArrangement = Arrangement.spacedBy(AlterMargin.Small),
+        ) {
+            // 48 → 최소 40, 2줄 말줄임
+            AutoShrinkHeadline(
+                text = content.portraitHeadline,
+                styles = listOf(typography.headlineSmall, typography.titleLarge),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = AlterPadding.Large, end = AlterPadding.XSmall, top = AlterMargin.Small),
+            )
+            GlassPanel(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = AlterPadding.Medium,
+                verticalPadding = AlterPadding.Normal,
+                glassAlpha = FlatStageGlassAlpha,
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom,
+                ) {
+                    BatteryValue(
+                        state = state,
+                        content = content,
+                        labelStyle = typography.labelMedium,
+                        socStyle = compactSocStyle(typography.numericHero),
+                    )
+                    // 미연결 variant(598:57512)는 range 문구를 숨기고 게이지만 SOC 줄 아래에 맞춘다
+                    BatteryDetail(
+                        content = content,
+                        statusStyle = typography.titleSmall,
+                        horizontalAlignment = Alignment.End,
+                        gap = AlterMargin.XSmall,
+                        showStatus = state.charging != ChargingState.UNPLUGGED,
+                    )
+                }
+            }
+        }
+        Box(
+            modifier = Modifier
+                .width(CompactStageWidth)
+                .fillMaxHeight(),
+        ) {
+            Stage(chip = state.chip) {
+                StageVehicle(spec = CompactStage, vehicleImage = vehicleImage)
+            }
+        }
+    }
+}
+
 /** 스테이지 아래쪽에 상태 패널을 겹쳐 올린다. 패널 높이를 먼저 재고 나머지를 스테이지에 준다. */
 @Composable
 private fun StageWithPanel(
@@ -537,7 +629,17 @@ private fun StageWithPanel(
 
 /** 헤드라인 최대 줄 수. 넘치면 말줄임 */
 private const val LANDSCAPE_HEADLINE_MAX_LINES = 2
-private const val PORTRAIT_HEADLINE_MAX_LINES = 3
+
+/**
+ * 세로 헤드라인 자동 축소 단계 (portrait · portrait_tall).
+ * card_vehicle_status/headline/font_size_max 60(headline/large) → 56(headline/medium) → 48(headline/small)
+ * → font_size_min 40(title/large)
+ */
+@Composable
+private fun portraitHeadlineStyles(): List<TextStyle> {
+    val typography = AlterTheme.typography
+    return listOf(typography.headlineLarge, typography.headlineMedium, typography.headlineSmall, typography.titleLarge)
+}
 
 /** WF 가로 헤드라인 칸은 높이가 내용을 따른다(시안 2줄). 긴 문구는 3줄까지 */
 private const val WF_LANDSCAPE_HEADLINE_MAX_LINES = 3
@@ -569,11 +671,12 @@ private val PortraitPanelOverlap = 24.dp
 /** 세로 헤드라인 줄 · tall 헤드라인 · tall 타일 줄 좌우 여백 */
 private val WideSidePadding = 40.dp
 
+/** 세로 충전기 쪽: 원 253, 세로 가운데에서 10.5 위 · 오른쪽 여백 19 (backdrop top = 50% - 10.5). 차 242×153 세로 가운데 */
 private val PortraitStageCharging = StageImageSpec(
     backdropSize = 253.dp,
-    backdropAlignment = Alignment.TopEnd,
+    backdropAlignment = Alignment.CenterEnd,
     backdropOffsetX = (-19).dp,
-    backdropOffsetY = (-21).dp,
+    backdropOffsetY = (-10.5).dp,
     imageWidth = 242.dp,
     imageHeight = 153.dp,
     imageAlignment = Alignment.CenterEnd,
@@ -594,6 +697,8 @@ private val PortraitStageUnplugged = StageImageSpec(
 /** W-Extended 모드별 값. Figma card_vehicle_status mode=landscape_tall (366:37686 · 366:37704) / portrait_tall (366:37763 · 366:37782) */
 private class TallSpec(
     val panelOverlap: Dp,
+    /** 헤드라인을 2줄 안에 맞춰 자동 축소할지 (portrait_tall만, 개발자 Q&A Q1) */
+    val autoShrinkHeadline: Boolean,
     /** 충전기 쪽 스테이지 배경을 카드 면(흰색)으로 둘지 */
     val chargingStageOnSurface: Boolean,
     val stageCharging: StageImageSpec,
@@ -607,6 +712,7 @@ private class TallSpec(
  */
 private val LandscapeTall = TallSpec(
     panelOverlap = LandscapePanelOverlap,
+    autoShrinkHeadline = false,
     chargingStageOnSurface = true,
     stageCharging = StageImageSpec(backdropSize = null, imageWidth = 626.dp, imageHeight = 441.dp),
     stageUnplugged = StageImageSpec(backdropSize = 529.22.dp, imageWidth = 391.dp, imageHeight = 473.dp),
@@ -616,6 +722,7 @@ private val LandscapeTall = TallSpec(
 /** W-Ext 세로 736×816: 패널 겹침 24, SOC 80. 원 290.7 가운데, 차 282×233(충전기 쪽) · 186×154(미연결), 둘 다 -90도 */
 private val PortraitTall = TallSpec(
     panelOverlap = PortraitPanelOverlap,
+    autoShrinkHeadline = true,
     chargingStageOnSurface = false,
     stageCharging = StageImageSpec(backdropSize = 290.7.dp, imageWidth = 282.dp, imageHeight = 233.dp),
     stageUnplugged = StageImageSpec(backdropSize = 290.7.dp, imageWidth = 186.dp, imageHeight = 154.dp),
@@ -648,6 +755,21 @@ private val LandscapeTileUnitStyle = TextStyle(
 
 /** 가로 타일 값: numeric/medium 40에 줄 높이만 1.2배(48). Figma tile_range · tile_* 값 */
 private fun landscapeTileValueStyle(base: TextStyle): TextStyle = base.copy(lineHeight = 48.sp)
+
+/** portrait_compact stage 폭 */
+private val CompactStageWidth = 300.dp
+
+/** portrait_compact (두 variant 같음): 원 240 세로 가운데 · 오른쪽 여백 30, 차 242×153(-90도) 가운데 */
+private val CompactStage = StageImageSpec(
+    backdropSize = 240.dp,
+    backdropAlignment = Alignment.CenterEnd,
+    backdropOffsetX = (-30).dp,
+    imageWidth = 242.dp,
+    imageHeight = 153.dp,
+)
+
+/** portrait_compact SOC 숫자 56 (디자인 값에 없는 크기, 줄 높이 1.5배 · 굵기 · 자간은 numericHero와 같다) */
+private fun compactSocStyle(base: TextStyle): TextStyle = base.copy(fontSize = 56.sp, lineHeight = 84.sp)
 
 /** 세로 SOC 숫자 80 (디자인 값에 없는 크기, 굵기 · 자간은 numericHero와 같다) */
 private fun portraitSocStyle(base: TextStyle): TextStyle = base.copy(fontSize = 80.sp, lineHeight = 120.sp)

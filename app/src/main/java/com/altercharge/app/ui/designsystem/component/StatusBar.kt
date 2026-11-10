@@ -25,17 +25,26 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.altercharge.app.R
+import com.altercharge.app.ui.designsystem.layout.AppLayoutInfo
+import com.altercharge.app.ui.designsystem.layout.FormFactor
+import com.altercharge.app.ui.designsystem.layout.LocalAppLayout
 import com.altercharge.app.ui.designsystem.theme.AlterFontWeight
 import com.altercharge.app.ui.designsystem.theme.AlterMargin
 import com.altercharge.app.ui.designsystem.theme.AlterPadding
 import com.altercharge.app.ui.designsystem.theme.AlterRadius
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
+import com.altercharge.app.ui.designsystem.theme.DarkAlterColors
+import com.altercharge.app.ui.designsystem.theme.LightAlterColors
 
-/** 차량 상태. 상단 바 칩에 쓴다. */
-enum class DriveState { PARKED, DRIVING, CHARGING, ARRIVED }
+/**
+ * 차량 상태. 상단 바 칩의 원 안 기호와 문구를 정한다.
+ * Figma status_bar (444:40718) state: parked(P) · charging(⚡) · arrived(✓). 주행 중은 시안에 없다.
+ */
+enum class DriveState { PARKED, CHARGING, ARRIVED }
 
 /**
  * 숫자 값의 상태. 디자이너 확정: 불러오는 중이면 "확인 중", 제공되지 않거나 확인할 수 없으면 "정보 없음".
+ * 응답이 없거나 시간이 지나면 Unavailable로 바꾼다 (Figma status_bar 설명 601:57722).
  */
 sealed interface StatusValue {
     data class Ready(val value: Int) : StatusValue
@@ -43,17 +52,32 @@ sealed interface StatusValue {
     data object Unavailable : StatusValue
 }
 
-/** 앱 상단 바에 넘기는 값. Figma status_bar (455:58782). */
+/**
+ * 앱 상단 바에 넘기는 값. Figma status_bar (444:40718)의 data variant는 [battery]가 정한다:
+ * Ready면 "32%"(와 [range]가 Ready일 때 "98km"), Loading이면 "확인 중", Unavailable이면 "정보 없음".
+ * 배터리 값이 없으면 km는 숨긴다.
+ */
 @Immutable
 data class StatusBarUiState(
     val driveState: DriveState,
     /** 배터리 % */
     val battery: StatusValue,
-    /** 갈 수 있는 거리 km */
+    /** 갈 수 있는 거리 km. Ready가 아니면 숨긴다. */
     val range: StatusValue,
     /** 실내 온도 °C. 모르면 null (온도 항목을 숨긴다) */
     val temperatureC: Int?,
 )
+
+/**
+ * 상단 바 크기 (Figma variant size).
+ * - REGULAR: 가로형 화면(S-17 · W-Standard · W-Extended) · 전체 항목.
+ * - COMPACT: WF 세로 등 좁은 화면. 앱 이름 · 상태 칩 · 배터리 % · 시간만 (km · 온도 · 연결 아이콘 생략).
+ */
+enum class StatusBarSize { REGULAR, COMPACT }
+
+/** 폼팩터에 맞는 상단 바 크기. Figma 화면 기준 compact는 WF 세로(452:54321)뿐이다. */
+fun statusBarSizeFor(layout: AppLayoutInfo): StatusBarSize =
+    if (layout.formFactor == FormFactor.WF && !layout.isLandscape) StatusBarSize.COMPACT else StatusBarSize.REGULAR
 
 // 디자인 값에 없는 상단 바 고유 치수 (Figma status_bar 444:40718)
 private val StatusBarHeight = 56.dp
@@ -65,26 +89,60 @@ private val DividerHeight = 20.dp
 private val BatteryGap = 6.dp
 private val ConnectivityIconSize = 24.dp
 private val ConnectivityGap = 12.dp
+private val BoltIconSize = 20.dp
+private val CheckIconSize = 16.dp
 
 /** 기획 확정: 연결 아이콘과 시간은 실제 값 대신 더미로 표시한다 (시안 값). TODO 실제 시각을 연결하면 지운다. */
 private const val DummyTime = "14:05"
 
-/** 기어 원 안 글자. 시안 기준 흰색 고정 (라이트/다크 같음) */
-private val GearLetterColor = Color.White
+/**
+ * 상태 원 색 (Figma 05 Components status_bar/gear/{parked, charging, arrived, icon, arrived_icon}). 상단 바에서만 쓰는 값이라 여기 둔다.
+ * parked는 blue_500(L #3B6FE0 / D #3562C4)을 참조한다.
+ */
+private data class GearPalette(
+    val parked: Color,
+    val charging: Color,
+    val arrived: Color,
+    /** P 글자 · 번개 */
+    val icon: Color,
+    /** 도착 체크 */
+    val arrivedIcon: Color,
+)
+
+private val GearPaletteLight = GearPalette(
+    parked = LightAlterColors.blue500,
+    charging = Color(0xFF00B975),
+    arrived = Color(0xFF131417),
+    icon = Color(0xFFFFFFFF),
+    arrivedIcon = Color(0xFFFFFFFF),
+)
+
+private val GearPaletteDark = GearPalette(
+    parked = DarkAlterColors.blue500,
+    charging = Color(0xFF00B975),
+    arrived = Color(0xFFFFFFFF),
+    icon = Color(0xFFFFFFFF),
+    arrivedIcon = Color(0xFF131417),
+)
 
 /**
  * 앱 상단 바. 왼쪽 앱 이름, 오른쪽 차량 상태 칩 · 배터리 · 온도 · 연결 아이콘 · 시간.
  * 폭이 좁으면 앱 이름이 말줄임되고 오른쪽 그룹은 그대로 둔다(줄바꿈 없음).
  * 연결 아이콘(블루투스 · 와이파이 · LTE)과 시간은 기획 확정에 따라 더미로 보여준다.
+ *
+ * @param size 기본값은 [AlterChargeLayout][com.altercharge.app.ui.designsystem.layout.AlterChargeLayout]이
+ *   고른 폼팩터로 정한다 ([statusBarSizeFor]).
  */
 @Composable
 fun StatusBar(
     state: StatusBarUiState,
     modifier: Modifier = Modifier,
+    size: StatusBarSize = statusBarSizeFor(LocalAppLayout.current),
 ) {
     val colors = AlterTheme.colors
     val typography = AlterTheme.typography
     val labelStrong = typography.labelSmall.copy(fontWeight = AlterFontWeight.Strong)
+    val regular = size == StatusBarSize.REGULAR
 
     Row(
         modifier = modifier
@@ -101,7 +159,8 @@ fun StatusBar(
             modifier = Modifier.weight(1f, fill = false),
         )
         Row(
-            horizontalArrangement = Arrangement.spacedBy(AlterMargin.Large),
+            // regular 24 (margin_large) · compact 16 (margin_normal)
+            horizontalArrangement = Arrangement.spacedBy(if (regular) AlterMargin.Large else AlterMargin.Normal),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             GearChip(state.driveState)
@@ -110,49 +169,56 @@ fun StatusBar(
                 horizontalArrangement = Arrangement.spacedBy(BatteryGap),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // 둘 다 값이 없고 상태가 같으면 문구를 한 번만 보여준다 ("확인 중" 또는 "정보 없음")
-                if (state.battery !is StatusValue.Ready && state.battery == state.range) {
+                val battery = state.battery
+                if (battery is StatusValue.Ready) {
                     SingleLineText(
-                        text = state.battery.text(R.string.status_bar_battery_percent),
-                        style = typography.labelSmall,
-                        color = colors.textTertiary,
+                        text = stringResource(R.string.status_bar_battery_percent, battery.value.toString()),
+                        style = labelStrong,
+                        color = colors.textPrimary,
                     )
+                    val range = state.range
+                    if (regular && range is StatusValue.Ready) {
+                        SingleLineText(
+                            text = stringResource(R.string.status_bar_range, range.value.toString()),
+                            style = typography.labelSmall,
+                            color = colors.textTertiary,
+                        )
+                    }
                 } else {
                     SingleLineText(
-                        text = state.battery.text(R.string.status_bar_battery_percent),
-                        style = if (state.battery is StatusValue.Ready) labelStrong else typography.labelSmall,
-                        color = if (state.battery is StatusValue.Ready) colors.textPrimary else colors.textTertiary,
-                    )
-                    SingleLineText(
-                        text = state.range.text(R.string.status_bar_range),
+                        text = stringResource(
+                            if (battery == StatusValue.Loading) R.string.common_value_loading else R.string.common_value_unavailable,
+                        ),
                         style = typography.labelSmall,
                         color = colors.textTertiary,
                     )
                 }
             }
-            state.temperatureC?.let {
-                SingleLineText(
-                    text = stringResource(R.string.status_bar_temperature, it),
-                    style = typography.labelSmall,
-                    color = colors.textSecondary,
-                )
-            }
-            VerticalDivider()
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(ConnectivityGap),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                listOf(
-                    R.drawable.ic_status_bluetooth,
-                    R.drawable.ic_status_wifi,
-                    R.drawable.ic_status_lte,
-                ).forEach {
-                    Icon(
-                        painter = painterResource(it),
-                        contentDescription = null,
-                        tint = colors.textSecondary,
-                        modifier = Modifier.size(ConnectivityIconSize),
+            if (regular) {
+                state.temperatureC?.let {
+                    SingleLineText(
+                        text = stringResource(R.string.status_bar_temperature, it),
+                        style = typography.labelSmall,
+                        color = colors.textSecondary,
                     )
+                }
+                VerticalDivider()
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(ConnectivityGap),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    listOf(
+                        R.drawable.ic_status_bluetooth,
+                        R.drawable.ic_status_wifi,
+                        R.drawable.ic_status_lte,
+                    ).forEach {
+                        Icon(
+                            painter = painterResource(it),
+                            contentDescription = null,
+                            tint = colors.textSecondary,
+                            modifier = Modifier.size(ConnectivityIconSize),
+                        )
+                    }
                 }
             }
             SingleLineText(text = DummyTime, style = labelStrong, color = colors.textPrimary)
@@ -160,11 +226,12 @@ fun StatusBar(
     }
 }
 
-/** 차량 상태 칩. 파란 원 안 기어 글자 + 상태 문구 */
+/** 차량 상태 칩. 상태 원(P · ⚡ · ✓) + 상태 문구 */
 @Composable
 private fun GearChip(driveState: DriveState) {
     val colors = AlterTheme.colors
     val typography = AlterTheme.typography
+    val gear = if (colors.isDark) GearPaletteDark else GearPaletteLight
     val capsule = RoundedCornerShape(AlterRadius.Full)
     Row(
         modifier = Modifier
@@ -180,17 +247,34 @@ private fun GearChip(driveState: DriveState) {
         horizontalArrangement = Arrangement.spacedBy(AlterMargin.XSmall),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        val circle = when (driveState) {
+            DriveState.PARKED -> gear.parked
+            DriveState.CHARGING -> gear.charging
+            DriveState.ARRIVED -> gear.arrived
+        }
         Box(
             modifier = Modifier
                 .size(GearCircleSize)
-                .background(colors.blue500, capsule),
+                .background(circle, capsule),
             contentAlignment = Alignment.Center,
         ) {
-            driveState.gearLetterRes()?.let {
-                SingleLineText(
-                    text = stringResource(it),
+            when (driveState) {
+                DriveState.PARKED -> SingleLineText(
+                    text = stringResource(R.string.status_bar_gear_parked),
                     style = typography.labelXSmall.copy(fontWeight = AlterFontWeight.Strong),
-                    color = GearLetterColor,
+                    color = gear.icon,
+                )
+                DriveState.CHARGING -> Icon(
+                    painter = painterResource(R.drawable.ic_status_bolt),
+                    contentDescription = null,
+                    tint = gear.icon,
+                    modifier = Modifier.size(BoltIconSize),
+                )
+                DriveState.ARRIVED -> Icon(
+                    painter = painterResource(R.drawable.ic_status_check),
+                    contentDescription = null,
+                    tint = gear.arrivedIcon,
+                    modifier = Modifier.size(CheckIconSize),
                 )
             }
         }
@@ -204,6 +288,7 @@ private fun GearChip(driveState: DriveState) {
 
 @Composable
 private fun VerticalDivider() {
+    // Figma divider는 basic_200 (L #E0E1E6 / D #44464E) = surface_accent와 같은 값
     Box(
         Modifier
             .width(DividerWidth)
@@ -230,26 +315,9 @@ private fun SingleLineText(
     )
 }
 
-/** 값 상태를 문구로. 값이 있으면 [format]에 숫자를 넣는다. */
-@Composable
-private fun StatusValue.text(@StringRes format: Int): String = when (this) {
-    is StatusValue.Ready -> stringResource(format, value.toString())
-    StatusValue.Loading -> stringResource(R.string.common_value_loading)
-    StatusValue.Unavailable -> stringResource(R.string.common_value_unavailable)
-}
-
 @StringRes
 private fun DriveState.labelRes(): Int = when (this) {
     DriveState.PARKED -> R.string.status_bar_parked
-    DriveState.DRIVING -> R.string.status_bar_driving
     DriveState.CHARGING -> R.string.status_bar_charging
     DriveState.ARRIVED -> R.string.status_bar_arrived
-}
-
-/** 원 안 기어 글자. 시안은 주차(P)만 있다. */
-@StringRes
-private fun DriveState.gearLetterRes(): Int? = when (this) {
-    DriveState.PARKED -> R.string.status_bar_gear_parked
-    // TODO 디자이너 확인: 주행 · 충전 · 도착일 때 원 안 글자(와 원 색). 확정 전까지 빈 원으로 둔다.
-    DriveState.DRIVING, DriveState.CHARGING, DriveState.ARRIVED -> null
 }

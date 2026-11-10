@@ -22,7 +22,6 @@
     <!-- 세로 카드 헤드라인 (가로와 다른 것만) -->
     <string name="card_vehicle_status_portrait_headline_charge_recommended">출발 전\n충전 권장</string>
     <string name="card_vehicle_status_portrait_headline_charging_critical">배터리 부족\n충전 중</string>
-    <string name="card_vehicle_status_portrait_headline_paused">충전 일시정지\n곧 재개</string>
     <string name="card_vehicle_status_portrait_headline_depleted">배터리 방전\n긴급 출동 필요</string>
     <string name="card_vehicle_status_portrait_headline_charge_error">충전 오류\n점검 필요</string>
     <string name="card_vehicle_status_portrait_headline_no_data">차량 정보\n불러오기 실패</string>
@@ -47,8 +46,7 @@
     <string name="card_vehicle_status_status_scheduled">예약 충전 대기 중</string>
     <string name="card_vehicle_status_status_depleted">지금은 주행할 수 없어요</string>
     <string name="card_vehicle_status_status_fault_communication">충전기 통신 오류 · E-21</string>
-    <!-- 충전 오류 3종 (REQ_EX_002). 충전기 고장(E-11)은 시안 문구, 커넥터 체결 불량은 시안이 없어 명세서 문구다.
-         TODO 디자이너 확인: 커넥터 체결 불량 문구 -->
+    <!-- 충전 오류 3종 (REQ_EX_002). 충전기 고장 · 커넥터 체결 불량은 06 Strings card_vehicle_status/fault/* 확정 문구 -->
     <string name="card_vehicle_status_status_fault_connector">커넥터 체결 불량</string>
     <string name="card_vehicle_status_status_fault_charger">충전기 고장 · E-11</string>
     <string name="card_vehicle_status_status_last_updated">마지막 업데이트 %1$s</string>
@@ -69,17 +67,17 @@
     <string name="card_vehicle_status_tile_cause_charger">충전기 고장</string>
     <string name="card_vehicle_status_tile_action">조치</string>
     <string name="card_vehicle_status_tile_action_reconnect">재연결</string>
-    <!-- 조치 타일은 값 + 단위로 읽는다: "커넥터 다시 꽂기", "다른 충전소 이용" -->
-    <string name="card_vehicle_status_tile_action_replug">커넥터</string>
-    <string name="card_vehicle_status_tile_action_other_station">다른 충전소</string>
+    <!-- 조치 타일은 값 + 단위로 읽는다: "커넥터 다시 연결", "다른 충전기 사용" (06 Strings fault/*_action) -->
+    <string name="card_vehicle_status_tile_action_connector">커넥터</string>
+    <string name="card_vehicle_status_tile_action_another_charger">다른 충전기</string>
     <string name="card_vehicle_status_tile_retry">다시 시도</string>
     <string name="card_vehicle_status_unit_km" translatable="false">km</string>
     <string name="card_vehicle_status_unit_expected">예정</string>
     <string name="card_vehicle_status_unit_done">완료</string>
     <string name="card_vehicle_status_unit_24h">24시간</string>
     <string name="card_vehicle_status_unit_then_retry">후 재시도</string>
-    <string name="card_vehicle_status_unit_replug">다시 꽂기</string>
-    <string name="card_vehicle_status_unit_use">이용</string>
+    <string name="card_vehicle_status_unit_reconnect_connector">다시 연결</string>
+    <string name="card_vehicle_status_unit_use_another_charger">사용</string>
     <string name="card_vehicle_status_unit_seconds_later">초 후</string>
 
     <!-- 값을 모를 때 -->

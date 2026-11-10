@@ -1,9 +1,11 @@
 package com.altercharge.app.ui.card.vehiclestatus
 
+import android.graphics.BlurMaskFilter
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -15,6 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,13 +25,19 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -61,6 +70,50 @@ internal fun Headline(
         overflow = TextOverflow.Ellipsis,
     )
 }
+
+/**
+ * 줄 수를 넘으면 글자를 한 단계씩 줄이는 헤드라인 (개발자 Q&A Q1).
+ * [styles]를 큰 것부터 차례로 재서 [maxLines] 안에 들어오는 첫 크기를 쓴다.
+ * 가장 작은 크기에서도 넘치면 [maxLines]까지 보여주고 말줄임한다.
+ */
+@Composable
+internal fun AutoShrinkHeadline(
+    text: String,
+    styles: List<TextStyle>,
+    modifier: Modifier = Modifier,
+    maxLines: Int = AUTO_SHRINK_HEADLINE_MAX_LINES,
+    lineBreak: LineBreak = PortraitHeadlineLineBreak,
+) {
+    val measurer = rememberTextMeasurer()
+    // 글자 크기 설정(fontScale)이 바뀌면 다시 재야 한다
+    val density = LocalDensity.current
+    BoxWithConstraints(modifier) {
+        val maxWidth = constraints.maxWidth
+        val candidates = remember(styles, lineBreak) {
+            styles.map { it.copy(fontWeight = AlterFontWeight.Strong, lineBreak = lineBreak) }
+        }
+        val style = remember(text, candidates, maxWidth, maxLines, density) {
+            candidates.firstOrNull { candidate ->
+                !measurer.measure(
+                    text = text,
+                    style = candidate,
+                    maxLines = maxLines,
+                    constraints = Constraints(maxWidth = maxWidth),
+                ).hasVisualOverflow
+            } ?: candidates.last()
+        }
+        Text(
+            text = text,
+            style = style,
+            color = AlterTheme.colors.textPrimary,
+            maxLines = maxLines,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/** 자동 축소 헤드라인 줄 수. Figma portrait · portrait_tall · portrait_compact 헤드라인 2줄 말줄임 */
+private const val AUTO_SHRINK_HEADLINE_MAX_LINES = 2
 
 /** 차량 이미지가 놓이는 면. 왼쪽 위에 연결 칩이 뜬다 (WF는 16, 나머지는 24 안쪽). */
 @Composable
@@ -165,12 +218,14 @@ internal fun BatteryDetail(
     content: CardContent,
     statusStyle: TextStyle,
     horizontalAlignment: Alignment.Horizontal,
+    gap: Dp = BatteryTileGap,
+    showStatus: Boolean = true,
 ) {
     val colors = AlterTheme.colors
     val typography = AlterTheme.typography
     Column(
         horizontalAlignment = horizontalAlignment,
-        verticalArrangement = Arrangement.spacedBy(BatteryTileGap),
+        verticalArrangement = Arrangement.spacedBy(gap),
     ) {
         BatteryGauge(
             level = content.gaugeLevel,
@@ -178,12 +233,14 @@ internal fun BatteryDetail(
             outline = colors.surfaceHigh,
             emptyCellBorder = colors.surfaceHigh,
         )
-        StatusText(
-            status = content.status,
-            numberStyle = statusStyle.copy(fontWeight = AlterFontWeight.Normal, color = colors.textPrimary),
-            unitStyle = statusStyle.copy(fontWeight = AlterFontWeight.Normal, color = colors.textTertiary),
-            plainStyle = typography.labelMedium.copy(color = colors.textTertiary),
-        )
+        if (showStatus) {
+            StatusText(
+                status = content.status,
+                numberStyle = statusStyle.copy(fontWeight = AlterFontWeight.Normal, color = colors.textPrimary),
+                unitStyle = statusStyle.copy(fontWeight = AlterFontWeight.Normal, color = colors.textTertiary),
+                plainStyle = typography.labelMedium.copy(color = colors.textTertiary),
+            )
+        }
     }
 }
 
@@ -227,6 +284,16 @@ private fun ChipStatus(chip: ConnectionChip, modifier: Modifier = Modifier) {
             Box(
                 modifier = Modifier
                     .size(ChipDotSize)
+                    .drawBehind {
+                        val glowRadius = size.minDimension / 2 + ChipDotGlowSpread.toPx()
+                        val blur = figmaBlurToAndroidRadius(ChipDotGlowBlur.toPx())
+                        val paint = android.graphics.Paint().apply {
+                            isAntiAlias = true
+                            color = ChipDotGlowColor.toArgb()
+                            if (blur > 0f) maskFilter = BlurMaskFilter(blur, BlurMaskFilter.Blur.NORMAL)
+                        }
+                        drawIntoCanvas { it.nativeCanvas.drawCircle(center.x, center.y, glowRadius, paint) }
+                    }
                     .background(dotColor, CircleShape),
             )
             Text(
@@ -245,6 +312,7 @@ internal fun GlassPanel(
     modifier: Modifier,
     contentPadding: Dp,
     glassAlpha: Float = GlassAlpha,
+    verticalPadding: Dp = contentPadding,
     content: @Composable () -> Unit,
 ) {
     val colors = AlterTheme.colors
@@ -255,7 +323,7 @@ internal fun GlassPanel(
             .clip(shape)
             .background(colors.surfaceHigh.copy(alpha = glassAlpha), shape)
             .border(GlassEdgeWidth, colors.surface.copy(alpha = GlassEdgeAlpha), shape)
-            .padding(contentPadding),
+            .padding(horizontal = contentPadding, vertical = verticalPadding),
     ) {
         content()
     }
@@ -276,19 +344,37 @@ internal fun RowScope.Soc(
         modifier = Modifier.alignByBaseline(),
         horizontalArrangement = Arrangement.spacedBy(SocGap),
     ) {
-        Text(
-            // 센서 값이 범위를 벗어나도 0~100으로 보여 준다.
-            text = state.socPercent?.coerceIn(0, MAX_SOC)?.toString()
-                ?: stringResource(R.string.card_vehicle_status_soc_unknown),
-            modifier = Modifier.alignByBaseline(),
-            style = if (known && glow) {
-                valueStyle.copy(shadow = Shadow(content.accent.copy(alpha = SocGlowAlpha), Offset.Zero, SocGlowBlur))
-            } else {
-                valueStyle
-            },
-            color = content.accent,
-            maxLines = 1,
-        )
+        // 센서 값이 범위를 벗어나도 0~100으로 보여 준다.
+        val socText = state.socPercent?.coerceIn(0, MAX_SOC)?.toString()
+            ?: stringResource(R.string.card_vehicle_status_soc_unknown)
+        if (known && glow) {
+            // Compose 글자 그림자는 한 겹이라 같은 글자를 두 번 겹쳐 그림자 두 겹을 낸다 (글자 색이 불투명이라 겹쳐도 같다)
+            val density = LocalDensity.current
+            val wide = with(density) { figmaBlurToAndroidRadius(SocGlowWideBlur.toPx()) }
+            val near = with(density) { figmaBlurToAndroidRadius(SocGlowNearBlur.toPx()) }
+            Box(modifier = Modifier.alignByBaseline()) {
+                Text(
+                    text = socText,
+                    style = valueStyle.copy(shadow = Shadow(content.accent.copy(alpha = SocGlowWideAlpha), Offset.Zero, wide)),
+                    color = content.accent,
+                    maxLines = 1,
+                )
+                Text(
+                    text = socText,
+                    style = valueStyle.copy(shadow = Shadow(content.accent.copy(alpha = SocGlowNearAlpha), Offset.Zero, near)),
+                    color = content.accent,
+                    maxLines = 1,
+                )
+            }
+        } else {
+            Text(
+                text = socText,
+                modifier = Modifier.alignByBaseline(),
+                style = valueStyle,
+                color = content.accent,
+                maxLines = 1,
+            )
+        }
         Text(
             text = stringResource(R.string.card_vehicle_status_percent_unit),
             modifier = Modifier.alignByBaseline(),
@@ -459,7 +545,6 @@ internal class StageImageSpec(
     val imageEndPadding: Dp = 0.dp,
 )
 
-/** 세로 충전기 연결 · 대기 · 오류 (03 · 05 · 08 · 11): 원 253, 스테이지 오른쪽에서 19 안 · 위로 21 나감. 차 242×153 */
 /** battery_tile/gap */
 internal val BatteryTileGap = 12.dp
 
@@ -475,15 +560,33 @@ private const val GlassAlpha = 0.55f
  * Figma는 surface_high 55% + 뒤 흐림 20 + 그림자라, 렌더 결과가 스테이지(#F7F8FA) 위든 흰 카드 위든 #EFF0F3 근처로 고르다
  * (366:37686 · 366:37763 · 366:37801 · 366:37835, 세로 455:60518 캡처 실측). 55%만 쓰면 스테이지가 끝나는 줄에 이음새가 보여
  * 렌더 색에 맞춰 90%로 둔다(흰 위 #EFF0F3, #F7F8FA 위 #EEEFF2). 가로는 뒤에 차 이미지가 있어 55% 그대로.
+ * 다크는 Figma 렌더가 55% 그대로와 같다(EN 다크 07 세로 457:78886 실측 #28292D = #313236 55% · 카드 #1D1E21 45%).
  */
-internal const val FlatStageGlassAlpha = 0.9f
+internal val FlatStageGlassAlpha: Float
+    @Composable get() = if (AlterTheme.colors.isDark) GlassAlpha else FLAT_STAGE_GLASS_ALPHA_LIGHT
+
+private const val FLAT_STAGE_GLASS_ALPHA_LIGHT = 0.9f
 private const val GlassEdgeAlpha = 0.8f
 private val GlassEdgeWidth = 1.5.dp
 
-/** soc/gap, SOC 숫자 빛번짐 (text-shadow 0 0 64, 22%) */
+/** soc/gap, SOC 숫자 빛번짐 두 겹 (soc_value text-shadow 0 0 64 22% · 0 0 24 10%, 457:78886) */
 private val SocGap = 4.dp
-private const val SocGlowAlpha = 0.22f
-private const val SocGlowBlur = 64f
+private const val SocGlowWideAlpha = 0.22f
+private val SocGlowWideBlur = 64.dp
+private const val SocGlowNearAlpha = 0.10f
+private val SocGlowNearBlur = 24.dp
+
+/** 칩 점 빛번짐 (dot drop shadow 0 0 blur 6 spread 2, #99C6CF 35%. 라이트 · 다크 같음) */
+private val ChipDotGlowSpread = 2.dp
+private val ChipDotGlowBlur = 6.dp
+private val ChipDotGlowColor = Color(0x5999C6CF)
+
+/**
+ * Figma blur(= 가우스 표준편차 × 2)를 안드로이드 blur 반지름(px)으로 바꾼다.
+ * 안드로이드는 반지름 r을 표준편차 0.57735 × r + 0.5로 쓴다.
+ */
+private fun figmaBlurToAndroidRadius(blurPx: Float): Float =
+    ((blurPx / 2f - 0.5f) / 0.57735f).coerceAtLeast(0f)
 
 /** gauge: 칸 4개, 칸 30×40, 테두리 2, 꼭지 7×22 */
 internal const val GaugeCells = 4

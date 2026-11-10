@@ -53,6 +53,16 @@ data class AlterColors(
     val surfaceAccent: Color,
     /** 입력 필드 바탕 */
     val fieldBackground: Color,
+    /**
+     * 화면 위 카드 면 (05 Components common/container/background → surface_basic).
+     * C 차량 상태, 충전소 카드 등. 다크에서 화면 배경보다 한 톤 밝다 (개발자 Q&A Q2)
+     */
+    val containerBackground: Color,
+    /**
+     * 화면 위 옅은 카드 면 (common/container/background_subtle → basic_50).
+     * L2 주간 주행 기록, 충전소 목록 패널
+     */
+    val containerBackgroundSubtle: Color,
 
     // 버튼 (button/contrast, button/common/disabled)
     val buttonContrastContainer: Color,
@@ -96,6 +106,8 @@ val LightAlterColors = AlterColors(
     surfaceHigh = Color(0xFFEDEEF2),
     surfaceAccent = Color(0xFFE0E1E6),
     fieldBackground = Color(0xFFFFFFFF),
+    containerBackground = Color(0xFFFFFFFF),
+    containerBackgroundSubtle = Color(0xFFF7F8FA),
 
     buttonContrastContainer = Color(0xFF131417),
     buttonContrastLabel = Color(0xFFFFFFFF),
@@ -133,6 +145,8 @@ val DarkAlterColors = AlterColors(
     surfaceHigh = Color(0xFF313236),
     surfaceAccent = Color(0xFF44464E),
     fieldBackground = Color(0xFF131417),
+    containerBackground = Color(0xFF1D1E21),
+    containerBackgroundSubtle = Color(0xFF1D1E21),
 
     buttonContrastContainer = Color(0xFFFFFFFF),
     buttonContrastLabel = Color(0xFF131417),

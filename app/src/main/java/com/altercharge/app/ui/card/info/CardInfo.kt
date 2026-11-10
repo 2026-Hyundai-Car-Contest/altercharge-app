@@ -127,7 +127,6 @@ fun CardInfo(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                // TODO 디자이너 확인: 영문 "Within 3 days"가 가로 폭에서 말줄임으로 잘린다.
                 Text(
                     text = stringResource(status.titleRes),
                     style = spec.titleStyle(),
@@ -226,17 +225,20 @@ private val LandscapeSpec = ModeSpec(
     AlterPadding.Large, 252.dp, 279.dp, isWf = false,
     boltFromRight = 299.0.dp, boltTop = (-9.7).dp, boltWidth = 381.9.dp, boltHeight = 387.4.dp,
 )
+// 세로 제목 영역 232 (개발자 Q&A Q5: 212 → 232, 영문 "Tomorrow" 213이 잘리지 않게)
 private val PortraitSpec = ModeSpec(
-    AlterPadding.Normal, 212.dp, 279.dp, isWf = false,
+    AlterPadding.Normal, 232.dp, 279.dp, isWf = false,
     boltFromRight = 244.6.dp, boltTop = (-9.4).dp, boltWidth = 371.6.dp, boltHeight = 376.9.dp,
 )
 private val WfLandscapeSpec = ModeSpec(
     AlterPadding.Normal, 217.dp, 262.dp, isWf = true,
     boltFromRight = 242.9.dp, boltTop = (-7.9).dp, boltWidth = 311.4.dp, boltHeight = 315.9.dp,
 )
+// WF 세로는 카드 폭이 584(Q&A Q4, 화면 인스턴스 452:54383)이고 번개는 왼쪽 x 319 그대로라
+// 584 기준 오른쪽 거리 = 584 − (319 + 14.8)
 private val WfPortraitSpec = ModeSpec(
     AlterPadding.Normal, 290.dp, 262.dp, isWf = true,
-    boltFromRight = 246.2.dp, boltTop = (-6.9).dp, boltWidth = 269.8.dp, boltHeight = 273.8.dp,
+    boltFromRight = 250.2.dp, boltTop = (-6.9).dp, boltWidth = 269.8.dp, boltHeight = 273.8.dp,
 )
 
 private fun CardInfoMode.spec(): ModeSpec = when (this) {
@@ -364,10 +366,10 @@ private fun CardInfoPortraitDarkPreview() =
 private fun CardInfoWfLandscapePreview() =
     CardInfoPreviewColumn(CardInfoMode.WF_LANDSCAPE, 387.dp, darkTheme = false)
 
-@Preview(name = "WF 세로 · 라이트", widthDp = 628, heightDp = 900)
+@Preview(name = "WF 세로 · 라이트", widthDp = 632, heightDp = 900)
 @Composable
 private fun CardInfoWfPortraitPreview() =
-    CardInfoPreviewColumn(CardInfoMode.WF_PORTRAIT, 580.dp, darkTheme = false)
+    CardInfoPreviewColumn(CardInfoMode.WF_PORTRAIT, 584.dp, darkTheme = false)
 
 @Preview(name = "가로 383 · 영문", widthDp = 431, heightDp = 1200, locale = "en")
 @Composable
