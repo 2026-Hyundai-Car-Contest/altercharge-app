@@ -137,7 +137,7 @@ enum class ChargeFault {
  */
 @Immutable
 data class CardVehicleStatusUiState(
-    /** 운전자 이름 (헤드라인에 들어간다) */
+    /** 운전자 이름 (헤드라인에 들어간다). MVP는 고정값이라 화면에서 stringResource(R.string.common_driver_name)을 넘긴다 */
     val driverName: String,
     val charging: ChargingState,
     /** 배터리 %. 모르면 null ("—" 표시, 12 차량 정보 없음) */

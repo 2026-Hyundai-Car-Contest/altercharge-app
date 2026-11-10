@@ -52,6 +52,9 @@ import com.altercharge.app.ui.designsystem.theme.AlterTheme
  *   WF는 스크롤 없음 규칙이라 이 값을 무시한다 (FormFactor.landscapeLeftScrollable).
  *
  * 슬롯 안에서는 [LocalAppLayout]으로 이 틀이 고른 폼팩터와 방향을 읽을 수 있다.
+ *
+ * 이 틀은 화면 배경을 칠하지 않는다. 화면 쪽에서 AlterChargeTheme 안에
+ * Box(Modifier.fillMaxSize().background(AlterTheme.colors.screenBackground))로 감싼다.
  */
 @Composable
 fun AlterChargeLayout(
@@ -197,7 +200,7 @@ private fun ScrollFade(modifier: Modifier) {
  *
  * - 기본(S-17 · W-Extended): S-17 세로 하이파이 기준. 여백 · 간격은 AreaSpec, C 652, 1행 368, 2행 576, 페이드 200 (461:14853).
  *   위치: 상태 바 y 32 → C y 108 → 1행 y 780 → 2행 y 1168 (앱 바 자리 80이 아니라 상태 바 56 + 거터 20).
- *   TODO 디자이너 확인: 1행 칸은 368인데 L1 card_info 세로 모드 높이는 358이라 칸 아래 10이 빈다.
+ *   1행 칸은 368이고 L1 card_info 세로는 358이라 칸 아래 10이 빈다 (하이파이 화면도 같다: row_1 368 안에 L1 358).
  * - W-Standard: 화면 altercharge/home/24_6_connect_w_standard/portrait (452:53649, 800×810) 값.
  *   이 화면은 layout 변수가 연결돼 있지 않아 pleos 값(margin 32 · gutter 20 · app_padding 24) 대신 화면 값을 쓴다:
  *   좌우 12 · 위 16 · 세로 간격 16 · 행 안 가로 간격 20(378 + 20 + 378) · C 776×338(portrait_compact, Q&A Q3) ·

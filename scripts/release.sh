@@ -33,7 +33,8 @@ say "서명 확인"
 SIGNER=""
 for jar in "$SDK"/build-tools/*/lib/apksigner.jar; do [ -f "$jar" ] && SIGNER="$jar"; done
 if [ -n "$SIGNER" ]; then
-  "$JAVA_HOME/bin/java" -jar "$SIGNER" verify "$SRC" >/dev/null && ok "서명 검증 통과"
+  "$JAVA_HOME/bin/java" -jar "$SIGNER" verify "$SRC" >/dev/null || die "서명 검증에 실패했어요. keystore.properties의 값을 확인해 주세요."
+  ok "서명 검증 통과"
 else
   warn "apksigner를 찾지 못해 서명 검증은 건너뛰었어요."
 fi

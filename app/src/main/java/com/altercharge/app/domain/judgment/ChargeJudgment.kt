@@ -1,14 +1,14 @@
 package com.altercharge.app.domain.judgment
 
-import kotlin.math.floor
-
 /**
  * 충전 판정에 넣는 값. data 쪽이 차량 데이터와 저장된 주행 기록으로 채운다.
  *
  * @property rangeKm 차량 주행가능거리(km)
  * @property socPercent 배터리 잔량(%)
  * @property recentDailyKm 최근 일별 주행거리(km). 오래된 날 → 오늘 순, 운행하지 않은 날은 0.
- *   기록이 있는 날만 담는다. 14일보다 많으면 마지막 14일만 쓴다.
+ *   기록이 있는 날만 담는다(앱을 쓴 지 10일이면 10개). 14일보다 많으면 마지막 14일만 쓴다.
+ *   7개 미만이면 기본값을 쓰고, 7~13개여도 일 평균은 명세서대로 14로 나눈다.
+ *   TODO 기획 확인: 기록이 7~13일일 때 14 대신 기록 일수로 나눌지(지금은 평균이 낮게 나온다).
  */
 data class JudgmentInput(
     val rangeKm: Int,
@@ -69,17 +69,21 @@ fun judge(input: JudgmentInput): Judgment {
     val records = input.recentDailyKm.takeLast(WINDOW_DAYS).map { it.coerceAtLeast(0) }
     val enoughRecords = records.size >= MIN_RECORD_DAYS
 
+    val totalKm = records.sum()
     val averageDailyKm: Double =
-        if (enoughRecords) records.sum().toDouble() / WINDOW_DAYS else DEFAULT_DAILY_KM.toDouble()
+        if (enoughRecords) totalKm.toDouble() / WINDOW_DAYS else DEFAULT_DAILY_KM.toDouble()
     val reserveKm: Int =
         if (enoughRecords) reserveFrom(records) else DEFAULT_DAILY_KM
 
     val drivableKm = (input.rangeKm.coerceAtLeast(0) - reserveKm).coerceAtLeast(0)
+    // 소수로 나누면 딱 떨어지는 경계에서 하루 모자라게 나올 수 있어(예: 9 ÷ (9/14) = 13.99…) 정수로 계산한다.
+    // 거리 ÷ (합 ÷ 14) = 거리 × 14 ÷ 합
     val daysLeft = when {
         drivableKm == 0 -> 0
-        averageDailyKm <= 0.0 -> MAX_DAYS_LEFT
-        else -> floor(drivableKm / averageDailyKm).toInt().coerceIn(0, MAX_DAYS_LEFT)
-    }
+        !enoughRecords -> drivableKm / DEFAULT_DAILY_KM
+        totalKm == 0 -> MAX_DAYS_LEFT
+        else -> (drivableKm.toLong() * WINDOW_DAYS / totalKm).toInt()
+    }.coerceIn(0, MAX_DAYS_LEFT)
 
     val chargeRecommended =
         daysLeft <= RECOMMEND_DAYS_LEFT || input.socPercent <= RECOMMEND_SOC_PERCENT
