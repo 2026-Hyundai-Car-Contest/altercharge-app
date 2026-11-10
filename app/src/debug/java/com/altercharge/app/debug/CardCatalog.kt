@@ -1,5 +1,6 @@
 package com.altercharge.app.debug
 
+import android.content.res.Configuration
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,11 +13,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -165,6 +169,61 @@ fun CardsCatalog() {
                 }
             }
         }
+        HeadlineShrinkSamples()
+    }
+}
+
+/**
+ * KO · EN 확인: L1 세로(제목 폭 232)와 C 세로 헤드라인 자동 축소(60 → 56 → 48 → 40, 40에서도 넘치면 2줄 말줄임).
+ * C는 07 일시정지(KO 48 · EN 40 기대)와 긴 영문 헤드라인을 모드별로 보여 준다.
+ */
+@Composable
+private fun HeadlineShrinkSamples() {
+    val modes = listOf(
+        CardVehicleStatusMode.PORTRAIT,
+        CardVehicleStatusMode.PORTRAIT_TALL,
+        CardVehicleStatusMode.PORTRAIT_COMPACT,
+    )
+    val samples = listOf(
+        CardVehicleStatusSampleData.Paused,
+        CardVehicleStatusSampleData.Charged,
+        CardVehicleStatusSampleData.Depleted,
+    )
+    listOf(Locale.KOREAN, Locale.ENGLISH).forEach { locale ->
+        WithLocale(locale) {
+            // L1 세로 제목 폭 232 확인 (Today · Tomorrow · In 3 days)
+            CatalogLabel("L1 card_info · PORTRAIT · ${locale.language.uppercase(Locale.ROOT)}")
+            Row(horizontalArrangement = Arrangement.spacedBy(AlterMargin.Large)) {
+                CardInfoSampleData.all.forEach { state ->
+                    CardInfo(
+                        state = state,
+                        mode = CardInfoMode.PORTRAIT,
+                        modifier = Modifier.width(CardInfoWidths.getValue(CardInfoMode.PORTRAIT)),
+                    )
+                }
+            }
+            modes.forEach { mode ->
+                val size = VehicleStatusSizes.getValue(mode)
+                CatalogLabel("C 헤드라인 축소 · ${locale.language.uppercase(Locale.ROOT)} · ${mode.name}")
+                Row(horizontalArrangement = Arrangement.spacedBy(AlterMargin.Large)) {
+                    samples.forEach { state ->
+                        CardVehicleStatus(state = state, mode = mode, modifier = Modifier.size(size))
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** 이 안의 문자열 리소스를 [locale]로 읽는다 */
+@Composable
+private fun WithLocale(locale: Locale, content: @Composable () -> Unit) {
+    val context = LocalContext.current
+    val base = LocalConfiguration.current
+    val configuration = remember(base, locale) { Configuration(base).apply { setLocale(locale) } }
+    val localized = remember(context, configuration) { context.createConfigurationContext(configuration) }
+    CompositionLocalProvider(LocalContext provides localized, LocalConfiguration provides configuration) {
+        content()
     }
 }
 
@@ -191,7 +250,7 @@ private val CardInfoWidths: Map<CardInfoMode, Dp> = mapOf(
     CardInfoMode.LANDSCAPE to 383.dp,
     CardInfoMode.PORTRAIT to 378.dp,
     CardInfoMode.WF_LANDSCAPE to 387.dp,
-    CardInfoMode.WF_PORTRAIT to 580.dp,
+    CardInfoMode.WF_PORTRAIT to 584.dp,
 )
 
 /** L2 모드별 시안 폭 */
@@ -200,7 +259,7 @@ private val DriveRecordWidths: Map<CardDriveRecordMode, Dp> = mapOf(
     CardDriveRecordMode.LANDSCAPE_TALL to 375.dp,
     CardDriveRecordMode.PORTRAIT to 378.dp,
     CardDriveRecordMode.WF_LANDSCAPE to 387.dp,
-    CardDriveRecordMode.WF_PORTRAIT to 580.dp,
+    CardDriveRecordMode.WF_PORTRAIT to 584.dp,
 )
 
 /** C 모드별 시안 크기 (Figma 스펙 시트 366:39011 인스턴스) */
@@ -210,5 +269,6 @@ private val VehicleStatusSizes: Map<CardVehicleStatusMode, DpSize> = mapOf(
     CardVehicleStatusMode.PORTRAIT to DpSize(776.dp, 652.dp),
     CardVehicleStatusMode.PORTRAIT_TALL to DpSize(736.dp, 816.dp),
     CardVehicleStatusMode.WF_LANDSCAPE to DpSize(387.dp, 751.dp),
-    CardVehicleStatusMode.WF_PORTRAIT to DpSize(580.dp, 666.dp),
+    CardVehicleStatusMode.WF_PORTRAIT to DpSize(584.dp, 666.dp),
+    CardVehicleStatusMode.PORTRAIT_COMPACT to DpSize(776.dp, 338.dp),
 )

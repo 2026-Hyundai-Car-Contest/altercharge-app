@@ -154,7 +154,8 @@ internal fun buildContent(state: CardVehicleStatusUiState, mode: CardVehicleStat
         VehicleSituation.CHARGE_ERROR -> stringResource(R.string.card_vehicle_status_headline_charge_error)
         VehicleSituation.NO_DATA -> stringResource(R.string.card_vehicle_status_headline_no_data)
     }
-    val portraitHeadline = if (mode == CardVehicleStatusMode.PORTRAIT) {
+    // 세로(portrait)와 W-Standard 세로(portrait_compact)는 헤드라인 칸이 카드 폭 절반이라 짧은 문구를 쓴다
+    val portraitHeadline = if (mode == CardVehicleStatusMode.PORTRAIT || mode == CardVehicleStatusMode.PORTRAIT_COMPACT) {
         portraitHeadlineRes(situation)?.let { stringResource(it) } ?: headline
     } else {
         headline
@@ -212,8 +213,8 @@ internal fun buildContent(state: CardVehicleStatusUiState, mode: CardVehicleStat
 private class FaultText(val status: String, val cause: String, val action: String, val actionUnit: String)
 
 /**
- * 오류 종류별 문구 (REQ_EX_002).
- * TODO 디자이너 확인: 커넥터 체결 불량은 시안이 없어 명세서 문구로 임시로 둔다. 충전기 고장 · 커넥터 체결 불량은 영문 시안이 없다.
+ * 오류 종류별 문구 (REQ_EX_002). 충전기 고장 · 커넥터 체결 불량은 06 Strings card_vehicle_status/fault/…
+ * (charger_fault(_action), connector_error(_action)) 확정 문구다 (개발자 Q&A Q6).
  */
 @Composable
 private fun faultText(fault: ChargeFault): FaultText = when (fault) {
@@ -226,14 +227,14 @@ private fun faultText(fault: ChargeFault): FaultText = when (fault) {
     ChargeFault.CONNECTOR -> FaultText(
         status = stringResource(R.string.card_vehicle_status_status_fault_connector),
         cause = stringResource(R.string.card_vehicle_status_tile_cause_connector),
-        action = stringResource(R.string.card_vehicle_status_tile_action_replug),
-        actionUnit = stringResource(R.string.card_vehicle_status_unit_replug),
+        action = stringResource(R.string.card_vehicle_status_tile_action_connector),
+        actionUnit = stringResource(R.string.card_vehicle_status_unit_reconnect_connector),
     )
     ChargeFault.CHARGER -> FaultText(
         status = stringResource(R.string.card_vehicle_status_status_fault_charger),
         cause = stringResource(R.string.card_vehicle_status_tile_cause_charger),
-        action = stringResource(R.string.card_vehicle_status_tile_action_other_station),
-        actionUnit = stringResource(R.string.card_vehicle_status_unit_use),
+        action = stringResource(R.string.card_vehicle_status_tile_action_another_charger),
+        actionUnit = stringResource(R.string.card_vehicle_status_unit_use_another_charger),
     )
 }
 
@@ -241,7 +242,6 @@ private fun faultText(fault: ChargeFault): FaultText = when (fault) {
 private fun portraitHeadlineRes(situation: VehicleSituation): Int? = when (situation) {
     VehicleSituation.CHARGE_RECOMMENDED -> R.string.card_vehicle_status_portrait_headline_charge_recommended
     VehicleSituation.CHARGING_CRITICAL -> R.string.card_vehicle_status_portrait_headline_charging_critical
-    VehicleSituation.PAUSED -> R.string.card_vehicle_status_portrait_headline_paused
     VehicleSituation.DEPLETED -> R.string.card_vehicle_status_portrait_headline_depleted
     VehicleSituation.CHARGE_ERROR -> R.string.card_vehicle_status_portrait_headline_charge_error
     VehicleSituation.NO_DATA -> R.string.card_vehicle_status_portrait_headline_no_data

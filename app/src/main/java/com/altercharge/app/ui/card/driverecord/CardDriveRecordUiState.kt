@@ -48,7 +48,7 @@ enum class CardDriveRecordMode {
     /** WF 가로 387×455 */
     WF_LANDSCAPE,
 
-    /** WF 세로 580×576 */
+    /** WF 세로 584×576 (화면 인스턴스 452:54439, Q&A Q4로 580 → 584) */
     WF_PORTRAIT,
 }
 

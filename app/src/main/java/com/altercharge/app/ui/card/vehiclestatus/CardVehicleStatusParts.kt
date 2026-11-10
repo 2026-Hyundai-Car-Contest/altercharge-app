@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -15,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,9 +28,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -61,6 +65,48 @@ internal fun Headline(
         overflow = TextOverflow.Ellipsis,
     )
 }
+
+/**
+ * 줄 수를 넘으면 글자를 한 단계씩 줄이는 헤드라인 (개발자 Q&A Q1).
+ * [styles]를 큰 것부터 차례로 재서 [maxLines] 안에 들어오는 첫 크기를 쓴다.
+ * 가장 작은 크기에서도 넘치면 [maxLines]까지 보여주고 말줄임한다.
+ */
+@Composable
+internal fun AutoShrinkHeadline(
+    text: String,
+    styles: List<TextStyle>,
+    modifier: Modifier = Modifier,
+    maxLines: Int = AUTO_SHRINK_HEADLINE_MAX_LINES,
+    lineBreak: LineBreak = PortraitHeadlineLineBreak,
+) {
+    val measurer = rememberTextMeasurer()
+    BoxWithConstraints(modifier) {
+        val maxWidth = constraints.maxWidth
+        val candidates = remember(styles, lineBreak) {
+            styles.map { it.copy(fontWeight = AlterFontWeight.Strong, lineBreak = lineBreak) }
+        }
+        val style = remember(text, candidates, maxWidth, maxLines) {
+            candidates.firstOrNull { candidate ->
+                !measurer.measure(
+                    text = text,
+                    style = candidate,
+                    maxLines = maxLines,
+                    constraints = Constraints(maxWidth = maxWidth),
+                ).hasVisualOverflow
+            } ?: candidates.last()
+        }
+        Text(
+            text = text,
+            style = style,
+            color = AlterTheme.colors.textPrimary,
+            maxLines = maxLines,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/** 자동 축소 헤드라인 줄 수. Figma portrait · portrait_tall · portrait_compact 헤드라인 2줄 말줄임 */
+private const val AUTO_SHRINK_HEADLINE_MAX_LINES = 2
 
 /** 차량 이미지가 놓이는 면. 왼쪽 위에 연결 칩이 뜬다 (WF는 16, 나머지는 24 안쪽). */
 @Composable
@@ -165,12 +211,13 @@ internal fun BatteryDetail(
     content: CardContent,
     statusStyle: TextStyle,
     horizontalAlignment: Alignment.Horizontal,
+    gap: Dp = BatteryTileGap,
 ) {
     val colors = AlterTheme.colors
     val typography = AlterTheme.typography
     Column(
         horizontalAlignment = horizontalAlignment,
-        verticalArrangement = Arrangement.spacedBy(BatteryTileGap),
+        verticalArrangement = Arrangement.spacedBy(gap),
     ) {
         BatteryGauge(
             level = content.gaugeLevel,
@@ -245,6 +292,7 @@ internal fun GlassPanel(
     modifier: Modifier,
     contentPadding: Dp,
     glassAlpha: Float = GlassAlpha,
+    verticalPadding: Dp = contentPadding,
     content: @Composable () -> Unit,
 ) {
     val colors = AlterTheme.colors
@@ -255,7 +303,7 @@ internal fun GlassPanel(
             .clip(shape)
             .background(colors.surfaceHigh.copy(alpha = glassAlpha), shape)
             .border(GlassEdgeWidth, colors.surface.copy(alpha = GlassEdgeAlpha), shape)
-            .padding(contentPadding),
+            .padding(horizontal = contentPadding, vertical = verticalPadding),
     ) {
         content()
     }
