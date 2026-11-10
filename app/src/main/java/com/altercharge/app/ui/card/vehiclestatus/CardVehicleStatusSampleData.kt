@@ -90,7 +90,6 @@ internal object CardVehicleStatusSampleData {
         charging = ChargingState.UNPLUGGED,
         socPercent = 14,
         rangeKm = 52,
-        remainingMinutes = 12,
     )
 
     /** 10 배터리 방전 */

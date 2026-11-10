@@ -172,7 +172,7 @@ internal fun buildContent(state: CardVehicleStatusUiState, mode: CardVehicleStat
         VehicleSituation.CHARGING_LOW,
         VehicleSituation.CHARGING_CRITICAL,
         -> timeLeft(state.remainingMinutes, unknown)
-        // 기획 · 디자이너 확정: 미연결 위험의 "n분 남았어요"는 뺀다. 게이지만 SOC 줄 아래에 둔다(시안 366:37704)
+        // 09는 상태 문구 없음 (StatusLine.None 설명 참고)
         VehicleSituation.CRITICAL_UNPLUGGED -> StatusLine.None
         VehicleSituation.CHARGED -> StatusLine.Plain(stringResource(R.string.card_vehicle_status_status_charged))
         VehicleSituation.PAUSED -> StatusLine.Plain(
