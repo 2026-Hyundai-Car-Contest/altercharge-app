@@ -34,6 +34,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.input.InputMode
+import androidx.compose.ui.platform.LocalInputModeManager
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -92,6 +94,9 @@ fun IviButton(
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val focused by interaction.collectIsFocusedAsState()
+    // 포커스 링은 로터리 · 스티어링 · 키보드로 조작할 때만 보인다(Figma Focused 상태).
+    // 터치로 쓸 때는 포커스가 자동으로 가 있어도 링을 그리지 않는다.
+    val keyboardInput = LocalInputModeManager.current.inputMode == InputMode.Keyboard
     val iconOnly = text == null
     val isGhost = hierarchy == IviButtonHierarchy.Ghost
 
@@ -137,7 +142,7 @@ fun IviButton(
                 .height(size.height)
                 .then(if (iconOnly) Modifier.width(size.height) else Modifier)
                 .then(if (fullWidth) Modifier.fillMaxWidth() else Modifier)
-                .focusRing(visible = focused, color = palette.focusRing, radius = size.radius)
+                .focusRing(visible = focused && keyboardInput, color = palette.focusRing, radius = size.radius)
                 .background(container, shape)
                 .then(
                     if (isGhost && !pressed) Modifier.border(GhostOutlineWidth, palette.outline, shape) else Modifier,
