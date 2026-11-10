@@ -116,4 +116,39 @@ class ChargeJudgmentTest {
         val result = judge(input(rangeKm = 400, socPercent = 31, days = List(14) { 20 }))
         assertFalse(result.chargeRecommended)
     }
+
+    // ---- 경계값 ----
+
+    @Test
+    fun `딱 나누어떨어지는 경계에서 하루 모자라지 않는다`() {
+        // 합 9 → 평균 9/14. 예비 30, 주행가능 39 → 거리 9. 9 ÷ (9/14) = 정확히 14일
+        val days = listOf(9) + List(13) { 0 }
+        assertEquals(14, judge(input(rangeKm = 39, days = days)).daysLeft)
+    }
+
+    @Test
+    fun `기록 6일은 기본값, 7일부터 기록으로 계산한다`() {
+        assertEquals(40, judge(input(rangeKm = 300, days = List(6) { 70 })).averageDailyKm)
+        // 7일 x 70 = 490 → 490 / 14 = 35
+        assertEquals(35, judge(input(rangeKm = 300, days = List(7) { 70 })).averageDailyKm)
+    }
+
+    @Test
+    fun `버틸 일수 1은 충전 권장, 2는 아니다`() {
+        // 평균 40, 예비 40
+        val days = List(14) { 40 }
+        val one = judge(input(rangeKm = 119, socPercent = 80, days = days)) // 79 / 40 = 1
+        val two = judge(input(rangeKm = 120, socPercent = 80, days = days)) // 80 / 40 = 2
+        assertEquals(1, one.daysLeft)
+        assertTrue(one.chargeRecommended)
+        assertEquals(2, two.daysLeft)
+        assertFalse(two.chargeRecommended)
+    }
+
+    @Test
+    fun `기록 7일 이상인데 모두 0이면 버틸 일수 상한`() {
+        val result = judge(input(rangeKm = 200, days = List(9) { 0 }))
+        assertEquals(MAX_DAYS_LEFT, result.daysLeft)
+        assertEquals(30, result.reserveKm)
+    }
 }

@@ -66,7 +66,8 @@ enum class CardInfoMode(val height: Dp) {
 
 /**
  * 레이아웃 정보로 mode를 고른다. card_info 시안은 S-17 · WF 모드만 있다.
- * TODO 디자이너 확인: W-Standard · W-Extended 시안이 없어 S-17 모드(LANDSCAPE · PORTRAIT)로 대신한다.
+ * W-Standard 세로 화면(452:53649)은 PORTRAIT(378×358)를 쓴다.
+ * TODO 디자이너 확인: W-Standard 가로 · W-Extended는 card_info 시안이 없어 S-17 모드(LANDSCAPE · PORTRAIT)로 대신한다.
  */
 fun cardInfoModeFor(info: AppLayoutInfo): CardInfoMode = when {
     info.formFactor == FormFactor.WF ->

@@ -93,6 +93,7 @@ enum class VehicleImageKind {
 /**
  * C 차량 상태 카드. Figma card_vehicle_status (366:39011), 상황별 시안 (455:58776 01~12).
  * 보기 전용 카드다(눌러서 하는 동작이 없다). 화면 읽기에서는 카드 전체를 한 덩어리로 읽는다.
+ * 카드가 주어진 칸을 채운다(fillMaxSize). 크기는 부모(레이아웃 슬롯)가 정해 줘야 하고, 스크롤 안에 크기 없이 넣으면 안 된다.
  *
  * @param mode 레이아웃 틀 안에서는 cardVehicleStatusModeFor(LocalAppLayout.current)로 고른다.
  * @param vehicleImage 차량 이미지 자리. 이미지 에셋(이슈 #4)이 들어오면 종류별 이미지를 그려 넘긴다.

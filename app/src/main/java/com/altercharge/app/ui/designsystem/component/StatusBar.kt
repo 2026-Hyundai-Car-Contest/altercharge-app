@@ -39,6 +39,8 @@ import com.altercharge.app.ui.designsystem.theme.LightAlterColors
 /**
  * 차량 상태. 상단 바 칩의 원 안 기호와 문구를 정한다.
  * Figma status_bar (444:40718) state: parked(P) · charging(⚡) · arrived(✓). 주행 중은 시안에 없다.
+ * 화면 쪽에서 고른다: 충전기가 연결돼 충전 중이면 CHARGING, 그 밖의 주차 상태는 PARKED.
+ * ARRIVED는 안내한 충전소에 도착했을 때 쓰는 상태로, MVP(주차 화면)에서는 쓰지 않는다.
  */
 enum class DriveState { PARKED, CHARGING, ARRIVED }
 
@@ -92,7 +94,7 @@ private val ConnectivityGap = 12.dp
 private val BoltIconSize = 20.dp
 private val CheckIconSize = 16.dp
 
-/** 기획 확정: 연결 아이콘과 시간은 실제 값 대신 더미로 표시한다 (시안 값). TODO 실제 시각을 연결하면 지운다. */
+/** 기획 확정: 연결 아이콘과 시간은 실제 값 대신 더미로 표시한다 (시안 값). 실제 시각을 연결하게 되면 이 상수를 지운다. */
 private const val DummyTime = "14:05"
 
 /**
