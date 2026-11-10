@@ -34,7 +34,6 @@ import com.altercharge.app.ui.card.vehiclestatus.CardVehicleStatusMode
 import com.altercharge.app.ui.card.vehiclestatus.CardVehicleStatusSampleData
 import com.altercharge.app.ui.card.vehiclestatus.cardVehicleStatusModeFor
 import com.altercharge.app.ui.designsystem.component.DriveState
-import com.altercharge.app.ui.designsystem.component.PlaceholderBox
 import com.altercharge.app.ui.designsystem.component.StatusBar
 import com.altercharge.app.ui.designsystem.component.StatusBarUiState
 import com.altercharge.app.ui.designsystem.component.StatusValue
@@ -115,7 +114,7 @@ fun VehicleStatusCatalog() {
                         CardVehicleStatus(
                             state = state,
                             mode = CardVehicleStatusMode.LANDSCAPE,
-                            modifier = Modifier.size(width = 790.dp, height = 1040.dp),
+                            modifier = Modifier.size(VehicleStatusSizes.getValue(CardVehicleStatusMode.LANDSCAPE)),
                         )
                     }
                 }
@@ -161,7 +160,7 @@ fun CardsCatalog() {
                     CardVehicleStatus(
                         state = state,
                         mode = mode,
-                        modifier = Modifier.size(width = size.width, height = size.height),
+                        modifier = Modifier.size(size),
                     )
                 }
             }
