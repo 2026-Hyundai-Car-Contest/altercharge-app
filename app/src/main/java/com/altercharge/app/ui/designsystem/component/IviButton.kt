@@ -139,13 +139,21 @@ fun IviButton(
                 .then(if (fullWidth) Modifier.fillMaxWidth() else Modifier)
                 .background(container, shape)
                 .then(
-                    if (isGhost && !pressed) Modifier.border(GhostOutlineWidth, palette.outline, shape) else Modifier,
+                    // Ghost 외곽선은 Enabled일 때만. Disabled · Restricted는 배경도 테두리도 없다 (Figma 366:36970)
+                    if (isGhost && !pressed && enabled && !restricted) {
+                        Modifier.border(GhostOutlineWidth, palette.outline, shape)
+                    } else {
+                        Modifier
+                    },
                 )
                 // 포커스 링: Figma Focused 견본(366:38903)처럼 버튼 안쪽 가장자리의 두께 4 테두리
                 .then(
                     if (focused && keyboardInput) Modifier.border(FocusRingWidth, palette.focusRing, shape) else Modifier,
                 )
-                .padding(horizontal = if (iconOnly) 0.dp else size.paddingHorizontal),
+                // Ghost는 외곽선 두께만큼 폭이 더 넓다 (Figma 인스턴스 폭 253 → 256)
+                .padding(
+                    horizontal = if (iconOnly) 0.dp else size.paddingHorizontal + (if (isGhost) GhostOutlineWidth else 0.dp),
+                ),
             horizontalArrangement = Arrangement.spacedBy(size.gap, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -161,7 +169,8 @@ fun IviButton(
             }
             if (!restricted) {
                 trailingIcon?.let {
-                    Icon(it, contentDescription = null, tint = content, modifier = Modifier.size(size.iconSize))
+                    // trailing 아이콘은 leading보다 4 작다: Large 32 · Medium 28 · Small 24 (Figma trailing_icon)
+                    Icon(it, contentDescription = null, tint = content, modifier = Modifier.size(size.iconSize - 4.dp))
                 }
             }
         }
