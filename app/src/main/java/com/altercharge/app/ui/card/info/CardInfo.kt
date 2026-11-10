@@ -8,8 +8,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -39,7 +42,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.altercharge.app.R
-import com.altercharge.app.ui.card.common.ChargeVerdict
+import com.altercharge.app.ui.designsystem.layout.AppLayoutInfo
+import com.altercharge.app.ui.designsystem.layout.FormFactor
 import com.altercharge.app.ui.designsystem.theme.AlterChargeTheme
 import com.altercharge.app.ui.designsystem.theme.AlterFontWeight
 import com.altercharge.app.ui.designsystem.theme.AlterMargin
@@ -50,15 +54,35 @@ import com.altercharge.app.ui.designsystem.theme.alterShadow
 
 /**
  * 카드가 놓이는 화면 모드. Figma card_info mode.
- * 카드 높이는 모드마다 고정이고(가로 368 · 세로 358 · WF 가로 300 · WF 세로 260) 부르는 쪽이 정한다.
- * 가로는 컬럼에 맞춰 늘어나고 번개 그래픽은 오른쪽에 붙는다.
+ * 카드 높이는 모드마다 고정이고 카드가 스스로 적용한다. 너비는 부모 폭을 채운다.
+ * 번개 그래픽은 오른쪽에 붙고, 제목과 겹치지 않게 제목 오른쪽으로 비켜 선다.
  */
-enum class CardInfoMode { LANDSCAPE, PORTRAIT, WF_LANDSCAPE, WF_PORTRAIT }
+enum class CardInfoMode(val height: Dp) {
+    LANDSCAPE(368.dp),
+    PORTRAIT(358.dp),
+    WF_LANDSCAPE(300.dp),
+    WF_PORTRAIT(260.dp),
+}
+
+/**
+ * 레이아웃 정보로 mode를 고른다. card_info 시안은 S-17 · WF 모드만 있다.
+ * TODO 디자이너 확인: W-Standard · W-Extended 시안이 없어 S-17 모드(LANDSCAPE · PORTRAIT)로 대신한다.
+ */
+fun cardInfoModeFor(info: AppLayoutInfo): CardInfoMode = when {
+    info.formFactor == FormFactor.WF ->
+        if (info.isLandscape) CardInfoMode.WF_LANDSCAPE else CardInfoMode.WF_PORTRAIT
+    info.isLandscape -> CardInfoMode.LANDSCAPE
+    else -> CardInfoMode.PORTRAIT
+}
 
 /**
  * L1 오늘 충전 판정 카드. Figma card_info (366:38742). 담당: 서희님
  * 보기 전용이다. 라이트/다크 모두 어두운 카드 배경을 쓰고, 제목과 번개 채움만 blue_500을 따른다.
  *
+ * 기본으로 부모 폭을 채우고(fillMaxWidth) 높이는 [CardInfoMode.height]를 쓴다.
+ * modifier에 크기를 주면 그 값이 이긴다 (예: Modifier.size(450.dp, 368.dp)).
+ *
+ * @param mode 레이아웃 틀 안에서는 cardInfoModeFor(LocalAppLayout.current)로 고른다.
  * @param showIcon Figma Show icons. false면 장소 줄에서 아이콘만 뺀다.
  */
 @Composable
@@ -74,6 +98,8 @@ fun CardInfo(
 
     Box(
         modifier = modifier
+            .fillMaxWidth()
+            .height(mode.height)
             .alterShadow(CardShadow, CardRadius)
             .clip(shape)
             .background(CardBackground)
@@ -81,7 +107,7 @@ fun CardInfo(
     ) {
         BoltGraphic(
             status = status,
-            rightOverflow = spec.boltRightOverflow,
+            spec = spec,
             fillColor = AlterTheme.colors.blue500,
             modifier = Modifier.matchParentSize(),
         )
@@ -101,6 +127,7 @@ fun CardInfo(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
+                // TODO 디자이너 확인: 영문 "Within 3 days"가 가로 폭에서 말줄임으로 잘린다.
                 Text(
                     text = stringResource(status.titleRes),
                     style = spec.titleStyle(),
@@ -164,8 +191,14 @@ private class ModeSpec(
     val headerMaxWidth: Dp,
     val placeMaxWidth: Dp,
     val isWf: Boolean,
-    /** 번개가 카드 오른쪽 밖으로 나가는 비율 (번개 너비 기준) */
-    val boltRightOverflow: Float,
+    /**
+     * 번개(bolt_track) 영역. Figma 인스턴스 값 그대로(오늘·내일 기준).
+     * 이미지는 오른쪽 고정이라, 카드 오른쪽 끝에서 번개 왼쪽까지 거리([boltFromRight])로 놓는다.
+     */
+    val boltFromRight: Dp,
+    val boltTop: Dp,
+    val boltWidth: Dp,
+    val boltHeight: Dp,
 ) {
     @Composable
     fun eyebrowStyle(): TextStyle =
@@ -181,10 +214,25 @@ private class ModeSpec(
         if (isWf) AlterTheme.typography.bodySmall else AlterTheme.typography.bodyMedium
 }
 
-private val LandscapeSpec = ModeSpec(AlterPadding.Large, 252.dp, 279.dp, isWf = false, boltRightOverflow = 0.218f)
-private val PortraitSpec = ModeSpec(AlterPadding.Normal, 212.dp, 279.dp, isWf = false, boltRightOverflow = 0.342f)
-private val WfLandscapeSpec = ModeSpec(AlterPadding.Normal, 217.dp, 262.dp, isWf = true, boltRightOverflow = 0.220f)
-private val WfPortraitSpec = ModeSpec(AlterPadding.Normal, 290.dp, 262.dp, isWf = true, boltRightOverflow = 0.088f)
+// 번개 값은 Figma card_info mode별 인스턴스(366:38751 · 38755 · 38759 · 38763)의 bolt_track에서
+// 그림이 실제로 차지하는 영역(상자 안쪽 위아래 8.87% · 좌우 4.95%)이다.
+// boltFromRight = 카드 폭 − 번개 왼쪽 x
+private val LandscapeSpec = ModeSpec(
+    AlterPadding.Large, 252.dp, 279.dp, isWf = false,
+    boltFromRight = 299.0.dp, boltTop = (-9.7).dp, boltWidth = 381.9.dp, boltHeight = 387.4.dp,
+)
+private val PortraitSpec = ModeSpec(
+    AlterPadding.Normal, 212.dp, 279.dp, isWf = false,
+    boltFromRight = 244.6.dp, boltTop = (-9.4).dp, boltWidth = 371.6.dp, boltHeight = 376.9.dp,
+)
+private val WfLandscapeSpec = ModeSpec(
+    AlterPadding.Normal, 217.dp, 262.dp, isWf = true,
+    boltFromRight = 242.9.dp, boltTop = (-7.9).dp, boltWidth = 311.4.dp, boltHeight = 315.9.dp,
+)
+private val WfPortraitSpec = ModeSpec(
+    AlterPadding.Normal, 290.dp, 262.dp, isWf = true,
+    boltFromRight = 246.2.dp, boltTop = (-6.9).dp, boltWidth = 269.8.dp, boltHeight = 273.8.dp,
+)
 
 private fun CardInfoMode.spec(): ModeSpec = when (this) {
     CardInfoMode.LANDSCAPE -> LandscapeSpec
@@ -203,26 +251,24 @@ private const val BOLT_PATH =
 private const val BOLT_WIDTH = 383.107f
 private const val BOLT_HEIGHT = 389.74f
 
-/** 번개 높이 = 카드 높이 × 1.055, 위로 2.8% 넘친다 (네 모드 평균) */
-private const val BOLT_HEIGHT_RATIO = 1.055f
-private const val BOLT_TOP_RATIO = -0.028f
+
 
 /**
  * 판정별 채움 수위. 번개 높이 기준 왼쪽 · 가운데 · 오른쪽 수면 높이(위에서부터)와,
- * 시안에서 판정별로 번개가 오른쪽으로 밀린 정도(번개 너비 기준).
+ * 판정별로 번개가 오른쪽으로 밀린 정도(번개 너비 기준). Figma: 오늘·내일은 같은 위치, 3일내만 53.3 (번개 너비 371.6 중 0.143).
  */
 private class BoltLevel(val left: Float, val middle: Float, val right: Float, val shift: Float)
 
 private fun CardInfoStatus.boltLevel(): BoltLevel = when (this) {
     CardInfoStatus.TODAY -> BoltLevel(left = 0.75f, middle = 0.705f, right = 0.66f, shift = 0f)
-    CardInfoStatus.TOMORROW -> BoltLevel(left = 0.43f, middle = 0.48f, right = 0.50f, shift = 0.029f)
-    CardInfoStatus.WITHIN_THREE_DAYS -> BoltLevel(left = 0.29f, middle = 0.275f, right = 0.27f, shift = 0.18f)
+    CardInfoStatus.TOMORROW -> BoltLevel(left = 0.43f, middle = 0.48f, right = 0.50f, shift = 0f)
+    CardInfoStatus.WITHIN_THREE_DAYS -> BoltLevel(left = 0.29f, middle = 0.275f, right = 0.27f, shift = 0.143f)
 }
 
 @Composable
 private fun BoltGraphic(
     status: CardInfoStatus,
-    rightOverflow: Float,
+    spec: ModeSpec,
     fillColor: Color,
     modifier: Modifier = Modifier,
 ) {
@@ -245,13 +291,16 @@ private fun BoltGraphic(
     }
 
     Canvas(modifier) {
-        val scale = size.height * BOLT_HEIGHT_RATIO / BOLT_HEIGHT
-        val boltWidth = BOLT_WIDTH * scale
-        val left = size.width - boltWidth + boltWidth * (rightOverflow + level.shift)
-        val top = size.height * BOLT_TOP_RATIO
+        // Figma 규칙: 오른쪽 고정, 글자와 겹쳐도 비키지 않는다(시안도 글자가 번개 위에 올라간다).
+        val boltWidth = spec.boltWidth.toPx()
+        val scaleX = boltWidth / BOLT_WIDTH
+        val scaleY = spec.boltHeight.toPx() / BOLT_HEIGHT
+        val scale = minOf(scaleX, scaleY)
+        val left = size.width - spec.boltFromRight.toPx() + boltWidth * level.shift
+        val top = spec.boltTop.toPx()
         withTransform({
             translate(left, top)
-            scale(scale, scale, pivot = Offset.Zero)
+            scale(scaleX, scaleY, pivot = Offset.Zero)
         }) {
             drawPath(track, BoltTrackColor)
             // 채움과 바깥 빛을 한 번에 그린다
@@ -267,10 +316,10 @@ private fun BoltGraphic(
     }
 }
 
-// 미리보기: 오늘 · 내일 · 3일내 × 라이트 · 다크 × 가로 · 세로 (+ WF)
+// 미리보기: 오늘 · 내일 · 3일내 × 라이트 · 다크 × 가로 · 세로 (+ WF). 높이는 카드가 mode로 정한다.
 
 @Composable
-private fun CardInfoPreviewColumn(mode: CardInfoMode, width: Dp, height: Dp, darkTheme: Boolean) {
+private fun CardInfoPreviewColumn(mode: CardInfoMode, width: Dp, darkTheme: Boolean) {
     AlterChargeTheme(darkTheme = darkTheme) {
         Column(
             modifier = Modifier
@@ -278,56 +327,44 @@ private fun CardInfoPreviewColumn(mode: CardInfoMode, width: Dp, height: Dp, dar
                 .padding(AlterPadding.Large),
             verticalArrangement = Arrangement.spacedBy(AlterMargin.Large),
         ) {
-            listOf(
-                CardInfoUiState(ChargeVerdict.TODAY, daysUntilCharge = 0, placeName = "예시 아파트"),
-                CardInfoUiState(ChargeVerdict.WITHIN_TWO_DAYS, daysUntilCharge = 1, placeName = "예시 아파트 지하주차장"),
-                CardInfoUiState(
-                    ChargeVerdict.WITHIN_TWO_DAYS,
-                    daysUntilCharge = 2,
-                    placeName = "아주 긴 예시 장소 이름이 들어가면 한 줄로 말줄임",
-                ),
-            ).forEach { state ->
-                CardInfo(
-                    state = state,
-                    mode = mode,
-                    modifier = Modifier.size(width, height),
-                )
+            CardInfoSampleData.all.forEach { state ->
+                CardInfo(state = state, mode = mode, modifier = Modifier.width(width))
             }
         }
     }
 }
 
-@Preview(name = "가로 · 라이트", widthDp = 498, heightDp = 1200)
+@Preview(name = "가로 383 · 라이트", widthDp = 431, heightDp = 1200)
 @Composable
 private fun CardInfoLandscapeLightPreview() =
-    CardInfoPreviewColumn(CardInfoMode.LANDSCAPE, 450.dp, 368.dp, darkTheme = false)
+    CardInfoPreviewColumn(CardInfoMode.LANDSCAPE, 383.dp, darkTheme = false)
 
-@Preview(name = "가로 · 다크", widthDp = 498, heightDp = 1200)
+@Preview(name = "가로 450 · 다크", widthDp = 498, heightDp = 1200)
 @Composable
 private fun CardInfoLandscapeDarkPreview() =
-    CardInfoPreviewColumn(CardInfoMode.LANDSCAPE, 450.dp, 368.dp, darkTheme = true)
+    CardInfoPreviewColumn(CardInfoMode.LANDSCAPE, 450.dp, darkTheme = true)
 
 @Preview(name = "세로 · 라이트", widthDp = 426, heightDp = 1170)
 @Composable
 private fun CardInfoPortraitLightPreview() =
-    CardInfoPreviewColumn(CardInfoMode.PORTRAIT, 378.dp, 358.dp, darkTheme = false)
+    CardInfoPreviewColumn(CardInfoMode.PORTRAIT, 378.dp, darkTheme = false)
 
 @Preview(name = "세로 · 다크", widthDp = 426, heightDp = 1170)
 @Composable
 private fun CardInfoPortraitDarkPreview() =
-    CardInfoPreviewColumn(CardInfoMode.PORTRAIT, 378.dp, 358.dp, darkTheme = true)
+    CardInfoPreviewColumn(CardInfoMode.PORTRAIT, 378.dp, darkTheme = true)
 
 @Preview(name = "WF 가로 · 라이트", widthDp = 435, heightDp = 1000)
 @Composable
 private fun CardInfoWfLandscapePreview() =
-    CardInfoPreviewColumn(CardInfoMode.WF_LANDSCAPE, 387.dp, 300.dp, darkTheme = false)
+    CardInfoPreviewColumn(CardInfoMode.WF_LANDSCAPE, 387.dp, darkTheme = false)
 
 @Preview(name = "WF 세로 · 라이트", widthDp = 628, heightDp = 900)
 @Composable
 private fun CardInfoWfPortraitPreview() =
-    CardInfoPreviewColumn(CardInfoMode.WF_PORTRAIT, 580.dp, 260.dp, darkTheme = false)
+    CardInfoPreviewColumn(CardInfoMode.WF_PORTRAIT, 580.dp, darkTheme = false)
 
-@Preview(name = "가로 · 영문", widthDp = 498, heightDp = 1200, locale = "en")
+@Preview(name = "가로 383 · 영문", widthDp = 431, heightDp = 1200, locale = "en")
 @Composable
 private fun CardInfoLandscapeEnPreview() =
-    CardInfoPreviewColumn(CardInfoMode.LANDSCAPE, 450.dp, 368.dp, darkTheme = false)
+    CardInfoPreviewColumn(CardInfoMode.LANDSCAPE, 383.dp, darkTheme = false)

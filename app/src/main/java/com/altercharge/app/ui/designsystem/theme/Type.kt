@@ -5,6 +5,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.altercharge.app.R
@@ -26,13 +27,27 @@ object AlterFontWeight {
     val ExtraStrong = FontWeight.W800
 }
 
-/** 모든 글자 공통: 줄 높이 = 크기 × 1.5, 자간 −3% */
+/**
+ * Figma처럼 줄 높이 전체를 차지하게 한다. Compose 기본값은 첫 줄 위 · 끝 줄 아래 여백을 잘라
+ * 글자 블록이 시안(줄 높이 × 줄 수)보다 짧아진다. 글자는 줄 가운데에 놓는다.
+ * 카드에서 TextStyle을 직접 만들 때도 이 값을 넣는다.
+ */
+val AlterLineHeightStyle = LineHeightStyle(
+    alignment = LineHeightStyle.Alignment.Center,
+    trim = LineHeightStyle.Trim.None,
+)
+
+/** 모든 글자 공통 자간 −3% */
+val AlterLetterSpacing = (-0.03).em
+
+/** 모든 글자 공통: 줄 높이 = 크기 × 1.5, 자간 −3%, 줄 높이 자르지 않음 */
 private fun style(sizeSp: Int, weight: FontWeight) = TextStyle(
     fontFamily = AstaSans,
     fontWeight = weight,
     fontSize = sizeSp.sp,
     lineHeight = (sizeSp * 1.5f).sp,
-    letterSpacing = (-0.03).em,
+    letterSpacing = AlterLetterSpacing,
+    lineHeightStyle = AlterLineHeightStyle,
 )
 
 /**

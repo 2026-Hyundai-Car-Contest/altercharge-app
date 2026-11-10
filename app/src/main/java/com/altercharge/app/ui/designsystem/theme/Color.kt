@@ -41,7 +41,9 @@ data class AlterColors(
     val contentNeutral: Color,
 
     // 면
-    /** 앱 배경, 패널 배경 (주간 주행 기록, 충전소 목록) */
+    /** 앱 화면 전체 배경. 15상황 보드 화면 프레임 (라이트 basic_100, 다크 surface_low) */
+    val screenBackground: Color,
+    /** 패널 배경 (주간 주행 기록, 충전소 목록) */
     val background: Color,
     /** 흰 카드 (차량 상태, 충전소 카드) */
     val surface: Color,
@@ -88,6 +90,7 @@ val LightAlterColors = AlterColors(
     textDisabled = Color(0x52131417),
     contentNeutral = Color(0xFF686A72),
 
+    screenBackground = Color(0xFFEDEEF2),
     background = Color(0xFFF7F8FA),
     surface = Color(0xFFFFFFFF),
     surfaceHigh = Color(0xFFEDEEF2),
@@ -124,6 +127,7 @@ val DarkAlterColors = AlterColors(
     textDisabled = Color(0x52FFFFFF),
     contentNeutral = Color(0xFFC7C9CE),
 
+    screenBackground = Color(0xFF131417),
     background = Color(0xFF131417),
     surface = Color(0xFF131417),
     surfaceHigh = Color(0xFF313236),

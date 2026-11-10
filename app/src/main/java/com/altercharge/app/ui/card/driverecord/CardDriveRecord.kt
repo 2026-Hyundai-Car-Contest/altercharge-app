@@ -4,10 +4,12 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -46,12 +48,13 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.offset
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.altercharge.app.R
@@ -63,7 +66,6 @@ import com.altercharge.app.ui.designsystem.theme.AlterRadius
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
 import com.altercharge.app.ui.designsystem.theme.ShadowLayer
 import com.altercharge.app.ui.designsystem.theme.alterShadow
-import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 // ---------------------------------------------------------------------------------------------
@@ -73,8 +75,14 @@ import java.time.format.DateTimeFormatter
 /** 기간 이동 · 펼침 버튼 크기 (period_nav/size) */
 private val CircleButtonSize = 48.dp
 
-/** 버튼 터치 영역. 보이는 크기는 48, 누르는 영역만 76 (AAOS 터치 76dp) */
+/** 버튼 터치 영역. 보이는 크기는 48, 누르는 영역은 76 (AAOS 터치 76dp) */
 private val CircleButtonTouchSize = 76.dp
+
+/** 원 바깥 터치 여백 (76 − 48) ÷ 2 = 14 */
+private val CircleButtonTouchInset = (CircleButtonTouchSize - CircleButtonSize) / 2
+
+/** 기간 이동 버튼 두 원 사이 간격 (시안 8). 터치 영역은 이 간격 가운데에서 나눈다 */
+private val PeriodNavGap = AlterMargin.XSmall
 
 /** 버튼 그림자 (drop-shadow 0 0 1 · 0 3 6). 디자인 시스템 Level1과 값이 달라 카드에 둔다 */
 private val CircleButtonShadow = listOf(
@@ -114,6 +122,9 @@ private val AverageChipVerticalPadding = 2.dp
 
 /** 차트 위쪽 모서리 (chart_week rounded-top 24) */
 private val ChartWeekTopRadius = AlterRadius.XXLarge
+
+/** 펼쳤을 때 그래프가 줄어드는 높이. Figma 펼침 인스턴스 두 개가 모두 23 */
+private val ExpandedChartShrink = 23.dp
 
 /** 타일 위 구분선 두께 */
 private val TileDividerThickness = 1.dp
@@ -165,12 +176,12 @@ private val DarkDriveRecordColors = DriveRecordColors(
  */
 private val CardDriveRecordMode.chartWeekHeight: Dp
     get() = when (this) {
-        CardDriveRecordMode.Landscape -> 353.dp
-        CardDriveRecordMode.LandscapeTall -> 521.dp
-        CardDriveRecordMode.Portrait -> 281.dp
+        CardDriveRecordMode.LANDSCAPE -> 353.dp
+        CardDriveRecordMode.LANDSCAPE_TALL -> 521.dp
+        CardDriveRecordMode.PORTRAIT -> 281.dp
         // TODO 디자이너 확인: 스펙 메모는 387×328, 인스턴스는 387×455. 인스턴스 기준으로 맞췄다
-        CardDriveRecordMode.WfLandscape -> 160.dp
-        CardDriveRecordMode.WfPortrait -> 281.dp
+        CardDriveRecordMode.WF_LANDSCAPE -> 160.dp
+        CardDriveRecordMode.WF_PORTRAIT -> 281.dp
     }
 
 /** 오른쪽 화살표 (ic_chevron_right 188:8). 방향은 회전으로 바꾼다 */
@@ -210,8 +221,14 @@ private enum class BarState { Past, Peak, Today, Future }
 /**
  * L2 주간 주행 기록 카드. Figma card_drive_record (366:38474). 담당: 서희님
  *
- * 모드별로 높이가 정해져 있고, 펼치면 상세 통계 4개가 아래에 붙어 카드가 늘어난다(그래프 높이는 그대로).
+ * 모드별로 높이가 정해져 있고, 펼치면 상세 통계 4개가 아래에 붙어 카드가 늘어난다(그래프는 Figma 펼침 인스턴스대로 23 줄어든다, 카드는 +207).
  * 부모가 높이를 무한대로 줄 수 있어서(가로에서 왼쪽 열 스크롤) 높이를 채우는 modifier는 쓰지 않는다.
+ *
+ * 사용 예:
+ * - 가로에서는 펼쳤을 때 왼쪽 열이 스크롤되게 `AlterChargeLayout(leftColumnScrollable = state.expanded, ...)`로 넘긴다.
+ * - 펼침 상태는 화면에 들어올 때마다 접힘(expanded = false)으로 시작한다(시안 규칙).
+ *
+ * @param mode 레이아웃 틀 안에서는 cardDriveRecordModeFor(LocalAppLayout.current)로 고른다.
  */
 @Composable
 fun CardDriveRecord(
@@ -220,7 +237,7 @@ fun CardDriveRecord(
     onNextWeek: () -> Unit,
     onToggleExpanded: () -> Unit,
     modifier: Modifier = Modifier,
-    mode: CardDriveRecordMode = CardDriveRecordMode.Landscape,
+    mode: CardDriveRecordMode = CardDriveRecordMode.LANDSCAPE,
 ) {
     val colors = AlterTheme.colors
     Column(
@@ -233,7 +250,8 @@ fun CardDriveRecord(
     ) {
         ChartPanel(
             state = state,
-            chartHeight = mode.chartWeekHeight,
+            // Figma 펼침 인스턴스(366:38510, 상황 15 455:68432)는 그래프가 23 줄어든다(353→330, 281→258)
+            chartHeight = if (state.expanded) mode.chartWeekHeight - ExpandedChartShrink else mode.chartWeekHeight,
             onPreviousWeek = onPreviousWeek,
             onNextWeek = onNextWeek,
         )
@@ -261,6 +279,8 @@ private fun ChartPanel(
             .clip(shape)
             .background(colors.surface)
             .border(ChartOutlineWidth, colors.surfaceHigh, shape)
+            // Figma는 테두리 1이 레이아웃에 들어간다(헤더가 패널 안 21, 21에서 시작). Compose border는 자리를 차지하지 않아 따로 띄운다
+            .padding(ChartOutlineWidth)
             .padding(AlterPadding.Medium),
         verticalArrangement = Arrangement.spacedBy(AlterMargin.Normal),
     ) {
@@ -279,10 +299,8 @@ private fun PeriodHeader(
     val typography = AlterTheme.typography
     val cardColors = driveRecordColors()
     val locale = LocalConfiguration.current.locales[0]
-    val formatter = DateTimeFormatter.ofPattern(
-        stringResource(R.string.card_drive_record_period_date_pattern),
-        locale,
-    )
+    val pattern = stringResource(R.string.card_drive_record_period_date_pattern)
+    val formatter = remember(pattern, locale) { DateTimeFormatter.ofPattern(pattern, locale) }
     val range = stringResource(
         R.string.card_drive_record_period_range,
         state.weekStart.format(formatter),
@@ -311,18 +329,32 @@ private fun PeriodHeader(
                 overflow = TextOverflow.Ellipsis,
             )
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(AlterMargin.XSmall)) {
+        // 두 버튼의 터치 영역은 원 사이 간격 가운데에서 맞닿고 겹치지 않는다.
+        val halfGap = PeriodNavGap / 2
+        Row(Modifier.bleedTouchInset()) {
             CircleIconButton(
                 contentDescription = stringResource(R.string.card_drive_record_previous_week),
                 iconRotation = 180f,
                 enabled = state.hasPreviousWeek,
                 onClick = onPreviousWeek,
+                touchPadding = PaddingValues(
+                    start = CircleButtonTouchInset,
+                    top = CircleButtonTouchInset,
+                    end = halfGap,
+                    bottom = CircleButtonTouchInset,
+                ),
             )
             CircleIconButton(
                 contentDescription = stringResource(R.string.card_drive_record_next_week),
                 iconRotation = 0f,
                 enabled = state.hasNextWeek,
                 onClick = onNextWeek,
+                touchPadding = PaddingValues(
+                    start = halfGap,
+                    top = CircleButtonTouchInset,
+                    end = CircleButtonTouchInset,
+                    bottom = CircleButtonTouchInset,
+                ),
             )
         }
     }
@@ -367,7 +399,8 @@ private fun ChartWeek(state: CardDriveRecordUiState, chartHeight: Dp) {
             .height(chartHeight)
             .clip(RoundedCornerShape(topStart = ChartWeekTopRadius, topEnd = ChartWeekTopRadius)),
     ) {
-        Row(Modifier.fillMaxSize()) {
+        // Figma chart_week: 막대 32 일곱 개를 양 끝에 붙여 고르게 벌린다(justify-between)
+        Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.SpaceBetween) {
             days.forEachIndexed { index, km ->
                 val barState = if (index == peakIndex) BarState.Peak else states[index]
                 DayBar(
@@ -379,7 +412,12 @@ private fun ChartWeek(state: CardDriveRecordUiState, chartHeight: Dp) {
                     } else {
                         stringResource(WeekdayLabels[index])
                     },
-                    modifier = Modifier.weight(1f),
+                    description = if (km == null || barState == BarState.Future) {
+                        stringResource(WeekdayLabels[index])
+                    } else {
+                        stringResource(R.string.card_drive_record_bar_description, stringResource(WeekdayLabels[index]), km)
+                    },
+                    modifier = Modifier.width(BarWidth),
                 )
             }
         }
@@ -410,6 +448,8 @@ private fun DayBar(
     state: BarState,
     barHeight: Dp,
     label: String,
+    /** 화면 읽기 문구 (예: "월 42km"). 막대 숫자 · 요일 글자 대신 읽는다 */
+    description: String,
     modifier: Modifier = Modifier,
 ) {
     val colors = AlterTheme.colors
@@ -418,7 +458,7 @@ private fun DayBar(
     Column(
         modifier = modifier
             .fillMaxHeight()
-            .semantics(mergeDescendants = true) {},
+            .clearAndSetSemantics { contentDescription = description },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(AlterMargin.XSmall),
     ) {
@@ -578,6 +618,7 @@ private fun ContentBlock(state: CardDriveRecordUiState, onToggleExpanded: () -> 
                     enabled = true,
                     onClick = onToggleExpanded,
                     iconTint = colors.textSecondary,
+                    modifier = Modifier.bleedTouchInset(),
                 )
             }
             Column {
@@ -634,7 +675,7 @@ private fun StatTiles(state: CardDriveRecordUiState) {
                 } else {
                     null
                 },
-                emphasis = true,
+                // Figma 펼침 인스턴스는 마지막 충전도 emphasis=false(28, 타일 높이 97)다
                 modifier = Modifier.weight(1f),
             )
             val sinceCharge = state.kmSinceLastCharge
@@ -666,7 +707,8 @@ private fun TileStat(
             .drawBehind {
                 drawRect(divider, size = Size(size.width, TileDividerThickness.toPx()))
             }
-            .padding(top = AlterPadding.Normal),
+            // Figma는 위 구분선 1이 자리를 차지한다(border-top 1 + 여백 16 → 타일 97)
+            .padding(top = TileDividerThickness + AlterPadding.Normal),
         verticalArrangement = Arrangement.spacedBy(AlterMargin.XSmall),
     ) {
         Text(text = label, style = typography.labelSmall, color = colors.textTertiary, maxLines = 1)
@@ -696,8 +738,11 @@ private fun TileStat(
 // ---------------------------------------------------------------------------------------------
 
 /**
- * 48 원형 버튼. 누르는 영역은 76이지만 레이아웃에서는 48만 차지한다(hit-slop).
+ * 48 원형 버튼. 레이아웃에서 누르는 영역(기본 76 = 원 + 사방 14)을 그대로 차지하고, 보이는 원만 48로 그린다.
+ * 시안의 원 자리에 맞추려면 부르는 쪽에서 [bleedTouchInset]으로 터치 여백만큼 바깥으로 번지게 놓는다.
  * 비활성이면 바탕과 그림자 없이 흐린 화살표만 보인다.
+ *
+ * @param touchPadding 원 바깥 터치 여백. 버튼이 나란히 있으면 맞닿는 쪽을 간격 절반으로 줄여 겹치지 않게 한다.
  */
 @Composable
 private fun CircleIconButton(
@@ -705,30 +750,24 @@ private fun CircleIconButton(
     iconRotation: Float,
     enabled: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     iconTint: Color = AlterTheme.colors.textPrimary,
+    touchPadding: PaddingValues = PaddingValues(CircleButtonTouchInset),
 ) {
     val colors = AlterTheme.colors
     val interaction = remember { MutableInteractionSource() }
     Box(
-        modifier = Modifier
-            .size(CircleButtonSize)
-            .layout { measurable, _ ->
-                // 76 크기로 재고 48 자리에 가운데 맞춰 놓는다. 넘친 부분도 터치를 받는다
-                val touch = CircleButtonTouchSize.roundToPx()
-                val visible = CircleButtonSize.roundToPx()
-                val placeable = measurable.measure(Constraints.fixed(touch, touch))
-                layout(visible, visible) {
-                    placeable.place((visible - touch) / 2, (visible - touch) / 2)
-                }
-            }
+        modifier = modifier
             .clickable(
                 interactionSource = interaction,
-                indication = ripple(bounded = false, radius = CircleButtonSize / 2),
+                // 물결은 원에 그린다 (터치 영역이 한쪽으로 치우쳐도 원 가운데에서 퍼지게)
+                indication = null,
                 enabled = enabled,
                 role = Role.Button,
                 onClick = onClick,
             )
-            .semantics { this.contentDescription = contentDescription },
+            .semantics { this.contentDescription = contentDescription }
+            .padding(touchPadding),
         contentAlignment = Alignment.Center,
     ) {
         val circle = if (enabled) {
@@ -741,7 +780,8 @@ private fun CircleIconButton(
         Box(
             modifier = Modifier
                 .size(CircleButtonSize)
-                .then(circle),
+                .then(circle)
+                .indication(interaction, ripple(bounded = false, radius = CircleButtonSize / 2)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
@@ -756,6 +796,22 @@ private fun CircleIconButton(
     }
 }
 
+/**
+ * 버튼(묶음)의 터치 여백만큼 사방으로 작게 보고하고 그만큼 바깥으로 옮겨 그린다.
+ * 그래서 원의 화면 위치와 줄 높이는 시안(48 기준) 그대로다.
+ * 번진 14는 카드 안쪽 여백(그래프 패널 20, 요약 오른쪽 16 + 카드 8, 요약 위 간격 20) 위에 놓여
+ * 잘리지 않고 터치도 받는다. Compose는 부모 영역 밖이라도 잘리지(clip) 않은 자식에 터치를 전달한다.
+ */
+private fun Modifier.bleedTouchInset(): Modifier = layout { measurable, constraints ->
+    val inset = CircleButtonTouchInset.roundToPx()
+    val placeable = measurable.measure(constraints.offset(horizontal = inset * 2, vertical = inset * 2))
+    val width = (placeable.width - inset * 2).coerceAtLeast(0)
+    val height = (placeable.height - inset * 2).coerceAtLeast(0)
+    layout(width, height) {
+        placeable.place(-inset, -inset)
+    }
+}
+
 @Composable
 private fun driveRecordColors(): DriveRecordColors =
     if (AlterTheme.colors.isDark) DarkDriveRecordColors else LightDriveRecordColors
@@ -763,34 +819,6 @@ private fun driveRecordColors(): DriveRecordColors =
 // ---------------------------------------------------------------------------------------------
 // 미리보기: 접힘/펼침 × 라이트/다크 × 가로/세로, 이번 주(오늘 있음) · 지난 주(오늘 없음)
 // ---------------------------------------------------------------------------------------------
-
-private val PreviewThisWeek = CardDriveRecordUiState(
-    weekStart = LocalDate.of(2026, 11, 2),
-    dailyKm = listOf(42, 36, 55, 31, 18, null, null),
-    todayIndex = 4,
-    averageKm = 37,
-    totalKm = 182,
-    daysSinceLastCharge = 3,
-    kmSinceLastCharge = 120,
-    diffFromLastWeekKm = 12,
-    hasPreviousWeek = true,
-    hasNextWeek = false,
-    expanded = false,
-)
-
-private val PreviewLastWeek = CardDriveRecordUiState(
-    weekStart = LocalDate.of(2026, 10, 26),
-    dailyKm = listOf(28, 0, 47, 33, 52, 64, 12),
-    todayIndex = null,
-    averageKm = 34,
-    totalKm = 236,
-    daysSinceLastCharge = 3,
-    kmSinceLastCharge = 120,
-    diffFromLastWeekKm = -5,
-    hasPreviousWeek = true,
-    hasNextWeek = true,
-    expanded = false,
-)
 
 @Composable
 private fun PreviewCard(
@@ -820,69 +848,69 @@ private fun PreviewCard(
 @Preview(name = "가로 · 접힘 · 라이트", widthDp = 399)
 @Composable
 private fun LandscapeCollapsedLightPreview() =
-    PreviewCard(PreviewThisWeek, CardDriveRecordMode.Landscape, darkTheme = false)
+    PreviewCard(CardDriveRecordSampleData.ThisWeek, CardDriveRecordMode.LANDSCAPE, darkTheme = false)
 
 @Preview(name = "가로 · 접힘 · 다크", widthDp = 399)
 @Composable
 private fun LandscapeCollapsedDarkPreview() =
-    PreviewCard(PreviewThisWeek, CardDriveRecordMode.Landscape, darkTheme = true)
+    PreviewCard(CardDriveRecordSampleData.ThisWeek, CardDriveRecordMode.LANDSCAPE, darkTheme = true)
 
 @Preview(name = "가로 · 펼침 · 라이트", widthDp = 399)
 @Composable
 private fun LandscapeExpandedLightPreview() =
-    PreviewCard(PreviewThisWeek.copy(expanded = true), CardDriveRecordMode.Landscape, darkTheme = false)
+    PreviewCard(CardDriveRecordSampleData.ThisWeek.copy(expanded = true), CardDriveRecordMode.LANDSCAPE, darkTheme = false)
 
 @Preview(name = "가로 · 펼침 · 다크", widthDp = 399)
 @Composable
 private fun LandscapeExpandedDarkPreview() =
-    PreviewCard(PreviewThisWeek.copy(expanded = true), CardDriveRecordMode.Landscape, darkTheme = true)
+    PreviewCard(CardDriveRecordSampleData.ThisWeek.copy(expanded = true), CardDriveRecordMode.LANDSCAPE, darkTheme = true)
 
 @Preview(name = "세로 · 접힘 · 라이트", widthDp = 394)
 @Composable
 private fun PortraitCollapsedLightPreview() =
-    PreviewCard(PreviewThisWeek, CardDriveRecordMode.Portrait, darkTheme = false)
+    PreviewCard(CardDriveRecordSampleData.ThisWeek, CardDriveRecordMode.PORTRAIT, darkTheme = false)
 
 @Preview(name = "세로 · 접힘 · 다크", widthDp = 394)
 @Composable
 private fun PortraitCollapsedDarkPreview() =
-    PreviewCard(PreviewThisWeek, CardDriveRecordMode.Portrait, darkTheme = true)
+    PreviewCard(CardDriveRecordSampleData.ThisWeek, CardDriveRecordMode.PORTRAIT, darkTheme = true)
 
 @Preview(name = "세로 · 펼침 · 라이트", widthDp = 394)
 @Composable
 private fun PortraitExpandedLightPreview() =
-    PreviewCard(PreviewThisWeek.copy(expanded = true), CardDriveRecordMode.Portrait, darkTheme = false)
+    PreviewCard(CardDriveRecordSampleData.ThisWeek.copy(expanded = true), CardDriveRecordMode.PORTRAIT, darkTheme = false)
 
 @Preview(name = "세로 · 펼침 · 다크", widthDp = 394)
 @Composable
 private fun PortraitExpandedDarkPreview() =
-    PreviewCard(PreviewThisWeek.copy(expanded = true), CardDriveRecordMode.Portrait, darkTheme = true)
+    PreviewCard(CardDriveRecordSampleData.ThisWeek.copy(expanded = true), CardDriveRecordMode.PORTRAIT, darkTheme = true)
 
 @Preview(name = "지난 주 · 가로 · 라이트", widthDp = 399)
 @Composable
 private fun LastWeekLandscapeLightPreview() =
-    PreviewCard(PreviewLastWeek, CardDriveRecordMode.Landscape, darkTheme = false)
+    PreviewCard(CardDriveRecordSampleData.LastWeek, CardDriveRecordMode.LANDSCAPE, darkTheme = false)
 
 @Preview(name = "지난 주 · 세로 · 펼침 · 다크", widthDp = 394)
 @Composable
 private fun LastWeekPortraitExpandedDarkPreview() =
-    PreviewCard(PreviewLastWeek.copy(expanded = true), CardDriveRecordMode.Portrait, darkTheme = true)
+    PreviewCard(CardDriveRecordSampleData.LastWeek.copy(expanded = true), CardDriveRecordMode.PORTRAIT, darkTheme = true)
 
 @Preview(name = "영문 · 세로 · 펼침 · 라이트", widthDp = 394, locale = "en")
 @Composable
 private fun EnglishPortraitExpandedPreview() =
-    PreviewCard(PreviewThisWeek.copy(expanded = true), CardDriveRecordMode.Portrait, darkTheme = false)
+    PreviewCard(CardDriveRecordSampleData.ThisWeek.copy(expanded = true), CardDriveRecordMode.PORTRAIT, darkTheme = false)
 
 @Preview(name = "W-Ext 가로 · 접힘 · 라이트", widthDp = 391)
 @Composable
 private fun LandscapeTallPreview() =
-    PreviewCard(PreviewThisWeek, CardDriveRecordMode.LandscapeTall, darkTheme = false)
+    PreviewCard(CardDriveRecordSampleData.ThisWeek, CardDriveRecordMode.LANDSCAPE_TALL, darkTheme = false)
 
 @Preview(name = "WF 가로 · 접힘 · 다크", widthDp = 403)
 @Composable
 private fun WfLandscapePreview() =
-    PreviewCard(PreviewThisWeek, CardDriveRecordMode.WfLandscape, darkTheme = true)
+    PreviewCard(CardDriveRecordSampleData.ThisWeek, CardDriveRecordMode.WF_LANDSCAPE, darkTheme = true)
 
 @Preview(name = "WF 세로 · 펼침 · 라이트", widthDp = 596)
 @Composable
 private fun WfPortraitPreview() =
-    PreviewCard(PreviewThisWeek.copy(expanded = true), CardDriveRecordMode.WfPortrait, darkTheme = false)
+    PreviewCard(CardDriveRecordSampleData.ThisWeek.copy(expanded = true), CardDriveRecordMode.WF_PORTRAIT, darkTheme = false)

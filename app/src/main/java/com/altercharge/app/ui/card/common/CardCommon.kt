@@ -5,5 +5,8 @@ package com.altercharge.app.ui.card.common
  * 담당: 서희님 (바꿀 때 석기님에게 알린다)
  */
 
-/** 충전 판정 단계. L1과 C가 같이 쓴다. Figma 판정: 오늘 / 1~2일 / 3일 이상 */
+/**
+ * 충전 판정 단계. Figma 판정: 오늘 / 1~2일 / 3일 이상.
+ * 지금은 L1(CardInfoUiState.verdict)만 쓴다.
+ */
 enum class ChargeVerdict { TODAY, WITHIN_TWO_DAYS, THREE_DAYS_OR_MORE }

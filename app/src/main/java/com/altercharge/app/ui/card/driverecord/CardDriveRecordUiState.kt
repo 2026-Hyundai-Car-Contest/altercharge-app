@@ -1,6 +1,8 @@
 package com.altercharge.app.ui.card.driverecord
 
 import androidx.compose.runtime.Immutable
+import com.altercharge.app.ui.designsystem.layout.AppLayoutInfo
+import com.altercharge.app.ui.designsystem.layout.FormFactor
 import java.time.LocalDate
 
 /**
@@ -35,17 +37,28 @@ data class CardDriveRecordUiState(
  */
 enum class CardDriveRecordMode {
     /** S-17 가로 383×648 */
-    Landscape,
+    LANDSCAPE,
 
     /** W-Extended 가로 375×816 */
-    LandscapeTall,
+    LANDSCAPE_TALL,
 
     /** S-17 · W-Extended 세로 378×576 */
-    Portrait,
+    PORTRAIT,
 
     /** WF 가로 387×455 */
-    WfLandscape,
+    WF_LANDSCAPE,
 
     /** WF 세로 580×576 */
-    WfPortrait,
+    WF_PORTRAIT,
+}
+
+/**
+ * 레이아웃 정보로 mode를 고른다.
+ * TODO 디자이너 확인: W-Standard 가로(높이 810)는 시안이 없어 S-17 가로(LANDSCAPE)로 대신한다.
+ */
+fun cardDriveRecordModeFor(info: AppLayoutInfo): CardDriveRecordMode = when (info.formFactor) {
+    FormFactor.WF -> if (info.isLandscape) CardDriveRecordMode.WF_LANDSCAPE else CardDriveRecordMode.WF_PORTRAIT
+    FormFactor.W_EXTENDED -> if (info.isLandscape) CardDriveRecordMode.LANDSCAPE_TALL else CardDriveRecordMode.PORTRAIT
+    FormFactor.S17, FormFactor.W_STANDARD ->
+        if (info.isLandscape) CardDriveRecordMode.LANDSCAPE else CardDriveRecordMode.PORTRAIT
 }

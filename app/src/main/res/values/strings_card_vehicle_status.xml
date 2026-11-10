@@ -71,7 +71,7 @@
 
     <!-- 값을 모를 때 -->
     <string name="card_vehicle_status_value_unknown" translatable="false">–</string>
-    <string name="card_vehicle_status_soc_unknown" translatable="false">—</string>
+    <string name="card_vehicle_status_soc_unknown" translatable="false">–</string>
 
     <!-- 차량 이미지 자리 (접근성 설명) -->
     <string name="card_vehicle_status_vehicle_image">차량 이미지</string>
