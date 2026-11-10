@@ -236,7 +236,7 @@ private fun iviButtonPalette(hierarchy: IviButtonHierarchy, colors: AlterColors)
         )
         IviButtonHierarchy.Secondary -> palette(colors.surfaceHigh, colors.surfaceAccent, colors.textPrimary)
         IviButtonHierarchy.Tonal -> palette(colors.blue50, colors.blue100, colors.textPrimary)
-        // 테두리는 basic_300 (버튼 전용, 다크는 basic_600)
+        // 테두리는 basic_300 (버튼 전용 변수, 다크 값 #686A72)
         IviButtonHierarchy.Ghost -> palette(
             Color.Transparent,
             colors.surfaceHigh,

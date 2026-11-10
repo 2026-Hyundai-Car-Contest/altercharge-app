@@ -50,7 +50,7 @@ fun AlterChargeTheme(
     val materialColors = if (darkTheme) {
         darkColorScheme(
             primary = colors.blue500,
-            background = colors.background,
+            background = colors.screenBackground,
             surface = colors.surface,
             onBackground = colors.textPrimary,
             onSurface = colors.textPrimary,
@@ -59,7 +59,7 @@ fun AlterChargeTheme(
     } else {
         lightColorScheme(
             primary = colors.blue500,
-            background = colors.background,
+            background = colors.screenBackground,
             surface = colors.surface,
             onBackground = colors.textPrimary,
             onSurface = colors.textPrimary,

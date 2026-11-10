@@ -29,7 +29,7 @@ fun DesignTokensSheet() {
     val colors = AlterTheme.colors
     val type = AlterTheme.typography
     Column(
-        modifier = Modifier.background(colors.background).padding(AlterPadding.XLarge),
+        modifier = Modifier.background(colors.screenBackground).padding(AlterPadding.XLarge),
         verticalArrangement = Arrangement.spacedBy(AlterMargin.Large),
     ) {
         Swatches(
@@ -41,7 +41,7 @@ fun DesignTokensSheet() {
         Swatches(
             listOf(
                 colors.textPrimary, colors.textSecondary, colors.textTertiary, colors.textDisabled,
-                colors.surface, colors.surfaceHigh, colors.surfaceAccent,
+                colors.screenBackground, colors.surface, colors.surfaceHigh, colors.surfaceAccent,
                 colors.positive, colors.negative, colors.danger, colors.warning,
             ),
         )

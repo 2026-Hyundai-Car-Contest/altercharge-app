@@ -35,7 +35,7 @@ class DesignCatalogActivity : ComponentActivity() {
         val dark = intent.getBooleanExtra("dark", false)
         setContent {
             AlterChargeTheme(darkTheme = dark) {
-                Box(Modifier.fillMaxSize().background(AlterTheme.colors.background)) {
+                Box(Modifier.fillMaxSize().background(AlterTheme.colors.screenBackground)) {
                     when (page) {
                         "buttons" -> IviButtonCatalog(
                             Modifier.background(AlterTheme.colors.surface).padding(AlterPadding.XLarge),

@@ -167,13 +167,13 @@ private fun ColumnScope.FillRest(content: @Composable () -> Unit) {
 
 /**
  * 스크롤이 더 있다는 표시. 하이파이 scroll_fade 그라데이션:
- * 위 투명 → 55% 지점 78% → 아래 96% 불투명. 색은 #EDEEF2(surfaceHigh).
+ * 위 투명 → 55% 지점 78% → 아래 96% 불투명. 색은 화면 배경(screenBackground)이라 끝이 배경과 이어진다.
  * 터치를 받지 않는 그림이라 아래 카드 조작을 막지 않는다.
  */
 @Composable
 private fun ScrollFade(modifier: Modifier) {
-    // TODO 디자이너 확인: 다크 모드 페이드 색은 시안에 없어 같은 토큰(surfaceHigh)의 다크 값을 쓴다.
-    val color = AlterTheme.colors.surfaceHigh
+    // 다크 페이드는 시안에 없어 화면 배경 다크 값을 쓴다 (라이트는 시안 #EDEEF2와 같다).
+    val color = AlterTheme.colors.screenBackground
     Box(
         modifier.background(
             Brush.verticalGradient(
