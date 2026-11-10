@@ -6,16 +6,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import com.altercharge.app.ui.designsystem.component.DriveState
-import com.altercharge.app.ui.designsystem.component.PlaceholderBox
-import com.altercharge.app.ui.designsystem.component.StatusBar
-import com.altercharge.app.ui.designsystem.component.StatusBarUiState
-import com.altercharge.app.ui.designsystem.component.StatusValue
-import com.altercharge.app.ui.designsystem.layout.AlterChargeLayout
 import com.altercharge.app.ui.designsystem.theme.AlterChargeTheme
 import com.altercharge.app.ui.designsystem.theme.AlterPadding
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
@@ -26,7 +18,9 @@ import com.altercharge.app.ui.designsystem.theme.AlterTheme
  *   adb shell am start --display 0 -n com.altercharge.app/.debug.DesignCatalogActivity \
  *     --es page buttons --ez dark false
  *
- * page: tokens(디자인 값) · buttons(버튼) · statusbar(상단 바) · layout(레이아웃 틀)
+ * page: tokens(디자인 값) · buttons(버튼) · statusbar(상단 바)
+ *   · layout(레이아웃 틀 + L1 · L2 · C 실제 카드, R1 · R2는 자리 표시)
+ *   · cv(C 카드 상황 01~12 가로) · cards(L1 · L2 · C 모드별)
  */
 class DesignCatalogActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,14 +35,9 @@ class DesignCatalogActivity : ComponentActivity() {
                             Modifier.background(AlterTheme.colors.surface).padding(AlterPadding.XLarge),
                         )
                         "statusbar" -> StatusBarCatalog(Modifier.padding(AlterPadding.XLarge))
-                        "layout" -> AlterChargeLayout(
-                            statusBar = { StatusBar(StatusBarUiState(DriveState.PARKED, battery = StatusValue.Ready(32), range = StatusValue.Ready(98), temperatureC = 12)) },
-                            l1 = { PlaceholderBox("L1 판정", Modifier.height(368.dp)) },
-                            l2 = { PlaceholderBox("L2 주행 기록") },
-                            c = { PlaceholderBox("C 차량 상태") },
-                            r1 = { PlaceholderBox("R1 추천 충전소", Modifier.height(368.dp)) },
-                            r2 = { PlaceholderBox("R2 충전소 목록") },
-                        )
+                        "layout" -> LayoutCatalog()
+                        "cv" -> VehicleStatusCatalog()
+                        "cards" -> CardsCatalog()
                         else -> DesignTokensSheet()
                     }
                 }

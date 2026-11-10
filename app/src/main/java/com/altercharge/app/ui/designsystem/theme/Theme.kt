@@ -10,7 +10,11 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 
 private val LocalAlterColors = staticCompositionLocalOf { LightAlterColors }
-private val LocalAlterTypography = staticCompositionLocalOf { AlterTypography() }
+
+/** 글자 스타일은 라이트/다크 구분이 없어 한 번만 만든다. */
+private val DefaultAlterTypography = AlterTypography()
+
+private val LocalAlterTypography = staticCompositionLocalOf { DefaultAlterTypography }
 
 /**
  * 라이트/다크 선택. 기획 확정: 지금은 [SYSTEM](차량 시스템 설정을 따름).
@@ -68,7 +72,7 @@ fun AlterChargeTheme(
     }
     CompositionLocalProvider(
         LocalAlterColors provides colors,
-        LocalAlterTypography provides AlterTypography(),
+        LocalAlterTypography provides DefaultAlterTypography,
     ) {
         MaterialTheme(colorScheme = materialColors, content = content)
     }

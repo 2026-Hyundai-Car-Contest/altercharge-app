@@ -33,7 +33,9 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Constraints
@@ -41,9 +43,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.altercharge.app.R
+import com.altercharge.app.ui.designsystem.layout.AppLayoutInfo
 import com.altercharge.app.ui.designsystem.theme.AlterChargeTheme
 import com.altercharge.app.ui.designsystem.theme.AlterColors
 import com.altercharge.app.ui.designsystem.theme.AlterFontWeight
+import com.altercharge.app.ui.designsystem.theme.AlterLetterSpacing
+import com.altercharge.app.ui.designsystem.theme.AlterLineHeightStyle
 import com.altercharge.app.ui.designsystem.theme.AlterMargin
 import com.altercharge.app.ui.designsystem.theme.AlterPadding
 import com.altercharge.app.ui.designsystem.theme.AlterRadius
@@ -64,6 +69,14 @@ import kotlin.math.ceil
  */
 enum class CardVehicleStatusMode { LANDSCAPE, PORTRAIT }
 
+/**
+ * 레이아웃 정보로 mode를 고른다. 지금 구현은 S-17 가로 · 세로 두 모드뿐이라 방향만 본다.
+ * TODO 디자이너 확인: W-Standard · W-Extended · WF는 구현한 mode가 없어 같은 방향의 S-17 모드로 대신한다.
+ *   W-Ext(landscape_tall · portrait_tall)와 WF(wf_landscape · wf_portrait) 모드를 만들면 여기서 나눈다.
+ */
+fun cardVehicleStatusModeFor(info: AppLayoutInfo): CardVehicleStatusMode =
+    if (info.isLandscape) CardVehicleStatusMode.LANDSCAPE else CardVehicleStatusMode.PORTRAIT
+
 /** 차량 이미지 종류. 상황에 따라 카드가 고른다. */
 enum class VehicleImageKind {
     /** 가로 카드 · 충전기에 꽂힌 측면 (vehicle_charging) */
@@ -78,8 +91,9 @@ enum class VehicleImageKind {
 
 /**
  * C 차량 상태 카드. Figma card_vehicle_status (366:39011), 상황별 시안 (455:58776 01~12).
- * 보기 전용 카드다(눌러서 하는 동작이 없다).
+ * 보기 전용 카드다(눌러서 하는 동작이 없다). 화면 읽기에서는 카드 전체를 한 덩어리로 읽는다.
  *
+ * @param mode 레이아웃 틀 안에서는 cardVehicleStatusModeFor(LocalAppLayout.current)로 고른다.
  * @param vehicleImage 차량 이미지 자리. 이미지 에셋(이슈 #4)이 들어오면 종류별 이미지를 그려 넘긴다.
  *   넘긴 Modifier에는 자리 크기가 들어 있다.
  */
@@ -93,13 +107,14 @@ fun CardVehicleStatus(
     },
 ) {
     val colors = AlterTheme.colors
-    val content = rememberContent(state, mode)
+    val content = buildContent(state, mode)
     val shape = RoundedCornerShape(CardRadius)
     // 다크 모드는 그림자 대신 면 색으로 높이를 나타낸다 (AlterShadows 설명).
     val shadowModifier = if (colors.isDark) Modifier else Modifier.alterShadow(CardShadow, CardRadius)
 
     Box(
         modifier = modifier
+            .semantics(mergeDescendants = true) {}
             .then(shadowModifier)
             .clip(shape)
             .background(colors.surface, shape)
@@ -130,6 +145,7 @@ private fun LandscapeLayout(
     ) {
         Headline(
             text = content.headline,
+            maxLines = LANDSCAPE_HEADLINE_MAX_LINES,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = AlterPadding.XLarge, vertical = AlterPadding.Large),
@@ -182,8 +198,12 @@ private fun LandscapeLayout(
                                 )
                             }
                         }
+                        // 타일이 하나뿐이면(09 배터리 위험 · 미연결) 값은 왼쪽 반에 두고 구분선은 패널 폭 전체에 긋는다 (시안).
+                        val singleTile = content.tiles.size == 1
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .then(if (singleTile) Modifier.tileDivider(colors.surfaceAccent) else Modifier),
                             horizontalArrangement = Arrangement.spacedBy(AlterMargin.Large),
                         ) {
                             content.tiles.forEach { tile ->
@@ -191,10 +211,10 @@ private fun LandscapeLayout(
                                     tile = tile,
                                     valueStyle = typography.numericMedium,
                                     unitStyle = LandscapeTileUnitStyle,
+                                    drawDivider = !singleTile,
                                 )
                             }
-                            // 타일이 하나뿐이어도 시안처럼 왼쪽 반만 차지한다 (09 배터리 위험 · 미연결).
-                            if (content.tiles.size == 1) Spacer(Modifier.weight(1f))
+                            if (singleTile) Spacer(Modifier.weight(1f))
                         }
                     }
                 }
@@ -222,7 +242,14 @@ private fun PortraitLayout(
             horizontalArrangement = Arrangement.spacedBy(AlterMargin.Large),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Headline(text = content.portraitHeadline, modifier = Modifier.weight(1f))
+            // TODO 디자이너 확인: 칸이 카드 폭 절반이라 긴 이름 · 영문(07 등)은 줄이 많아진다.
+            //   임시로 단어 단위로 줄을 바꾸고 3줄에서 말줄임한다. 긴 이름 · 영문 기준 시안이 나오면 맞춘다.
+            Headline(
+                text = content.portraitHeadline,
+                maxLines = PORTRAIT_HEADLINE_MAX_LINES,
+                lineBreak = PortraitHeadlineLineBreak,
+                modifier = Modifier.weight(1f),
+            )
             Row(
                 modifier = Modifier.weight(1f),
                 horizontalArrangement = Arrangement.spacedBy(AlterMargin.XSmall),
@@ -343,12 +370,19 @@ private fun StageWithPanel(
 // ---------------------------------------------------------------------------
 
 @Composable
-private fun Headline(text: String, modifier: Modifier = Modifier) {
+private fun Headline(
+    text: String,
+    maxLines: Int,
+    modifier: Modifier = Modifier,
+    lineBreak: LineBreak = LineBreak.Unspecified,
+) {
     Text(
         text = text,
         modifier = modifier,
-        style = AlterTheme.typography.headlineLarge.copy(fontWeight = AlterFontWeight.Strong),
+        style = AlterTheme.typography.headlineLarge.copy(fontWeight = AlterFontWeight.Strong, lineBreak = lineBreak),
         color = AlterTheme.colors.textPrimary,
+        maxLines = maxLines,
+        overflow = TextOverflow.Ellipsis,
     )
 }
 
@@ -446,7 +480,9 @@ private fun RowScope.Soc(
         horizontalArrangement = Arrangement.spacedBy(SocGap),
     ) {
         Text(
-            text = state.socPercent?.toString() ?: stringResource(R.string.card_vehicle_status_soc_unknown),
+            // 센서 값이 범위를 벗어나도 0~100으로 보여 준다.
+            text = state.socPercent?.coerceIn(0, MAX_SOC)?.toString()
+                ?: stringResource(R.string.card_vehicle_status_soc_unknown),
             modifier = Modifier.alignByBaseline(),
             style = if (known) {
                 valueStyle.copy(shadow = Shadow(content.accent.copy(alpha = SocGlowAlpha), Offset.Zero, SocGlowBlur))
@@ -522,21 +558,32 @@ private fun StatusText(
     }
 }
 
-/** 정보 타일 (tile_stat): 위 구분선 / 라벨 / 값 + 단위 */
+/** 타일 위 구분선. 위쪽 끝에 폭 전체로 긋는다. */
+private fun Modifier.tileDivider(color: Color): Modifier = drawBehind {
+    drawLine(
+        color = color,
+        start = Offset(0f, 0f),
+        end = Offset(size.width, 0f),
+        strokeWidth = TileDividerWidth.toPx(),
+    )
+}
+
+/**
+ * 정보 타일 (tile_stat): 위 구분선 / 라벨 / 값 + 단위.
+ * @param drawDivider false면 구분선을 부모가 대신 긋는다 (타일 하나일 때 폭 전체).
+ */
 @Composable
-private fun RowScope.InfoTile(tile: Tile, valueStyle: TextStyle, unitStyle: TextStyle) {
+private fun RowScope.InfoTile(
+    tile: Tile,
+    valueStyle: TextStyle,
+    unitStyle: TextStyle,
+    drawDivider: Boolean = true,
+) {
     val colors = AlterTheme.colors
     Column(
         modifier = Modifier
             .weight(1f)
-            .drawBehind {
-                drawLine(
-                    color = colors.surfaceAccent,
-                    start = Offset(0f, 0f),
-                    end = Offset(size.width, 0f),
-                    strokeWidth = TileDividerWidth.toPx(),
-                )
-            }
+            .then(if (drawDivider) Modifier.tileDivider(colors.surfaceAccent) else Modifier)
             .padding(top = AlterPadding.Normal),
         verticalArrangement = Arrangement.spacedBy(AlterMargin.XSmall),
     ) {
@@ -607,8 +654,9 @@ private data class CardContent(
     val landscapeImage: VehicleImageKind,
 )
 
+/** 상황별 문구 · 색 · 타일을 만든다. 리소스 문자열을 읽어야 해서 Composable이다. */
 @Composable
-private fun rememberContent(state: CardVehicleStatusUiState, mode: CardVehicleStatusMode): CardContent {
+private fun buildContent(state: CardVehicleStatusUiState, mode: CardVehicleStatusMode): CardContent {
     val colors = AlterTheme.colors
     val situation = state.situation
     val unknown = stringResource(R.string.card_vehicle_status_value_unknown)
@@ -775,8 +823,10 @@ private fun timeLeft(minutes: Int?, unknown: String): StatusLine {
     if (minutes == null) {
         return StatusLine.TimeLeft(stringResource(R.string.card_vehicle_status_time_left_minutes), listOf(unknown))
     }
-    val hours = minutes / MINUTES_PER_HOUR
-    val rest = minutes % MINUTES_PER_HOUR
+    // 음수(데이터 오류)는 0분으로 보여 준다.
+    val safeMinutes = minutes.coerceAtLeast(0)
+    val hours = safeMinutes / MINUTES_PER_HOUR
+    val rest = safeMinutes % MINUTES_PER_HOUR
     return if (hours > 0) {
         StatusLine.TimeLeft(
             stringResource(R.string.card_vehicle_status_time_left_hours),
@@ -812,7 +862,7 @@ private fun accentColor(situation: VehicleSituation, colors: AlterColors): Color
 /** level = ceil(SOC ÷ 25), 0~4칸. 값을 모르면 0칸. */
 private fun gaugeLevel(socPercent: Int?): Int {
     if (socPercent == null) return 0
-    return ceil(socPercent.coerceIn(0, 100) / SOC_PER_CELL).toInt().coerceIn(0, GaugeCells)
+    return ceil(socPercent.coerceIn(0, MAX_SOC) / SOC_PER_CELL).toInt().coerceIn(0, GaugeCells)
 }
 
 /**
@@ -845,6 +895,18 @@ private fun emphasizeArgs(
 private val ArgPattern = Regex("%(\\d+)\\$[sd]")
 private const val MINUTES_PER_HOUR = 60
 private const val SOC_PER_CELL = 25.0
+private const val MAX_SOC = 100
+
+/** 헤드라인 최대 줄 수. 넘치면 말줄임 */
+private const val LANDSCAPE_HEADLINE_MAX_LINES = 2
+private const val PORTRAIT_HEADLINE_MAX_LINES = 3
+
+/** 세로 헤드라인: 단어(한국어는 어절) 단위 줄바꿈 */
+private val PortraitHeadlineLineBreak = LineBreak(
+    strategy = LineBreak.Strategy.HighQuality,
+    strictness = LineBreak.Strictness.Normal,
+    wordBreak = LineBreak.WordBreak.Phrase,
+)
 
 /** container/radius */
 private val CardRadius = 32.dp
@@ -895,108 +957,22 @@ private val GaugeTipRadius = 3.dp
 /** 타일 위 구분선 */
 private val TileDividerWidth = 1.dp
 
-/** 가로 타일 단위 글자 18/27 (디자인 값에 없는 크기) */
+/** 가로 타일 단위 글자 18/27 (디자인 값에 없는 크기). 자간 · 줄 높이 처리는 디자인 값 글자와 같다 */
 private val LandscapeTileUnitStyle = TextStyle(
     fontFamily = AstaSans,
     fontWeight = AlterFontWeight.Normal,
     fontSize = 18.sp,
     lineHeight = 27.sp,
+    letterSpacing = AlterLetterSpacing,
+    lineHeightStyle = AlterLineHeightStyle,
 )
 
 /** 세로 SOC 숫자 80 (디자인 값에 없는 크기, 굵기 · 자간은 numericHero와 같다) */
 private fun portraitSocStyle(base: TextStyle): TextStyle = base.copy(fontSize = 80.sp, lineHeight = 120.sp)
 
 // ---------------------------------------------------------------------------
-// 미리보기 (샘플 이름 "운전자")
+// 미리보기 (샘플: CardVehicleStatusSampleData)
 // ---------------------------------------------------------------------------
-
-private object Samples {
-    private const val NAME = "운전자"
-
-    /** 01 주차 · 충전 권장 */
-    val ChargeRecommended = CardVehicleStatusUiState(
-        driverName = NAME,
-        charging = ChargingState.UNPLUGGED,
-        socPercent = 22,
-        rangeKm = 95,
-        nearestStationKm = 1.2,
-    )
-
-    /** 03 충전 중 */
-    val Charging = CardVehicleStatusUiState(
-        driverName = NAME,
-        charging = ChargingState.CHARGING,
-        socPercent = 62,
-        rangeKm = 250,
-        remainingMinutes = 63,
-        fullAt = "21:40",
-    )
-
-    /** 05 충전 중 · 배터리 위험 */
-    val ChargingCritical = CardVehicleStatusUiState(
-        driverName = NAME,
-        charging = ChargingState.CHARGING,
-        socPercent = 8,
-        rangeKm = 30,
-        remainingMinutes = 160,
-        fullAt = "00:20",
-    )
-
-    /** 06 충전 완료 */
-    val Charged = CardVehicleStatusUiState(
-        driverName = NAME,
-        charging = ChargingState.COMPLETED,
-        socPercent = 100,
-        rangeKm = 410,
-        fullAt = "21:12",
-    )
-
-    /** 07 충전 일시정지 */
-    val Paused = CardVehicleStatusUiState(
-        driverName = NAME,
-        charging = ChargingState.PAUSED,
-        socPercent = 54,
-        rangeKm = 220,
-        pauseReason = PauseReason.GRID_DEMAND,
-        autoResumeAt = "22:30",
-    )
-
-    /** 09 배터리 위험 · 미연결 */
-    val CriticalUnplugged = CardVehicleStatusUiState(
-        driverName = NAME,
-        charging = ChargingState.UNPLUGGED,
-        socPercent = 14,
-        rangeKm = 52,
-        remainingMinutes = 12,
-    )
-
-    /** 10 배터리 방전 */
-    val Depleted = CardVehicleStatusUiState(
-        driverName = NAME,
-        charging = ChargingState.UNPLUGGED,
-        socPercent = 0,
-        rangeKm = 0,
-    )
-
-    /** 11 충전 오류 */
-    val ChargeError = CardVehicleStatusUiState(
-        driverName = NAME,
-        charging = ChargingState.FAULT,
-        socPercent = null,
-        rangeKm = null,
-        fault = ChargeFault.COMMUNICATION,
-    )
-
-    /** 12 차량 정보 없음 */
-    val NoData = CardVehicleStatusUiState(
-        driverName = NAME,
-        charging = ChargingState.UNPLUGGED,
-        socPercent = null,
-        rangeKm = null,
-        lastUpdatedAt = "14:05",
-        retryInSeconds = 30,
-    )
-}
 
 @Composable
 private fun LandscapePreview(state: CardVehicleStatusUiState, dark: Boolean = false) {
@@ -1033,68 +1009,72 @@ private fun PortraitPreview(state: CardVehicleStatusUiState, dark: Boolean = fal
 
 @Preview(name = "01 충전 권장 · 가로", widthDp = 822, heightDp = 1072)
 @Composable
-private fun PreviewChargeRecommended() = LandscapePreview(Samples.ChargeRecommended)
+private fun PreviewChargeRecommended() = LandscapePreview(CardVehicleStatusSampleData.ChargeRecommended)
 
 @Preview(name = "03 충전 중 · 가로", widthDp = 822, heightDp = 1072)
 @Composable
-private fun PreviewCharging() = LandscapePreview(Samples.Charging)
+private fun PreviewCharging() = LandscapePreview(CardVehicleStatusSampleData.Charging)
 
 @Preview(name = "03 충전 중 · 가로 · 다크", widthDp = 822, heightDp = 1072)
 @Composable
-private fun PreviewChargingDark() = LandscapePreview(Samples.Charging, dark = true)
+private fun PreviewChargingDark() = LandscapePreview(CardVehicleStatusSampleData.Charging, dark = true)
 
 @Preview(name = "03 충전 중 · 가로 · EN", widthDp = 822, heightDp = 1072, locale = "en")
 @Composable
-private fun PreviewChargingEn() = LandscapePreview(Samples.Charging)
+private fun PreviewChargingEn() = LandscapePreview(CardVehicleStatusSampleData.Charging)
 
 @Preview(name = "05 배터리 위험 · 가로", widthDp = 822, heightDp = 1072)
 @Composable
-private fun PreviewChargingCritical() = LandscapePreview(Samples.ChargingCritical)
+private fun PreviewChargingCritical() = LandscapePreview(CardVehicleStatusSampleData.ChargingCritical)
 
 @Preview(name = "06 충전 완료 · 가로 · 다크", widthDp = 822, heightDp = 1072)
 @Composable
-private fun PreviewCharged() = LandscapePreview(Samples.Charged, dark = true)
+private fun PreviewCharged() = LandscapePreview(CardVehicleStatusSampleData.Charged, dark = true)
 
 @Preview(name = "07 일시정지 · 가로 · EN", widthDp = 822, heightDp = 1072, locale = "en")
 @Composable
-private fun PreviewPaused() = LandscapePreview(Samples.Paused)
+private fun PreviewPaused() = LandscapePreview(CardVehicleStatusSampleData.Paused)
 
 @Preview(name = "09 위험 · 미연결 · 가로", widthDp = 822, heightDp = 1072)
 @Composable
-private fun PreviewCriticalUnplugged() = LandscapePreview(Samples.CriticalUnplugged)
+private fun PreviewCriticalUnplugged() = LandscapePreview(CardVehicleStatusSampleData.CriticalUnplugged)
 
 @Preview(name = "10 방전 · 가로", widthDp = 822, heightDp = 1072)
 @Composable
-private fun PreviewDepleted() = LandscapePreview(Samples.Depleted)
+private fun PreviewDepleted() = LandscapePreview(CardVehicleStatusSampleData.Depleted)
 
 @Preview(name = "11 충전 오류 · 가로", widthDp = 822, heightDp = 1072)
 @Composable
-private fun PreviewChargeError() = LandscapePreview(Samples.ChargeError)
+private fun PreviewChargeError() = LandscapePreview(CardVehicleStatusSampleData.ChargeError)
 
 @Preview(name = "12 정보 없음 · 가로 · 다크", widthDp = 822, heightDp = 1072)
 @Composable
-private fun PreviewNoData() = LandscapePreview(Samples.NoData, dark = true)
+private fun PreviewNoData() = LandscapePreview(CardVehicleStatusSampleData.NoData, dark = true)
 
 @Preview(name = "01 충전 권장 · 세로", widthDp = 808, heightDp = 684)
 @Composable
-private fun PreviewPortraitChargeRecommended() = PortraitPreview(Samples.ChargeRecommended)
+private fun PreviewPortraitChargeRecommended() = PortraitPreview(CardVehicleStatusSampleData.ChargeRecommended)
 
 @Preview(name = "03 충전 중 · 세로", widthDp = 808, heightDp = 684)
 @Composable
-private fun PreviewPortraitCharging() = PortraitPreview(Samples.Charging)
+private fun PreviewPortraitCharging() = PortraitPreview(CardVehicleStatusSampleData.Charging)
 
 @Preview(name = "03 충전 중 · 세로 · 다크 · EN", widthDp = 808, heightDp = 684, locale = "en")
 @Composable
-private fun PreviewPortraitChargingDarkEn() = PortraitPreview(Samples.Charging, dark = true)
+private fun PreviewPortraitChargingDarkEn() = PortraitPreview(CardVehicleStatusSampleData.Charging, dark = true)
 
 @Preview(name = "05 배터리 위험 · 세로 · 다크", widthDp = 808, heightDp = 684)
 @Composable
-private fun PreviewPortraitCritical() = PortraitPreview(Samples.ChargingCritical, dark = true)
+private fun PreviewPortraitCritical() = PortraitPreview(CardVehicleStatusSampleData.ChargingCritical, dark = true)
 
 @Preview(name = "11 충전 오류 · 세로", widthDp = 808, heightDp = 684)
 @Composable
-private fun PreviewPortraitError() = PortraitPreview(Samples.ChargeError)
+private fun PreviewPortraitError() = PortraitPreview(CardVehicleStatusSampleData.ChargeError)
 
 @Preview(name = "12 정보 없음 · 세로", widthDp = 808, heightDp = 684)
 @Composable
-private fun PreviewPortraitNoData() = PortraitPreview(Samples.NoData)
+private fun PreviewPortraitNoData() = PortraitPreview(CardVehicleStatusSampleData.NoData)
+
+@Preview(name = "07 일시정지 · 세로 · EN (헤드라인 줄바꿈)", widthDp = 808, heightDp = 684, locale = "en")
+@Composable
+private fun PreviewPortraitPausedEn() = PortraitPreview(CardVehicleStatusSampleData.Paused)

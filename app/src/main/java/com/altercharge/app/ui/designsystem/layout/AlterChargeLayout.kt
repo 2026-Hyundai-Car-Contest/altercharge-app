@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -46,6 +47,8 @@ import com.altercharge.app.ui.designsystem.theme.AlterTheme
  * @param leftColumnScrollable 가로에서 L2를 펼쳤을 때(상황 15) 왼쪽 열만 스크롤하고 아래에 페이드를 덮는다.
  *   이때 l1 · l2 슬롯은 높이 제약이 무한대라 안에서 fillMaxHeight나 weight를 쓰면 안 된다.
  *   WF는 스크롤 없음 규칙이라 이 값을 무시한다 (FormFactor.landscapeLeftScrollable).
+ *
+ * 슬롯 안에서는 [LocalAppLayout]으로 이 틀이 고른 폼팩터와 방향을 읽을 수 있다.
  */
 @Composable
 fun AlterChargeLayout(
@@ -62,14 +65,17 @@ fun AlterChargeLayout(
         val isLandscape = maxWidth >= maxHeight
         val formFactor = FormFactor.closestTo(maxWidth, maxHeight)
         val spec = formFactor.spec(isLandscape)
-        if (isLandscape) {
-            LandscapeLayout(
-                spec, formFactor.landscapeSpans, maxWidth,
-                leftColumnScrollable && formFactor.landscapeLeftScrollable,
-                statusBar, l1, l2, c, r1, r2,
-            )
-        } else {
-            PortraitLayout(spec, statusBar, l1, l2, c, r1, r2)
+        val layoutInfo = remember(formFactor, isLandscape) { AppLayoutInfo(formFactor, isLandscape) }
+        CompositionLocalProvider(LocalAppLayout provides layoutInfo) {
+            if (isLandscape) {
+                LandscapeLayout(
+                    spec, formFactor.landscapeSpans, maxWidth,
+                    leftColumnScrollable && formFactor.landscapeLeftScrollable,
+                    statusBar, l1, l2, c, r1, r2,
+                )
+            } else {
+                PortraitLayout(spec, statusBar, l1, l2, c, r1, r2)
+            }
         }
     }
 }
@@ -188,6 +194,7 @@ private fun ScrollFade(modifier: Modifier) {
 /**
  * 세로 슬롯 높이. S-17 세로 하이파이 기준 (C 652, 1행 368, 2행 576).
  * 다른 폼팩터 세로는 시안이 없어 같은 값을 쓴다. 시안이 나오면 AreaSpec으로 옮긴다.
+ * TODO 디자이너 확인: 1행 칸은 368인데 L1 card_info 세로 모드 높이는 358이라 칸 아래 10이 빈다.
  *
  * 세로 위치(S-17 하이파이): 상태 바 y 32 → C y 108 → 1행 y 780 → 2행 y 1168.
  * 세로는 앱 바 자리가 80이 아니라 상태 바 56 + 거터 20이다(본문 y 108). 하이파이를 따른다.

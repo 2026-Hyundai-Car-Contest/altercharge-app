@@ -66,7 +66,11 @@ enum class FormFactor(
     fun spec(isLandscape: Boolean): AreaSpec = if (isLandscape) landscape else portrait
 
     companion object {
-        /** 지금 앱 영역 크기와 가장 가까운 폼팩터를 고른다. */
+        /**
+         * 지금 앱 영역 크기와 가장 가까운 폼팩터를 고른다.
+         * width · height는 기기 화면 크기가 아니라 앱이 실제로 받은 영역 크기다
+         * (차량 시스템 바 · 분할 화면을 뺀 값, 예: BoxWithConstraints의 maxWidth · maxHeight).
+         */
         fun closestTo(width: Dp, height: Dp): FormFactor {
             val isLandscape = width >= height
             return entries.minBy { formFactor ->
