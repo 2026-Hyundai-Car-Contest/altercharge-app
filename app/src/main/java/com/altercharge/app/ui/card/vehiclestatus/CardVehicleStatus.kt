@@ -204,6 +204,7 @@ private fun LandscapeLayout(
                                     content = content,
                                     valueStyle = typography.numericHero,
                                     unitColor = colors.textTertiary,
+                                    glow = true,
                                 )
                                 StatusText(
                                     status = content.status,
@@ -297,17 +298,20 @@ private fun PortraitLayout(
                 GlassPanel(
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = AlterPadding.Large,
+                    glassAlpha = FlatStageGlassAlpha,
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.Bottom,
                     ) {
+                        // 세로 시안(455:58776 세로 01~12)은 SOC 숫자 빛번짐이 있다
                         BatteryValue(
                             state = state,
                             content = content,
                             labelStyle = typography.labelMedium,
                             socStyle = portraitSocStyle(typography.numericHero),
+                            glow = true,
                         )
                         BatteryDetail(
                             content = content,
@@ -347,7 +351,15 @@ private fun TallLayout(
                 .fillMaxWidth()
                 .weight(1f),
             stage = {
-                Stage(chip = state.chip) {
+                // TODO 디자이너 확인(변수 연결): landscape_tall 충전 중(366:37686) stage만 배경이
+                //   panel_station_list/item/enabled/container(흰색)에 연결돼 있다. 다른 variant는 stage/background(#F7F8FA).
+                //   화면에 보이는 값(흰색)을 따랐다.
+                val stageBackground = if (content.isCharging && spec.chargingStageOnSurface) {
+                    AlterTheme.colors.surface
+                } else {
+                    AlterTheme.colors.background
+                }
+                Stage(chip = state.chip, background = stageBackground) {
                     StageVehicle(
                         spec = if (content.isCharging) spec.stageCharging else spec.stageUnplugged,
                         vehicleImage = vehicleImage,
@@ -358,6 +370,7 @@ private fun TallLayout(
                 GlassPanel(
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = AlterPadding.Large,
+                    glassAlpha = FlatStageGlassAlpha,
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -432,6 +445,7 @@ private fun WfLandscapeLayout(
                 GlassPanel(
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = AlterPadding.Large,
+                    glassAlpha = FlatStageGlassAlpha,
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(BatteryTileGap)) {
                         BatteryValue(
@@ -488,6 +502,7 @@ private fun WfPortraitLayout(
                 GlassPanel(
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = AlterPadding.Large,
+                    glassAlpha = FlatStageGlassAlpha,
                 ) {
                     // Figma 노드 위치상 요약은 battery_row 바로 아래(y 178)에 붙는다 (battery_tile 높이 238 고정)
                     Column {
@@ -566,6 +581,7 @@ private fun Headline(
 private fun Stage(
     chip: ConnectionChip,
     chipInset: Dp = AlterPadding.Large,
+    background: Color = AlterTheme.colors.background,
     image: @Composable () -> Unit,
 ) {
     val shape = RoundedCornerShape(AlterRadius.XXLarge)
@@ -573,7 +589,7 @@ private fun Stage(
         modifier = Modifier
             .fillMaxSize()
             .clip(shape)
-            .background(AlterTheme.colors.background, shape),
+            .background(background, shape),
     ) {
         image()
         ChipStatus(
@@ -623,13 +639,17 @@ private fun StageVehicle(
     }
 }
 
-/** 배터리 라벨 + SOC 큰 숫자 (battery_value). */
+/**
+ * 배터리 라벨 + SOC 큰 숫자 (battery_value).
+ * @param glow SOC 숫자 빛번짐. 세로 시안에만 있고 tall · WF 시안(366:37686 · 366:37763 · 366:37801 · 366:37835 등)에는 없다.
+ */
 @Composable
 private fun BatteryValue(
     state: CardVehicleStatusUiState,
     content: CardContent,
     labelStyle: TextStyle,
     socStyle: TextStyle,
+    glow: Boolean = false,
 ) {
     val colors = AlterTheme.colors
     Column(verticalArrangement = Arrangement.spacedBy(AlterMargin.XXSmall)) {
@@ -644,6 +664,7 @@ private fun BatteryValue(
                 content = content,
                 valueStyle = socStyle,
                 unitColor = portraitSocUnitColor(colors),
+                glow = glow,
             )
         }
     }
@@ -686,7 +707,8 @@ private fun InfoSummary(text: String) {
     Text(
         text = text,
         modifier = Modifier.fillMaxWidth(),
-        style = AlterTheme.typography.labelMedium,
+        // 한국어는 기본이 글자 단위 줄바꿈이라 어절 단위로 바꾼다 (항목 안은 줄바꿈 없는 공백)
+        style = AlterTheme.typography.labelMedium.copy(lineBreak = PortraitHeadlineLineBreak),
         color = AlterTheme.colors.textSecondary,
     )
 }
@@ -736,6 +758,7 @@ private fun ChipStatus(chip: ConnectionChip, modifier: Modifier = Modifier) {
 private fun GlassPanel(
     modifier: Modifier,
     contentPadding: Dp,
+    glassAlpha: Float = GlassAlpha,
     content: @Composable () -> Unit,
 ) {
     val colors = AlterTheme.colors
@@ -744,7 +767,7 @@ private fun GlassPanel(
     Box(
         modifier = modifier
             .clip(shape)
-            .background(colors.surfaceHigh.copy(alpha = GlassAlpha), shape)
+            .background(colors.surfaceHigh.copy(alpha = glassAlpha), shape)
             .border(GlassEdgeWidth, colors.surface.copy(alpha = GlassEdgeAlpha), shape)
             .padding(contentPadding),
     ) {
@@ -759,6 +782,7 @@ private fun RowScope.Soc(
     content: CardContent,
     valueStyle: TextStyle,
     unitColor: Color,
+    glow: Boolean,
 ) {
     val typography = AlterTheme.typography
     val known = state.socPercent != null
@@ -771,7 +795,7 @@ private fun RowScope.Soc(
             text = state.socPercent?.coerceIn(0, MAX_SOC)?.toString()
                 ?: stringResource(R.string.card_vehicle_status_soc_unknown),
             modifier = Modifier.alignByBaseline(),
-            style = if (known) {
+            style = if (known && glow) {
                 valueStyle.copy(shadow = Shadow(content.accent.copy(alpha = SocGlowAlpha), Offset.Zero, SocGlowBlur))
             } else {
                 valueStyle
@@ -1117,7 +1141,8 @@ private fun buildContent(state: CardVehicleStatusUiState, mode: CardVehicleStatu
         tiles = tiles,
         portraitTiles = portraitTiles,
         landscapeImage = landscapeImage,
-        summary = tiles.joinToString(SUMMARY_SEPARATOR) { it.summary },
+        // 항목 안 공백은 줄바꿈 없는 공백으로 바꿔 "충전 완료"처럼 한 항목은 붙여 두고, 줄은 항목 사이에서만 바뀌게 한다
+        summary = tiles.joinToString(SUMMARY_SEPARATOR) { it.summary.replace(' ', NO_BREAK_SPACE) },
     )
 }
 
@@ -1189,6 +1214,7 @@ private fun timeLeft(minutes: Int?, unknown: String): StatusLine {
  * 상황별 시안은 모든 칸이 상태 색 하나라 시안을 따랐다.
  */
 private fun accentColor(situation: VehicleSituation, colors: AlterColors): Color = when (situation) {
+    // 07 일시정지는 SOC와 상관없이 주황이다 (상황 보드 07 가로 455:63201: 54%가 regulation_orange #FF8A00)
     VehicleSituation.CHARGE_RECOMMENDED,
     VehicleSituation.CHARGING_LOW,
     VehicleSituation.PAUSED,
@@ -1210,6 +1236,7 @@ private fun gaugeLevel(socPercent: Int?): Int {
 
 /**
  * 세로 카드 % 단위 색 (card_vehicle_status/soc/unit, 라이트 #8DABED = blue_300).
+ * 상태 색을 따라가지 않는다: 위험 · 빨강 숫자일 때도 시안 %는 이 색이다 (세로 05 455:61892, landscape_tall 미연결 366:37704).
  * TODO 디자이너 확인: 다크 값이 시안에 없어 다크 팔레트에서 밝기가 비슷한 blue_700을 쓴다.
  */
 private fun portraitSocUnitColor(colors: AlterColors): Color = if (colors.isDark) colors.blue700 else colors.blue300
@@ -1272,7 +1299,9 @@ private val PortraitPanelOverlap = 24.dp
 private val WideSidePadding = 40.dp
 
 /** WF 요약 줄에서 타일 사이 구분 */
-private const val SUMMARY_SEPARATOR = " · "
+/** 앞 공백은 줄바꿈 없는 공백이라 "·"가 줄 맨 앞에 오지 않는다 */
+private const val SUMMARY_SEPARATOR = "\u00A0· "
+private const val NO_BREAK_SPACE = '\u00A0'
 
 /**
  * 스테이지 안 원형 배경과 위에서 본 차 자리. 위치는 패널이 겹친 부분까지 포함한 스테이지 기준이다.
@@ -1316,6 +1345,8 @@ private val PortraitStageUnplugged = StageImageSpec(
 /** W-Extended 모드별 값. Figma card_vehicle_status mode=landscape_tall (366:37686 · 366:37704) / portrait_tall (366:37763 · 366:37782) */
 private class TallSpec(
     val panelOverlap: Dp,
+    /** 충전기 쪽 스테이지 배경을 카드 면(흰색)으로 둘지 */
+    val chargingStageOnSurface: Boolean,
     val stageCharging: StageImageSpec,
     val stageUnplugged: StageImageSpec,
     val socStyle: (TextStyle) -> TextStyle,
@@ -1327,6 +1358,7 @@ private class TallSpec(
  */
 private val LandscapeTall = TallSpec(
     panelOverlap = LandscapePanelOverlap,
+    chargingStageOnSurface = true,
     stageCharging = StageImageSpec(backdropSize = null, imageWidth = 626.dp, imageHeight = 441.dp),
     stageUnplugged = StageImageSpec(backdropSize = 529.22.dp, imageWidth = 391.dp, imageHeight = 473.dp),
     socStyle = { it },
@@ -1335,6 +1367,7 @@ private val LandscapeTall = TallSpec(
 /** W-Ext 세로 736×816: 패널 겹침 24, SOC 80. 원 290.7 가운데, 차 282×233(충전기 쪽) · 186×154(미연결), 둘 다 -90도 */
 private val PortraitTall = TallSpec(
     panelOverlap = PortraitPanelOverlap,
+    chargingStageOnSurface = false,
     stageCharging = StageImageSpec(backdropSize = 290.7.dp, imageWidth = 282.dp, imageHeight = 233.dp),
     stageUnplugged = StageImageSpec(backdropSize = 290.7.dp, imageWidth = 186.dp, imageHeight = 154.dp),
     socStyle = ::portraitSocStyle,
@@ -1363,6 +1396,14 @@ private val ChipDotSize = 12.dp
 
 /** 유리 면 */
 private const val GlassAlpha = 0.55f
+
+/**
+ * 민무늬 스테이지(세로 · tall · WF) 위 유리 면 불투명도.
+ * Figma는 surface_high 55% + 뒤 흐림 20 + 그림자라, 렌더 결과가 스테이지(#F7F8FA) 위든 흰 카드 위든 #EFF0F3 근처로 고르다
+ * (366:37686 · 366:37763 · 366:37801 · 366:37835, 세로 455:60518 캡처 실측). 55%만 쓰면 스테이지가 끝나는 줄에 이음새가 보여
+ * 렌더 색에 맞춰 90%로 둔다(흰 위 #EFF0F3, #F7F8FA 위 #EEEFF2). 가로는 뒤에 차 이미지가 있어 55% 그대로.
+ */
+private const val FlatStageGlassAlpha = 0.9f
 private const val GlassEdgeAlpha = 0.8f
 private val GlassEdgeWidth = 1.5.dp
 

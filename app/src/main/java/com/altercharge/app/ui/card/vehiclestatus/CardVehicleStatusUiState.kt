@@ -171,6 +171,7 @@ data class CardVehicleStatusUiState(
      * 충전 권장 판정 (REQ_ST_005). 미연결일 때 01 충전 권장 · 02 출발 준비 완료를 이 값으로 고른다.
      * 판정 결과(Judgment.chargeRecommended)를 넘긴다. 넘기지 않으면 배터리 30% 이하만 본다.
      * 위험(09) · 방전(10) · 정보 없음(12)은 배터리 구간이 먼저다.
+     * 기본값은 만들 때 한 번만 정해져 copy(socPercent = …)로는 다시 계산되지 않으니, 실제 연결 때는 judge() 결과를 항상 넘긴다.
      */
     val chargeRecommended: Boolean = socPercent != null && socPercent <= RECOMMEND_SOC_PERCENT,
 ) {
