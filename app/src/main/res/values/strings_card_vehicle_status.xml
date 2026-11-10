@@ -58,6 +58,8 @@
     <string name="card_vehicle_status_tile_nearest_station">가까운 충전소</string>
     <string name="card_vehicle_status_tile_last_charge">마지막 충전</string>
     <string name="card_vehicle_status_tile_full_at">충전 완료</string>
+    <!-- WF 요약 줄(info_summary)의 충전 완료 시각: "21:40 충전 완료" -->
+    <string name="card_vehicle_status_summary_full_at">%1$s 충전 완료</string>
     <string name="card_vehicle_status_tile_auto_resume">자동 재개</string>
     <string name="card_vehicle_status_tile_emergency">긴급 충전</string>
     <string name="card_vehicle_status_tile_emergency_value">호출</string>
