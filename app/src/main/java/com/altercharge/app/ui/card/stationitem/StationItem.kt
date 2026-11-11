@@ -1,0 +1,209 @@
+package com.altercharge.app.ui.card.stationitem
+
+import android.text.Layout
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.altercharge.app.R
+import com.altercharge.app.ui.designsystem.theme.AlterChargeTheme
+import com.altercharge.app.ui.designsystem.theme.AlterColors
+import com.altercharge.app.ui.designsystem.theme.AlterFontWeight
+import com.altercharge.app.ui.designsystem.theme.AlterRadius
+import com.altercharge.app.ui.designsystem.theme.AlterTheme
+
+@Composable
+fun StationItem(
+    modifier: Modifier = Modifier
+) {
+
+    // 전체 컨테이너
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(AlterRadius.Small))
+            .background(AlterTheme.colors.background)
+            .padding(vertical = 10.dp, horizontal = 16.dp)
+    ) {
+        // 충전소명(좌측), 충전소자리(우측)
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = modifier
+                .fillMaxWidth()
+        ) {
+            // 충전소명
+            Text(
+                text = "연희동 주민센터",
+                fontWeight = AlterFontWeight.Strong,
+                color = AlterTheme.colors.textPrimary
+            )
+
+            // 충전소자리 태그
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = modifier
+                    .clip(RoundedCornerShape(AlterRadius.Small))
+                    .background(AlterTheme.colors.surfaceHigh)
+                    .padding(vertical = 2.dp, horizontal = 6.dp)
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.ic_charger_slow),
+                    contentDescription = null,
+                    modifier = modifier
+                        .size(16.dp)
+                )
+                Text(
+                    text = "2",
+                    fontSize = 16.sp,
+                    lineHeight = 24.sp,
+                    fontWeight = AlterFontWeight.Strong,
+                    color = AlterTheme.colors.textPrimary,
+                    modifier = Modifier.padding(start = 3.dp)
+                )
+
+                Text(
+                    text = "/4",
+                    fontSize = 16.sp,
+                    lineHeight = 24.sp,
+                    color = AlterTheme.colors.textTertiary,
+                    modifier = Modifier.padding(start = 4.dp)
+                )
+
+                Text(
+                    text = "대",
+                    fontSize = 16.sp,
+                    lineHeight = 24.sp,
+                    color = AlterTheme.colors.textTertiary,
+                    modifier = Modifier.padding(start = 4.dp)
+                )
+            }
+        }
+
+        // 충전소까지거리/충전소 도로명 주소
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = modifier
+                .padding(top = 6.dp)
+        ) {
+            Text(
+                text = "1.2km",
+                color = AlterTheme.colors.textPrimary,
+                fontWeight = AlterFontWeight.Strong,
+                fontSize = 24.sp,
+                lineHeight = 36.sp
+            )
+
+            Box(
+                modifier = modifier
+                    .background(AlterTheme.colors.surfaceAccent)
+                    .height(14.dp)
+                    .width(1.5.dp)
+            )
+
+            Text(
+                text = "서울 마포구 동교로 263",
+                fontSize = 16.sp,
+                color = AlterTheme.colors.textTertiary.copy(alpha = 0.64f)
+            )
+        }
+    }
+}
+
+@Preview(name = "Station Item(Light/KO)", locale = "ko")
+@Composable
+private fun StationItemListLightKoPreview() {
+    AlterChargeTheme(darkTheme = false) {
+        Box(
+            modifier = Modifier
+                .width(351.dp)
+        ) {
+            Column (
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier
+                    .padding(10.dp)
+            ) {
+                StationItem()
+                StationItem()
+            }
+        }
+    }
+}
+
+@Preview(name = "Station Item(Dark/KO)", locale = "ko")
+@Composable
+private fun StationItemListDarkKoPreview() {
+    AlterChargeTheme(darkTheme = true) {
+        Box(
+            modifier = Modifier
+                .width(351.dp)
+        ) {
+            Column (
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier
+                    .padding(10.dp)
+            ) {
+                StationItem()
+                StationItem()
+            }
+        }
+    }
+}
+
+@Preview(name = "Station Item(Light/EN)", locale = "en")
+@Composable
+private fun StationItemListLightEnPreview() {
+    AlterChargeTheme(darkTheme = false) {
+        Box(
+            modifier = Modifier
+                .width(351.dp)
+        ) {
+            Column (
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier
+                    .padding(10.dp)
+            ) {
+                StationItem()
+                StationItem()
+            }
+        }
+    }
+}
+
+@Preview(name = "Station Item(Dark/EN)", locale = "en")
+@Composable
+private fun StationItemListDarkEnPreview() {
+    AlterChargeTheme(darkTheme = true) {
+        Box(
+            modifier = Modifier
+                .width(351.dp)
+        ) {
+            Column (
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier
+                    .padding(10.dp)
+            ) {
+                StationItem()
+                StationItem()
+            }
+        }
+    }
+}
