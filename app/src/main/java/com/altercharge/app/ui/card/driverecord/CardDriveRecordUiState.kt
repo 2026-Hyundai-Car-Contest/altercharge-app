@@ -29,6 +29,11 @@ data class CardDriveRecordUiState(
     val hasNextWeek: Boolean,
     /** 펼침 상태 (상황 15). 화면에 들어올 때는 접힘으로 시작한다(시안 규칙) */
     val expanded: Boolean,
+    /**
+     * 이번 주 기록이 하나도 없는 빈 상태 (Figma state = empty, 첫날). 막대를 흐리게 가리고 안내를 보여 준다.
+     * 이전 · 다음 주 버튼은 눌리지 않고, 펼침 버튼과 상세 통계는 숨긴다. 값은 [dailyKm] 모두 null · [todayIndex] 지정으로 둔다.
+     */
+    val empty: Boolean = false,
 )
 
 /**

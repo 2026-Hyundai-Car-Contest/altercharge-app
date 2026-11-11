@@ -35,4 +35,20 @@ internal object CardDriveRecordSampleData {
         hasNextWeek = true,
         expanded = false,
     )
+
+    /** 기록이 하나도 없는 첫날 (이번 주, 오늘 = 금) */
+    val Empty = CardDriveRecordUiState(
+        weekStart = LocalDate.of(2026, 11, 2),
+        dailyKm = List(7) { null },
+        todayIndex = 4,
+        averageKm = 0,
+        totalKm = 0,
+        daysSinceLastCharge = null,
+        kmSinceLastCharge = null,
+        diffFromLastWeekKm = null,
+        hasPreviousWeek = false,
+        hasNextWeek = false,
+        expanded = false,
+        empty = true,
+    )
 }

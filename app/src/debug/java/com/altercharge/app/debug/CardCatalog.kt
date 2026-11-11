@@ -160,6 +160,11 @@ fun CardsCatalog() {
                 DriveRecordSample(CardDriveRecordSampleData.ThisWeek.copy(expanded = true), mode)
                 DriveRecordSample(CardDriveRecordSampleData.LastWeek, mode)
             }
+            // 기록 없음(첫날): 시안은 세로(378×576)만 있다
+            if (mode == CardDriveRecordMode.PORTRAIT) {
+                CatalogLabel("L2 card_drive_record · PORTRAIT · 기록 없음(empty)")
+                DriveRecordSample(CardDriveRecordSampleData.Empty, mode)
+            }
         }
         // C: 모드마다 충전 중 · 미연결 배터리 위험 (Figma variant charging · unplugged/critical)
         CardVehicleStatusMode.entries.forEach { mode ->

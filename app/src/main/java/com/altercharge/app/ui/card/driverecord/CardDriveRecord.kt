@@ -177,7 +177,7 @@ private fun PeriodHeader(
             CircleIconButton(
                 contentDescription = stringResource(R.string.card_drive_record_previous_week),
                 iconRotation = 180f,
-                enabled = state.hasPreviousWeek,
+                enabled = state.hasPreviousWeek && !state.empty,
                 onClick = onPreviousWeek,
                 touchPadding = PaddingValues(
                     start = CircleButtonTouchInset,
@@ -189,7 +189,7 @@ private fun PeriodHeader(
             CircleIconButton(
                 contentDescription = stringResource(R.string.card_drive_record_next_week),
                 iconRotation = 0f,
-                enabled = state.hasNextWeek,
+                enabled = state.hasNextWeek && !state.empty,
                 onClick = onNextWeek,
                 touchPadding = PaddingValues(
                     start = halfGap,
@@ -263,8 +263,11 @@ private fun ChartWeek(state: CardDriveRecordUiState, chartHeight: Dp) {
                 )
             }
         }
+        if (state.empty) {
+            ChartEmptyOverlay(Modifier.matchParentSize())
+        }
         // 평균선: 지난 요일과 오늘 평균. 막대가 모두 0이면 위치를 정할 수 없어 그리지 않는다
-        if (weekMax > 0) {
+        if (weekMax > 0 && !state.empty) {
             // 평균이 그 주 최대값보다 커도(데이터 오류) 차트 밖으로 나가지 않게 막는다
             val averageY = labelAreaHeight + barMaxHeight * (state.averageKm.toFloat() / weekMax).coerceIn(0f, 1f)
             AverageLine(
@@ -452,18 +455,27 @@ private fun ContentBlock(state: CardDriveRecordUiState, onToggleExpanded: () -> 
                     color = colors.textPrimary,
                     modifier = Modifier.weight(1f),
                 )
-                CircleIconButton(
-                    contentDescription = stringResource(
-                        if (state.expanded) R.string.card_drive_record_collapse else R.string.card_drive_record_expand,
-                    ),
-                    iconRotation = if (state.expanded) -90f else 90f,
-                    enabled = true,
-                    onClick = onToggleExpanded,
-                    iconTint = colors.textSecondary,
-                    modifier = Modifier.bleedTouchInset(),
-                )
+                // 기록 없음에서는 펼칠 내용이 없어 펼침 버튼을 숨긴다 (Figma state = empty)
+                if (!state.empty) {
+                    CircleIconButton(
+                        contentDescription = stringResource(
+                            if (state.expanded) R.string.card_drive_record_collapse else R.string.card_drive_record_expand,
+                        ),
+                        iconRotation = if (state.expanded) -90f else 90f,
+                        enabled = true,
+                        onClick = onToggleExpanded,
+                        iconTint = colors.textSecondary,
+                        modifier = Modifier.bleedTouchInset(),
+                    )
+                }
             }
-            Column {
+            if (state.empty) {
+                Text(
+                    text = stringResource(R.string.card_drive_record_empty_description),
+                    style = typography.labelSmall,
+                    color = colors.textTertiary,
+                )
+            } else Column {
                 Text(
                     text = stringResource(R.string.card_drive_record_summary_average, state.averageKm),
                     style = typography.labelSmall,
@@ -481,7 +493,7 @@ private fun ContentBlock(state: CardDriveRecordUiState, onToggleExpanded: () -> 
                 }
             }
         }
-        if (state.expanded) {
+        if (state.expanded && !state.empty) {
             StatTiles(state)
         }
     }
