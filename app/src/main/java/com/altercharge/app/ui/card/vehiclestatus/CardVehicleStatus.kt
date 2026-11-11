@@ -96,16 +96,15 @@ enum class VehicleImageKind {
  * 카드가 주어진 칸을 채운다(fillMaxSize). 크기는 부모(레이아웃 슬롯)가 정해 줘야 하고, 스크롤 안에 크기 없이 넣으면 안 된다.
  *
  * @param mode 레이아웃 틀 안에서는 cardVehicleStatusModeFor(LocalAppLayout.current)로 고른다.
- * @param vehicleImage 차량 이미지 자리. 이미지 에셋(이슈 #4)이 들어오면 종류별 이미지를 그려 넘긴다.
- *   넘긴 Modifier에는 자리 크기가 들어 있다.
+ * @param vehicleImage 차량 이미지 자리. 기본은 종류별 에셋([VehicleImage]). 바꿔 그리려면 넘긴 Modifier(자리 크기 포함)를 쓴다.
  */
 @Composable
 fun CardVehicleStatus(
     state: CardVehicleStatusUiState,
     modifier: Modifier = Modifier,
     mode: CardVehicleStatusMode = CardVehicleStatusMode.LANDSCAPE,
-    vehicleImage: @Composable (kind: VehicleImageKind, modifier: Modifier) -> Unit = { _, imageModifier ->
-        VehicleImagePlaceholder(imageModifier)
+    vehicleImage: @Composable (kind: VehicleImageKind, modifier: Modifier) -> Unit = { kind, imageModifier ->
+        VehicleImage(kind, imageModifier)
     },
 ) {
     val colors = AlterTheme.colors

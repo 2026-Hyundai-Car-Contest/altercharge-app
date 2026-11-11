@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +31,8 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -521,18 +525,26 @@ internal fun RowScope.InfoTile(
 }
 
 /**
- * 차량 이미지 자리 표시. 같은 크기의 회색 면이다.
- * TODO 석기님(이슈 #4): 차량 이미지 에셋이 들어오면 CardVehicleStatus의 vehicleImage로 종류별 이미지를 넘긴다.
+ * 차량 이미지. 종류별 에셋(이슈 #4)을 주어진 자리 크기에 맞춰 그린다.
+ * 자리 크기는 시안에서 회전한 뒤 화면에 차지하는 크기라 이미지를 돌리지 않고 가운데에 맞춘다.
  */
 @Composable
-fun VehicleImagePlaceholder(modifier: Modifier = Modifier) {
-    val description = stringResource(R.string.card_vehicle_status_vehicle_image)
-    Box(
-        modifier = modifier
-            .semantics { contentDescription = description }
-            .background(AlterTheme.colors.surfaceAccent, RoundedCornerShape(AlterRadius.Large)),
+fun VehicleImage(kind: VehicleImageKind, modifier: Modifier = Modifier) {
+    Image(
+        painter = painterResource(kind.drawableRes),
+        contentDescription = stringResource(R.string.card_vehicle_status_vehicle_image),
+        contentScale = ContentScale.Fit,
+        modifier = modifier,
     )
 }
+
+@get:DrawableRes
+private val VehicleImageKind.drawableRes: Int
+    get() = when (this) {
+        VehicleImageKind.CHARGING -> R.drawable.img_vehicle_charging
+        VehicleImageKind.DRIVING -> R.drawable.img_vehicle_driving
+        VehicleImageKind.TOP_VIEW -> R.drawable.img_vehicle_top_view
+    }
 
 // ---------------------------------------------------------------------------
 // 조각 치수 (Figma card_vehicle_status 변수). 디자인 값에 없는 것만 둔다.
