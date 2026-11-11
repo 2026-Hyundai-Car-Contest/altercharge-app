@@ -26,7 +26,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.InputMode
@@ -137,6 +142,7 @@ fun IviButton(
                 .height(size.height)
                 .then(if (iconOnly) Modifier.width(size.height) else Modifier)
                 .then(if (fullWidth) Modifier.fillMaxWidth() else Modifier)
+                .focusRing(visible = focused && keyboardInput, color = palette.focusRing, radius = size.radius)
                 .background(container, shape)
                 .then(
                     // Ghost 외곽선은 Enabled일 때만. Disabled · Restricted는 배경도 테두리도 없다 (Figma 366:36970)
@@ -145,10 +151,6 @@ fun IviButton(
                     } else {
                         Modifier
                     },
-                )
-                // 포커스 링: Figma Focused 견본(366:38903)처럼 버튼 안쪽 가장자리의 두께 4 테두리
-                .then(
-                    if (focused && keyboardInput) Modifier.border(FocusRingWidth, palette.focusRing, shape) else Modifier,
                 )
                 // Ghost는 외곽선 두께만큼 폭이 더 넓다 (Figma 인스턴스 폭 253 → 256)
                 .padding(
@@ -180,8 +182,27 @@ fun IviButton(
 /** Ghost 테두리: 1.5dp, 안쪽 정렬, basic_300. 누른 동안에는 테두리 없음 (디자이너 확정) */
 private val GhostOutlineWidth = 1.5.dp
 
-/** 포커스 링 두께 (button/focus/ring_width) */
-private val FocusRingWidth = 4.dp
+/**
+ * 포커스 링: 두께 4, 버튼에서 4 바깥 (button/focus/ring_width, ring_offset). 디자이너 확정(2026-11-11).
+ * Primary 같은 파란 배경에서 안쪽 테두리는 보이지 않고 라벨 공간도 줄어서 바깥에 둔다.
+ * 버튼 바깥에 그리므로 부모가 잘라내면(clip, 스크롤) 안 보일 수 있다. 카드 가장자리에 둘 때 여유를 둔다.
+ */
+private fun Modifier.focusRing(visible: Boolean, color: Color, radius: Dp): Modifier =
+    if (!visible) {
+        this
+    } else {
+        drawBehind {
+            val stroke = 4.dp.toPx()
+            val inset = 4.dp.toPx() + stroke / 2
+            drawRoundRect(
+                color = color,
+                topLeft = Offset(-inset, -inset),
+                size = Size(size.width + inset * 2, size.height + inset * 2),
+                cornerRadius = CornerRadius(radius.toPx() + inset),
+                style = Stroke(stroke),
+            )
+        }
+    }
 
 private fun IviButtonSize.textStyle(type: AlterTypography): TextStyle = when (this) {
     IviButtonSize.Large -> type.titleSmall
