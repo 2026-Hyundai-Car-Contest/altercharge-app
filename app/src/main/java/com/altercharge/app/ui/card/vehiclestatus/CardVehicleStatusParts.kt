@@ -1,6 +1,9 @@
 package com.altercharge.app.ui.card.vehiclestatus
 
 import android.graphics.BlurMaskFilter
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -12,28 +15,37 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.annotation.DrawableRes
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.BlurredEdgeTreatment
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -43,9 +55,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.altercharge.app.R
+import com.altercharge.app.ui.designsystem.theme.AlterColors
 import com.altercharge.app.ui.designsystem.theme.AlterFontWeight
 import com.altercharge.app.ui.designsystem.theme.AlterMargin
 import com.altercharge.app.ui.designsystem.theme.AlterPadding
@@ -141,6 +155,87 @@ internal fun Stage(
         )
     }
 }
+
+/**
+ * 상태 패널(status_panel) 뒤에 깔리는 "뒤 흐림" 대용. 스테이지와 패널 사이 층에 놓는다.
+ *
+ * Figma 패널은 BACKGROUND_BLUR 40이라 뒤에 있는 스테이지 아래쪽과 그 밑의 카드 배경이 흐리게 비친다.
+ * Compose에는 뒤를 흐리는 기능이 없어서, 패널 뒤에 있을 내용(스테이지 배경 + 이미지 + 카드 배경)을 한 번 더 그려
+ * 흐린 뒤 패널이 겹치는 띠 모양으로 잘라낸다. 흐림은 API 31 이상에서만 걸린다. 그 아래(minSdk 28)에서는 복사본이
+ * 흐려지지 않은 채 원본 위에 겹치므로 띠 구간만 아래 모서리가 각지고 카드 배경이 비친다(크래시 없음, 차량은 API 34).
+ *
+ * 이 composable은 스테이지와 같은 폭, 스테이지 높이 + [extendBelow] 높이로 놓인다(StageWithPanel이 정한다).
+ * - 보이는 띠: 스테이지 아래 [bandHeight](패널이 겹치는 높이)부터 아래 끝([extendBelow]까지)이다.
+ *   스테이지 아래 끝도 흐려져야 시안처럼 경계가 사라지므로 스테이지보다 아래로 더 내려간다.
+ * - 흐림 복사본은 스테이지보다 사방 [PanelBackdropMargin]만큼 크게 만든다. 가장자리에 여유가 있어야
+ *   흐림이 끝에서 어두워지지 않고, 스테이지 밑 카드 배경(단색)이 섞여 띠가 아래로 갈수록 밝아진다.
+ * - 큰 상자는 부모보다 커서 Compose가 넘친 만큼 가운데로 민다. 그래서 상자 높이를 "부모 높이 + 여유 × 2"로 두고
+ *   안쪽 스테이지 복사본을 위에서 여유만큼 내리면, 복사본이 원본 스테이지와 정확히 같은 자리에 온다.
+ */
+@Composable
+internal fun PanelBackdrop(
+    bandHeight: Dp,
+    extendBelow: Dp,
+    stageBackground: Color = AlterTheme.colors.background,
+    cardBackground: Color = AlterTheme.colors.containerBackground,
+    image: @Composable () -> Unit,
+) {
+    val density = LocalDensity.current
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        // 안쪽 Box 안에서는 BoxWithConstraints 값에 바로 닿을 수 없어(DslMarker) 여기서 미리 꺼낸다
+        val stageWidth = maxWidth
+        val stageHeight = maxHeight - extendBelow
+        val backdropHeight = maxHeight
+        // 보이는 띠: 스테이지 아래 bandHeight부터 이 상자 아래 끝까지. 위 두 모서리는 패널 모서리(24)와 같다
+        val bandShape = remember(stageHeight, bandHeight, density) {
+            GenericShape { size, _ ->
+                val top = with(density) { (stageHeight - bandHeight).toPx() }.coerceAtLeast(0f)
+                val radius = with(density) { AlterRadius.XXLarge.toPx() }
+                addRoundRect(
+                    RoundRect(
+                        left = 0f,
+                        top = top,
+                        right = size.width,
+                        bottom = size.height,
+                        topLeftCornerRadius = CornerRadius(radius),
+                        topRightCornerRadius = CornerRadius(radius),
+                    ),
+                )
+            }
+        }
+        // 복사본은 장식이라 접근성 트리에서 뺀다 (안 그러면 차량 이미지 설명이 두 번 읽힌다)
+        Box(Modifier.matchParentSize().clip(bandShape).clearAndSetSemantics {}) {
+            Box(
+                modifier = Modifier
+                    .requiredSize(
+                        width = stageWidth + PanelBackdropMargin * 2,
+                        height = backdropHeight + PanelBackdropMargin * 2,
+                    )
+                    .background(cardBackground)
+                    .blur(PanelBackdropBlurRadius, BlurredEdgeTreatment.Unbounded),
+                contentAlignment = Alignment.TopCenter,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .padding(top = PanelBackdropMargin)
+                        .size(width = stageWidth, height = stageHeight)
+                        .background(stageBackground),
+                ) {
+                    image()
+                }
+            }
+        }
+    }
+}
+
+/**
+ * status_panel BACKGROUND_BLUR 40 = 가우스 표준편차 20. Modifier.blur(RenderEffect)의 radius는 표준편차로 쓰인다.
+ * (BlurMaskFilter용 반지름 변환을 쓰면 띠가 시안보다 넓게 번진다 — 에뮬레이터 캡처로 확인)
+ */
+internal val PanelBackdropBlurRadius = 20.dp
+
+/** 흐림 복사본을 스테이지보다 사방으로 더 키우는 여유. 표준편차 20의 3배 */
+private val PanelBackdropMargin = 60.dp
 
 /**
  * 위에서 본 차 + 원형 배경 (세로 · tall · WF 스테이지). 둘 다 패널이 겹친 부분까지 포함한 스테이지 기준이다.
@@ -268,9 +363,9 @@ private fun ChipStatus(chip: ConnectionChip, modifier: Modifier = Modifier) {
         ConnectionChip.CONNECTED -> R.string.card_vehicle_status_chip_connected to colors.blue500
         ConnectionChip.UNPLUGGED -> R.string.card_vehicle_status_chip_unplugged to colors.negative
         ConnectionChip.ERROR -> R.string.card_vehicle_status_chip_error to colors.negative
-        // TODO 서희님: Figma 점 색은 basic_300(회색)인데 디자인 값에 없어 textDisabled로 대신한다.
-        ConnectionChip.STANDBY -> R.string.card_vehicle_status_chip_standby to colors.textDisabled
-        ConnectionChip.OFFLINE -> R.string.card_vehicle_status_chip_offline to colors.textDisabled
+        // Figma chip/dot/standby → basic/gray/basic_300. 오프라인 variant(371:9645)의 점도 같은 색
+        ConnectionChip.STANDBY -> R.string.card_vehicle_status_chip_standby to colors.gray300
+        ConnectionChip.OFFLINE -> R.string.card_vehicle_status_chip_offline to colors.gray300
     }
     val pill = RoundedCornerShape(AlterRadius.Full)
     Box(
@@ -309,6 +404,14 @@ private fun ChipStatus(chip: ConnectionChip, modifier: Modifier = Modifier) {
         }
     }
 }
+
+/**
+ * pleos basic/gray/basic_300 (라이트 #C7C9CE · 다크 #686A72). 디자인 값(AlterColors)에 없는 단계라 C 카드 안에서만 쓴다.
+ * 칩 점(standby · offline)과 값 없는 SOC "--"가 이 색이다.
+ * 공용 팔레트(AlterColors)에 gray300이 생기면 이 확장을 지운다 — 멤버가 확장보다 우선해 조용히 무시된다.
+ */
+internal val AlterColors.gray300: Color
+    get() = if (isDark) Color(0xFF686A72) else Color(0xFFC7C9CE)
 
 /** 상태 패널의 유리 면 (glass + glass_edge). */
 @Composable
@@ -519,16 +622,40 @@ internal fun RowScope.InfoTile(
 /**
  * 차량 이미지. 종류별 에셋(이슈 #4)을 주어진 자리 크기에 맞춰 그린다.
  * 자리 크기는 시안에서 회전한 뒤 화면에 차지하는 크기라 이미지를 돌리지 않고 가운데에 맞춘다.
+ * DRIVING은 자리 비율이 Figma 슬롯(774×411)과 같다는 전제로 자른다. 자리 비율을 바꾸면 이미지가 늘어난다.
  */
 @Composable
 fun VehicleImage(kind: VehicleImageKind, modifier: Modifier = Modifier) {
+    val description = stringResource(R.string.card_vehicle_status_vehicle_image)
+    if (kind == VehicleImageKind.DRIVING) {
+        // Figma vehicle_driving(371:9513)은 같은 1440×444 파일을 CROP으로 쓴다. 자리의 (u, v) → 이미지의
+        // (0.2138 + 0.5723u, -0.2144 + v): 가로는 21.4%~78.6%만 보이고, 세로는 자리 위 21.4%가 비고 아래가 잘린다.
+        val bitmap = ImageBitmap.imageResource(kind.drawableRes)
+        Canvas(modifier.clipToBounds().semantics { contentDescription = description }) {
+            val dstWidth = size.width / DRIVING_CROP_SCALE_X
+            val dstHeight = size.height / DRIVING_CROP_SCALE_Y
+            drawImage(
+                image = bitmap,
+                dstOffset = IntOffset((-DRIVING_CROP_OFFSET_X * dstWidth).roundToInt(), (-DRIVING_CROP_OFFSET_Y * dstHeight).roundToInt()),
+                dstSize = IntSize(dstWidth.roundToInt(), dstHeight.roundToInt()),
+                filterQuality = FilterQuality.High,
+            )
+        }
+        return
+    }
     Image(
         painter = painterResource(kind.drawableRes),
-        contentDescription = stringResource(R.string.card_vehicle_status_vehicle_image),
+        contentDescription = description,
         contentScale = ContentScale.Fit,
         modifier = modifier,
     )
 }
+
+/** Figma vehicle_driving imageTransform [[0.5723, 0, 0.2138], [0, 1, -0.2144]] */
+private const val DRIVING_CROP_SCALE_X = 0.5723f
+private const val DRIVING_CROP_OFFSET_X = 0.2138f
+private const val DRIVING_CROP_SCALE_Y = 1f
+private const val DRIVING_CROP_OFFSET_Y = -0.2144f
 
 @get:DrawableRes
 private val VehicleImageKind.drawableRes: Int

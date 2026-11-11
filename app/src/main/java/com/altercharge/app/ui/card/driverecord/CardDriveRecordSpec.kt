@@ -68,8 +68,17 @@ internal val AverageChipVerticalPadding = 2.dp
 /** 차트 위쪽 모서리 (chart_week rounded-top 24) */
 internal val ChartWeekTopRadius = AlterRadius.XXLarge
 
-/** 펼쳤을 때 그래프가 줄어드는 높이. Figma 펼침 인스턴스 두 개가 모두 23 */
-internal val ExpandedChartShrink = 23.dp
+/**
+ * 펼쳤을 때 그래프 높이 변화. Figma expanded=true variant의 chart_week − expanded=false의 chart_week.
+ * 가로(366:37434) 353→330, W-Ext 가로(366:37467) 521→498, 세로(366:37500) 281→258은 −23.
+ * WF 가로(366:37533)는 160 그대로, WF 세로(366:37566)는 281→314로 +33.
+ */
+internal val CardDriveRecordMode.expandedChartDelta: Dp
+    get() = when (this) {
+        CardDriveRecordMode.LANDSCAPE, CardDriveRecordMode.LANDSCAPE_TALL, CardDriveRecordMode.PORTRAIT -> (-23).dp
+        CardDriveRecordMode.WF_LANDSCAPE -> 0.dp
+        CardDriveRecordMode.WF_PORTRAIT -> 33.dp
+    }
 
 /** 타일 위 구분선 두께 */
 internal val TileDividerThickness = 1.dp

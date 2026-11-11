@@ -92,8 +92,9 @@ fun CardDriveRecord(
     ) {
         ChartPanel(
             state = state,
-            // Figma 펼침 인스턴스(366:38510, 상황 15 455:68432)는 그래프가 23 줄어든다(353→330, 281→258)
-            chartHeight = if (state.expanded) mode.chartWeekHeight - ExpandedChartShrink else mode.chartWeekHeight,
+            mode = mode,
+            // 펼치면 그래프 높이가 모드별로 달라진다 (expandedChartDelta: 가로 · 세로 −23, WF 가로 0, WF 세로 +33)
+            chartHeight = if (state.expanded) mode.chartWeekHeight + mode.expandedChartDelta else mode.chartWeekHeight,
             onPreviousWeek = onPreviousWeek,
             onNextWeek = onNextWeek,
         )
@@ -109,6 +110,7 @@ fun CardDriveRecord(
 @Composable
 private fun ChartPanel(
     state: CardDriveRecordUiState,
+    mode: CardDriveRecordMode,
     chartHeight: Dp,
     onPreviousWeek: () -> Unit,
     onNextWeek: () -> Unit,
@@ -127,7 +129,7 @@ private fun ChartPanel(
         verticalArrangement = Arrangement.spacedBy(AlterMargin.Normal),
     ) {
         PeriodHeader(state, onPreviousWeek, onNextWeek)
-        ChartWeek(state, chartHeight)
+        ChartWeek(state, mode, chartHeight)
     }
 }
 
@@ -204,7 +206,7 @@ private fun PeriodHeader(
 
 /** 요일 막대 7개 + 평균선 (chart_week) */
 @Composable
-private fun ChartWeek(state: CardDriveRecordUiState, chartHeight: Dp) {
+private fun ChartWeek(state: CardDriveRecordUiState, mode: CardDriveRecordMode, chartHeight: Dp) {
     val typography = AlterTheme.typography
     val density = LocalDensity.current
     // 요일 라벨 줄 높이 + 간격. 막대 바닥선과 평균선 위치를 여기에 맞춘다
@@ -264,7 +266,7 @@ private fun ChartWeek(state: CardDriveRecordUiState, chartHeight: Dp) {
             }
         }
         if (state.empty) {
-            ChartEmptyOverlay(Modifier.matchParentSize())
+            ChartEmptyOverlay(mode, Modifier.matchParentSize())
         }
         // 평균선: 지난 요일과 오늘 평균. 막대가 모두 0이면 위치를 정할 수 없어 그리지 않는다
         if (weekMax > 0 && !state.empty) {

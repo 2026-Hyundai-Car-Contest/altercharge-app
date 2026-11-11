@@ -164,11 +164,8 @@ private fun LandscapeLayout(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
-            stage = {
-                Stage(chip = state.chip) {
-                    vehicleImage(content.landscapeImage, Modifier.fillMaxSize())
-                }
-            },
+            chip = state.chip,
+            image = { vehicleImage(content.landscapeImage, Modifier.fillMaxSize()) },
             panel = {
                 GlassPanel(
                     modifier = Modifier.fillMaxWidth(),
@@ -275,15 +272,14 @@ private fun PortraitLayout(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
-            stage = {
+            chip = state.chip,
+            image = {
                 // Figma 세로 stage는 variant가 둘이다(상황 보드 455:58776 세로 01~12).
                 // 둘 다 패널이 겹친 부분까지 포함한 스테이지 기준이고, 차 자리는 세로 가운데 · 오른쪽 여백 24.
-                Stage(chip = state.chip) {
-                    StageVehicle(
-                        spec = if (content.isCharging) PortraitStageCharging else PortraitStageUnplugged,
-                        vehicleImage = vehicleImage,
-                    )
-                }
+                StageVehicle(
+                    spec = if (content.isCharging) PortraitStageCharging else PortraitStageUnplugged,
+                    vehicleImage = vehicleImage,
+                )
             },
             panel = {
                 GlassPanel(
@@ -345,26 +341,26 @@ private fun TallLayout(
                 modifier = headlineModifier,
             )
         }
+        // TODO 디자이너 확인(변수 연결): landscape_tall 충전 중(366:37686) stage만 배경이
+        //   panel_station_list/item/enabled/container(흰색)에 연결돼 있다. 다른 variant는 stage/background(#F7F8FA).
+        //   화면에 보이는 값(흰색)을 따랐다.
+        val stageBackground = if (content.isCharging && spec.chargingStageOnSurface) {
+            AlterTheme.colors.surface
+        } else {
+            AlterTheme.colors.background
+        }
         StageWithPanel(
             overlap = spec.panelOverlap,
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
-            stage = {
-                // TODO 디자이너 확인(변수 연결): landscape_tall 충전 중(366:37686) stage만 배경이
-                //   panel_station_list/item/enabled/container(흰색)에 연결돼 있다. 다른 variant는 stage/background(#F7F8FA).
-                //   화면에 보이는 값(흰색)을 따랐다.
-                val stageBackground = if (content.isCharging && spec.chargingStageOnSurface) {
-                    AlterTheme.colors.surface
-                } else {
-                    AlterTheme.colors.background
-                }
-                Stage(chip = state.chip, background = stageBackground) {
-                    StageVehicle(
-                        spec = if (content.isCharging) spec.stageCharging else spec.stageUnplugged,
-                        vehicleImage = vehicleImage,
-                    )
-                }
+            chip = state.chip,
+            stageBackground = stageBackground,
+            image = {
+                StageVehicle(
+                    spec = if (content.isCharging) spec.stageCharging else spec.stageUnplugged,
+                    vehicleImage = vehicleImage,
+                )
             },
             panel = {
                 GlassPanel(
@@ -436,11 +432,9 @@ private fun WfLandscapeLayout(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
-            stage = {
-                Stage(chip = state.chip, chipInset = AlterPadding.Normal) {
-                    StageVehicle(spec = WfLandscapeStage, vehicleImage = vehicleImage)
-                }
-            },
+            chip = state.chip,
+            chipInset = AlterPadding.Normal,
+            image = { StageVehicle(spec = WfLandscapeStage, vehicleImage = vehicleImage) },
             panel = {
                 GlassPanel(
                     modifier = Modifier.fillMaxWidth(),
@@ -493,11 +487,9 @@ private fun WfPortraitLayout(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
-            stage = {
-                Stage(chip = state.chip, chipInset = AlterPadding.Normal) {
-                    StageVehicle(spec = WfPortraitStage, vehicleImage = vehicleImage)
-                }
-            },
+            chip = state.chip,
+            chipInset = AlterPadding.Normal,
+            image = { StageVehicle(spec = WfPortraitStage, vehicleImage = vehicleImage) },
             panel = {
                 GlassPanel(
                     modifier = Modifier.fillMaxWidth(),
@@ -593,6 +585,7 @@ private fun CompactLayout(
                 .width(CompactStageWidth)
                 .fillMaxHeight(),
         ) {
+            // portrait_compact는 패널이 스테이지 옆에 있어 겹치지 않는다 (흐림 복사본 없음)
             Stage(chip = state.chip) {
                 StageVehicle(spec = CompactStage, vehicleImage = vehicleImage)
             }
@@ -600,28 +593,55 @@ private fun CompactLayout(
     }
 }
 
-/** 스테이지 아래쪽에 상태 패널을 겹쳐 올린다. 패널 높이를 먼저 재고 나머지를 스테이지에 준다. */
+/**
+ * 스테이지(차량 이미지 면) 위에 상태 패널을 [overlap]만큼 겹쳐 올린다. 세 층을 아래에서 위로 쌓는다.
+ *
+ * 1. 스테이지: [Stage]. 패널 높이를 먼저 재고, 남은 높이 + 겹침만큼을 받는다.
+ * 2. 흐림 복사본: [PanelBackdrop]. 패널이 겹치는 띠에 스테이지를 흐리게 다시 그린다(시안의 뒤 흐림 대용).
+ *    스테이지 아래 끝도 흐려져야 해서 스테이지보다 [PanelBackdropExtendBelow]만큼 더 내려간다.
+ * 3. 패널: [panel]. 유리 면(GlassPanel)과 내용.
+ */
 @Composable
 private fun StageWithPanel(
     overlap: Dp,
+    chip: ConnectionChip,
     modifier: Modifier,
-    stage: @Composable () -> Unit,
+    chipInset: Dp = AlterPadding.Large,
+    stageBackground: Color = AlterTheme.colors.background,
+    image: @Composable () -> Unit,
     panel: @Composable () -> Unit,
 ) {
-    Layout(contents = listOf(stage, panel), modifier = modifier) { measurables, constraints ->
-        val (stageMeasurables, panelMeasurables) = measurables
+    val stage: @Composable () -> Unit = {
+        Stage(chip = chip, chipInset = chipInset, background = stageBackground, image = image)
+    }
+    val backdrop: @Composable () -> Unit = {
+        PanelBackdrop(
+            bandHeight = overlap,
+            extendBelow = PanelBackdropExtendBelow,
+            stageBackground = stageBackground,
+            image = image,
+        )
+    }
+    Layout(contents = listOf(stage, backdrop, panel), modifier = modifier) { measurables, constraints ->
+        val (stageMeasurables, backdropMeasurables, panelMeasurables) = measurables
         val width = constraints.maxWidth
         val height = constraints.maxHeight
         val panelPlaceable = panelMeasurables.first()
             .measure(Constraints(minWidth = width, maxWidth = width, maxHeight = height))
         val stageHeight = (height - panelPlaceable.height + overlap.roundToPx()).coerceIn(0, height)
         val stagePlaceable = stageMeasurables.first().measure(Constraints.fixed(width, stageHeight))
+        val backdropHeight = (stageHeight + PanelBackdropExtendBelow.roundToPx()).coerceAtMost(height)
+        val backdropPlaceable = backdropMeasurables.first().measure(Constraints.fixed(width, backdropHeight))
         layout(width, height) {
             stagePlaceable.place(0, 0)
+            backdropPlaceable.place(0, 0)
             panelPlaceable.place(0, height - panelPlaceable.height)
         }
     }
 }
+
+/** 흐림 복사본이 스테이지 아래로 더 내려가는 높이. 흐림 표준편차(20)의 2배면 경계가 사라진다 */
+private val PanelBackdropExtendBelow = PanelBackdropBlurRadius * 2
 
 // ---------------------------------------------------------------------------
 // mode별 치수 (Figma card_vehicle_status 변수). 디자인 값에 없는 것만 둔다.

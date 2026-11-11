@@ -290,7 +290,8 @@ private fun accentColor(situation: VehicleSituation, colors: AlterColors): Color
     VehicleSituation.DEPLETED,
     -> colors.danger
     VehicleSituation.CHARGED -> colors.positive
-    VehicleSituation.CHARGE_ERROR, VehicleSituation.NO_DATA -> colors.textDisabled
+    // Figma fault · unknown variant(371:9467 · 371:9645)의 soc_value "--"는 basic_300 (라이트 #C7C9CE · 다크 #686A72)
+    VehicleSituation.CHARGE_ERROR, VehicleSituation.NO_DATA -> colors.gray300
     VehicleSituation.READY, VehicleSituation.CHARGING, VehicleSituation.SCHEDULED -> colors.blue600
 }
 
