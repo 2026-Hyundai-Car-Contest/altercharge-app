@@ -1,6 +1,9 @@
 package com.altercharge.app.ui.card.vehiclestatus
 
 import android.graphics.BlurMaskFilter
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -16,9 +19,6 @@ import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.GenericShape
-import androidx.annotation.DrawableRes
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,11 +40,12 @@ import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -160,8 +161,8 @@ internal fun Stage(
  *
  * Figma 패널은 BACKGROUND_BLUR 40이라 뒤에 있는 스테이지 아래쪽과 그 밑의 카드 배경이 흐리게 비친다.
  * Compose에는 뒤를 흐리는 기능이 없어서, 패널 뒤에 있을 내용(스테이지 배경 + 이미지 + 카드 배경)을 한 번 더 그려
- * 흐린 뒤 패널이 겹치는 띠 모양으로 잘라낸다. 흐림은 API 31 이상에서만 걸리고, 그 아래에서는 복사본이 원본과
- * 같은 자리에 겹쳐 보여 화면이 달라지지 않는다.
+ * 흐린 뒤 패널이 겹치는 띠 모양으로 잘라낸다. 흐림은 API 31 이상에서만 걸린다. 그 아래(minSdk 28)에서는 복사본이
+ * 흐려지지 않은 채 원본 위에 겹치므로 띠 구간만 아래 모서리가 각지고 카드 배경이 비친다(크래시 없음, 차량은 API 34).
  *
  * 이 composable은 스테이지와 같은 폭, 스테이지 높이 + [extendBelow] 높이로 놓인다(StageWithPanel이 정한다).
  * - 보이는 띠: 스테이지 아래 [bandHeight](패널이 겹치는 높이)부터 아래 끝([extendBelow]까지)이다.
@@ -202,7 +203,8 @@ internal fun PanelBackdrop(
                 )
             }
         }
-        Box(Modifier.matchParentSize().clip(bandShape)) {
+        // 복사본은 장식이라 접근성 트리에서 뺀다 (안 그러면 차량 이미지 설명이 두 번 읽힌다)
+        Box(Modifier.matchParentSize().clip(bandShape).clearAndSetSemantics {}) {
             Box(
                 modifier = Modifier
                     .requiredSize(
