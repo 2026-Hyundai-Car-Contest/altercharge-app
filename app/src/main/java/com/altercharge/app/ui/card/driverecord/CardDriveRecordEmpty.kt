@@ -50,7 +50,7 @@ internal fun ChartEmptyOverlay(modifier: Modifier = Modifier) {
         ) {
             Box(Modifier.size(width = EmptyIllustWidth, height = EmptyIllustHeight)) {
                 Image(
-                    painter = painterResource(R.drawable.card_drive_record_img_empty_vehicle),
+                    painter = painterResource(R.drawable.img_vehicle_illust),
                     contentDescription = null,
                     contentScale = ContentScale.Fit,
                     modifier = Modifier
