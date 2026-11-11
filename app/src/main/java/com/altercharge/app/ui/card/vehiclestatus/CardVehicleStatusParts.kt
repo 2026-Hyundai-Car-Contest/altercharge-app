@@ -12,8 +12,10 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.GenericShape
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -23,10 +25,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.BlurredEdgeTreatment
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
@@ -148,6 +154,86 @@ internal fun Stage(
         )
     }
 }
+
+/**
+ * 상태 패널(status_panel) 뒤에 깔리는 "뒤 흐림" 대용. 스테이지와 패널 사이 층에 놓는다.
+ *
+ * Figma 패널은 BACKGROUND_BLUR 40이라 뒤에 있는 스테이지 아래쪽과 그 밑의 카드 배경이 흐리게 비친다.
+ * Compose에는 뒤를 흐리는 기능이 없어서, 패널 뒤에 있을 내용(스테이지 배경 + 이미지 + 카드 배경)을 한 번 더 그려
+ * 흐린 뒤 패널이 겹치는 띠 모양으로 잘라낸다. 흐림은 API 31 이상에서만 걸리고, 그 아래에서는 복사본이 원본과
+ * 같은 자리에 겹쳐 보여 화면이 달라지지 않는다.
+ *
+ * 이 composable은 스테이지와 같은 폭, 스테이지 높이 + [extendBelow] 높이로 놓인다(StageWithPanel이 정한다).
+ * - 보이는 띠: 스테이지 아래 [bandHeight](패널이 겹치는 높이)부터 아래 끝([extendBelow]까지)이다.
+ *   스테이지 아래 끝도 흐려져야 시안처럼 경계가 사라지므로 스테이지보다 아래로 더 내려간다.
+ * - 흐림 복사본은 스테이지보다 사방 [PanelBackdropMargin]만큼 크게 만든다. 가장자리에 여유가 있어야
+ *   흐림이 끝에서 어두워지지 않고, 스테이지 밑 카드 배경(단색)이 섞여 띠가 아래로 갈수록 밝아진다.
+ * - 큰 상자는 부모보다 커서 Compose가 넘친 만큼 가운데로 민다. 그래서 상자 높이를 "부모 높이 + 여유 × 2"로 두고
+ *   안쪽 스테이지 복사본을 위에서 여유만큼 내리면, 복사본이 원본 스테이지와 정확히 같은 자리에 온다.
+ */
+@Composable
+internal fun PanelBackdrop(
+    bandHeight: Dp,
+    extendBelow: Dp,
+    stageBackground: Color = AlterTheme.colors.background,
+    cardBackground: Color = AlterTheme.colors.containerBackground,
+    image: @Composable () -> Unit,
+) {
+    val density = LocalDensity.current
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        // 안쪽 Box 안에서는 BoxWithConstraints 값에 바로 닿을 수 없어(DslMarker) 여기서 미리 꺼낸다
+        val stageWidth = maxWidth
+        val stageHeight = maxHeight - extendBelow
+        val backdropHeight = maxHeight
+        // 보이는 띠: 스테이지 아래 bandHeight부터 이 상자 아래 끝까지. 위 두 모서리는 패널 모서리(24)와 같다
+        val bandShape = remember(stageHeight, bandHeight, density) {
+            GenericShape { size, _ ->
+                val top = with(density) { (stageHeight - bandHeight).toPx() }.coerceAtLeast(0f)
+                val radius = with(density) { AlterRadius.XXLarge.toPx() }
+                addRoundRect(
+                    RoundRect(
+                        left = 0f,
+                        top = top,
+                        right = size.width,
+                        bottom = size.height,
+                        topLeftCornerRadius = CornerRadius(radius),
+                        topRightCornerRadius = CornerRadius(radius),
+                    ),
+                )
+            }
+        }
+        Box(Modifier.matchParentSize().clip(bandShape)) {
+            Box(
+                modifier = Modifier
+                    .requiredSize(
+                        width = stageWidth + PanelBackdropMargin * 2,
+                        height = backdropHeight + PanelBackdropMargin * 2,
+                    )
+                    .background(cardBackground)
+                    .blur(PanelBackdropBlurRadius, BlurredEdgeTreatment.Unbounded),
+                contentAlignment = Alignment.TopCenter,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .padding(top = PanelBackdropMargin)
+                        .size(width = stageWidth, height = stageHeight)
+                        .background(stageBackground),
+                ) {
+                    image()
+                }
+            }
+        }
+    }
+}
+
+/**
+ * status_panel BACKGROUND_BLUR 40 = 가우스 표준편차 20. Modifier.blur(RenderEffect)의 radius는 표준편차로 쓰인다.
+ * (BlurMaskFilter용 반지름 변환을 쓰면 띠가 시안보다 넓게 번진다 — 에뮬레이터 캡처로 확인)
+ */
+internal val PanelBackdropBlurRadius = 20.dp
+
+/** 흐림 복사본을 스테이지보다 사방으로 더 키우는 여유. 표준편차 20의 3배 */
+private val PanelBackdropMargin = 60.dp
 
 /**
  * 위에서 본 차 + 원형 배경 (세로 · tall · WF 스테이지). 둘 다 패널이 겹친 부분까지 포함한 스테이지 기준이다.

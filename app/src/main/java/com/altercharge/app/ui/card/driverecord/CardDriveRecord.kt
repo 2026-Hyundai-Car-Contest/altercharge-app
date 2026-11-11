@@ -93,8 +93,8 @@ fun CardDriveRecord(
         ChartPanel(
             state = state,
             mode = mode,
-            // Figma 펼침 인스턴스(366:38510, 상황 15 455:68432)는 그래프가 23 줄어든다(353→330, 281→258)
-            chartHeight = if (state.expanded) mode.chartWeekHeight - ExpandedChartShrink else mode.chartWeekHeight,
+            // 펼치면 그래프 높이가 모드별로 달라진다 (expandedChartDelta: 가로 · 세로 −23, WF 가로 0, WF 세로 +33)
+            chartHeight = if (state.expanded) mode.chartWeekHeight + mode.expandedChartDelta else mode.chartWeekHeight,
             onPreviousWeek = onPreviousWeek,
             onNextWeek = onNextWeek,
         )
