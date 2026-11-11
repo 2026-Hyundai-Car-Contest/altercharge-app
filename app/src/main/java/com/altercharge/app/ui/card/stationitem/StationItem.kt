@@ -19,19 +19,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.altercharge.app.R
+import com.altercharge.app.ui.card.station.ChargingType
 import com.altercharge.app.ui.designsystem.theme.AlterChargeTheme
-import com.altercharge.app.ui.designsystem.theme.AlterColors
 import com.altercharge.app.ui.designsystem.theme.AlterFontWeight
 import com.altercharge.app.ui.designsystem.theme.AlterRadius
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
 
 @Composable
 fun StationItem(
+    state: CardItemUiState,
     modifier: Modifier = Modifier
 ) {
 
@@ -45,15 +46,18 @@ fun StationItem(
     ) {
         // 충전소명(좌측), 충전소자리(우측)
         Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = modifier
-                .fillMaxWidth()
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth()
         ) {
             // 충전소명
             Text(
-                text = "연희동 주민센터",
+                text = state.stationName,
                 fontWeight = AlterFontWeight.Strong,
-                color = AlterTheme.colors.textPrimary
+                color = AlterTheme.colors.textPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
             )
 
             // 충전소자리 태그
@@ -141,8 +145,28 @@ private fun StationItemListLightKoPreview() {
                 modifier = Modifier
                     .padding(10.dp)
             ) {
-                StationItem()
-                StationItem()
+                listOf<CardItemUiState>(
+                    CardItemUiState(
+                        stationName = "연희동 주민센터",
+                        availableChargerCount = 4,
+                        occupiedChargerCount = 2,
+                        chargingType = ChargingType.AC,
+                        distance = 1.2,
+                        chargeStationAddress = "서울 마포구 동교로 263"
+                    ),
+                    CardItemUiState(
+                        stationName = "연남동 공영주차장",
+                        availableChargerCount = 6,
+                        occupiedChargerCount = 3,
+                        chargingType = ChargingType.ULTRA_FAST,
+                        distance = 1.2,
+                        chargeStationAddress = "서울 마포구 양화로"
+                    )
+                ).forEach { cardItemUiState ->
+                    StationItem(
+                        state = cardItemUiState
+                    )
+                }
             }
         }
     }
@@ -161,8 +185,29 @@ private fun StationItemListDarkKoPreview() {
                 modifier = Modifier
                     .padding(10.dp)
             ) {
-                StationItem()
-                StationItem()
+                listOf<CardItemUiState>(
+                    CardItemUiState(
+                        stationName = "연희동 주민센터",
+                        availableChargerCount = 4,
+                        occupiedChargerCount = 2,
+                        chargingType = ChargingType.AC,
+                        distance = 1.2,
+                        chargeStationAddress = "서울 마포구 동교로 263"
+                    ),
+                    CardItemUiState(
+                        stationName = "연남동 공영주차장",
+                        availableChargerCount = 6,
+                        occupiedChargerCount = 3,
+                        chargingType = ChargingType.ULTRA_FAST,
+                        distance = 1.2,
+                        chargeStationAddress = "서울 마포구 양화로"
+                    )
+                ).forEach { cardItemUiState ->
+                    StationItem(
+                        state = cardItemUiState
+                    )
+                }
+
             }
         }
     }
@@ -181,8 +226,28 @@ private fun StationItemListLightEnPreview() {
                 modifier = Modifier
                     .padding(10.dp)
             ) {
-                StationItem()
-                StationItem()
+                listOf<CardItemUiState>(
+                    CardItemUiState(
+                        stationName = "Yeonhui-dong Community Ctr",
+                        availableChargerCount = 2,
+                        occupiedChargerCount = 1,
+                        chargingType = ChargingType.AC,
+                        distance = 1.2,
+                        chargeStationAddress = "140 Yeonhui-ro, Seodaemun-gu"
+                    ),
+                    CardItemUiState(
+                        stationName = "Yeonnam-dong Parking",
+                        availableChargerCount = 6,
+                        occupiedChargerCount = 3,
+                        chargingType = ChargingType.ULTRA_FAST,
+                        distance = 1.2,
+                        chargeStationAddress = "26 Yeonnam-dong Parking-ro"
+                    )
+                ).forEach { cardItemUiState ->
+                    StationItem(
+                        state = cardItemUiState
+                    )
+                }
             }
         }
     }
@@ -201,8 +266,28 @@ private fun StationItemListDarkEnPreview() {
                 modifier = Modifier
                     .padding(10.dp)
             ) {
-                StationItem()
-                StationItem()
+                listOf<CardItemUiState>(
+                    CardItemUiState(
+                        stationName = "Yeonhui-dong Community Ctr",
+                        availableChargerCount = 2,
+                        occupiedChargerCount = 1,
+                        chargingType = ChargingType.AC,
+                        distance = 1.2,
+                        chargeStationAddress = "140 Yeonhui-ro, Seodaemun-gu"
+                    ),
+                    CardItemUiState(
+                        stationName = "Yeonnam-dong Parking",
+                        availableChargerCount = 6,
+                        occupiedChargerCount = 3,
+                        chargingType = ChargingType.ULTRA_FAST,
+                        distance = 1.2,
+                        chargeStationAddress = "26 Yeonnam-dong Parking-ro"
+                    )
+                ).forEach { cardItemUiState ->
+                    StationItem(
+                        state = cardItemUiState
+                    )
+                }
             }
         }
     }
