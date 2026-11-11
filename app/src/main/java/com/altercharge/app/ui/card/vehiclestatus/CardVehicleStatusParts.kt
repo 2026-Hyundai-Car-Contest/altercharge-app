@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.altercharge.app.R
+import com.altercharge.app.ui.designsystem.theme.AlterColors
 import com.altercharge.app.ui.designsystem.theme.AlterFontWeight
 import com.altercharge.app.ui.designsystem.theme.AlterMargin
 import com.altercharge.app.ui.designsystem.theme.AlterPadding
@@ -264,9 +265,9 @@ private fun ChipStatus(chip: ConnectionChip, modifier: Modifier = Modifier) {
         ConnectionChip.CONNECTED -> R.string.card_vehicle_status_chip_connected to colors.blue500
         ConnectionChip.UNPLUGGED -> R.string.card_vehicle_status_chip_unplugged to colors.negative
         ConnectionChip.ERROR -> R.string.card_vehicle_status_chip_error to colors.negative
-        // TODO 서희님: Figma 점 색은 basic_300(회색)인데 디자인 값에 없어 textDisabled로 대신한다.
-        ConnectionChip.STANDBY -> R.string.card_vehicle_status_chip_standby to colors.textDisabled
-        ConnectionChip.OFFLINE -> R.string.card_vehicle_status_chip_offline to colors.textDisabled
+        // Figma chip/dot/standby → basic/gray/basic_300. 오프라인 variant(371:9645)의 점도 같은 색
+        ConnectionChip.STANDBY -> R.string.card_vehicle_status_chip_standby to colors.gray300
+        ConnectionChip.OFFLINE -> R.string.card_vehicle_status_chip_offline to colors.gray300
     }
     val pill = RoundedCornerShape(AlterRadius.Full)
     Box(
@@ -305,6 +306,13 @@ private fun ChipStatus(chip: ConnectionChip, modifier: Modifier = Modifier) {
         }
     }
 }
+
+/**
+ * pleos basic/gray/basic_300 (라이트 #C7C9CE · 다크 #686A72). 디자인 값(AlterColors)에 없는 단계라 C 카드 안에서만 쓴다.
+ * 칩 점(standby · offline)과 값 없는 SOC "--"가 이 색이다.
+ */
+internal val AlterColors.gray300: Color
+    get() = if (isDark) Color(0xFF686A72) else Color(0xFFC7C9CE)
 
 /** 상태 패널의 유리 면 (glass + glass_edge). */
 @Composable

@@ -291,7 +291,7 @@ private fun accentColor(situation: VehicleSituation, colors: AlterColors): Color
     -> colors.danger
     VehicleSituation.CHARGED -> colors.positive
     // Figma fault · unknown variant(371:9467 · 371:9645)의 soc_value "--"는 basic_300 (라이트 #C7C9CE · 다크 #686A72)
-    VehicleSituation.CHARGE_ERROR, VehicleSituation.NO_DATA -> if (colors.isDark) SocPlaceholderDark else SocPlaceholderLight
+    VehicleSituation.CHARGE_ERROR, VehicleSituation.NO_DATA -> colors.gray300
     VehicleSituation.READY, VehicleSituation.CHARGING, VehicleSituation.SCHEDULED -> colors.blue600
 }
 
@@ -326,10 +326,6 @@ internal fun emphasizeArgs(
 
 private val ArgPattern = Regex("%(\\d+)\\$[sd]")
 private const val MINUTES_PER_HOUR = 60
-
-/** 값이 없을 때 SOC 자리("--") 색: pleos basic/gray/basic_300 (라이트 · 다크) */
-private val SocPlaceholderLight = Color(0xFFC7C9CE)
-private val SocPlaceholderDark = Color(0xFF686A72)
 private const val SOC_PER_CELL = 25.0
 internal const val MAX_SOC = 100
 
