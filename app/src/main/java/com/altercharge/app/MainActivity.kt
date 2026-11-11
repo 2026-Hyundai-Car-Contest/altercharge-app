@@ -28,17 +28,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-//                    HomeScreen()
-                    var selectedSort by remember {
-                        mutableStateOf(StationSortType.DISTANCE)
-                    }
-
-                    SortDropDown(
-                        items = StationSortType.entries,
-                        selectedItem = selectedSort,
-                        itemLabel = { it.label },
-                        onItemSelected = { selectedSort = it }
-                    )
+                    HomeScreen()
                 }
             }
         }
