@@ -145,6 +145,12 @@ fun CardsCatalog() {
                     CardInfo(state = state, mode = mode, modifier = Modifier.width(CardInfoWidths.getValue(mode)))
                 }
             }
+            // 기록 수집 중: 첫날 · 3일차 · 13일차
+            Row(horizontalArrangement = Arrangement.spacedBy(AlterMargin.Large)) {
+                CardInfoSampleData.collecting.forEach { state ->
+                    CardInfo(state = state, mode = mode, modifier = Modifier.width(CardInfoWidths.getValue(mode)))
+                }
+            }
         }
         // L2: 모드마다 접힘 · 펼침 (버튼으로 바꿀 수 있다)
         CardDriveRecordMode.entries.forEach { mode ->

@@ -1,6 +1,7 @@
 package com.altercharge.app.ui.card.info
 
 import com.altercharge.app.domain.judgment.Judgment
+import com.altercharge.app.domain.judgment.JudgmentResult
 import com.altercharge.app.ui.card.common.ChargeVerdict
 
 /**
@@ -26,3 +27,9 @@ fun Judgment.toCardInfoUiState(placeName: String): CardInfoUiState {
 
 /** 1~2일 단계의 마지막 날 */
 private const val LAST_DAY_WITHIN_TWO_DAYS = 2
+
+/** 판정 결과(수집 중 포함)로 L1 카드 값을 만든다. 수집 중이면 진행률 카드, 아니면 판정 카드. */
+fun JudgmentResult.toCardInfoUiState(placeName: String): CardInfoUiState = when (this) {
+    is JudgmentResult.Collecting -> CardInfoUiState.collecting(recordedDays)
+    is JudgmentResult.Ready -> judgment.toCardInfoUiState(placeName)
+}
