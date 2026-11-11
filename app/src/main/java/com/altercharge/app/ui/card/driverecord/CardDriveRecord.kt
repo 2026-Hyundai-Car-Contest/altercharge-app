@@ -475,21 +475,23 @@ private fun ContentBlock(state: CardDriveRecordUiState, onToggleExpanded: () -> 
                     style = typography.labelSmall,
                     color = colors.textTertiary,
                 )
-            } else Column {
-                Text(
-                    text = stringResource(R.string.card_drive_record_summary_average, state.averageKm),
-                    style = typography.labelSmall,
-                    color = colors.textTertiary,
-                )
-                // TODO 디자이너 확인: 지난주보다 덜 달렸을 때 · 같을 때 · 비교할 주가 없을 때 문구가 시안에 없다.
-                // 지금은 더 달렸을 때만 두 번째 줄을 보여준다.
-                val diff = state.diffFromLastWeekKm
-                if (diff != null && diff > 0) {
+            } else {
+                Column {
                     Text(
-                        text = stringResource(R.string.card_drive_record_summary_diff_more, diff),
+                        text = stringResource(R.string.card_drive_record_summary_average, state.averageKm),
                         style = typography.labelSmall,
                         color = colors.textTertiary,
                     )
+                    // TODO 디자이너 확인: 지난주보다 덜 달렸을 때 · 같을 때 · 비교할 주가 없을 때 문구가 시안에 없다.
+                    // 지금은 더 달렸을 때만 두 번째 줄을 보여준다.
+                    val diff = state.diffFromLastWeekKm
+                    if (diff != null && diff > 0) {
+                        Text(
+                            text = stringResource(R.string.card_drive_record_summary_diff_more, diff),
+                            style = typography.labelSmall,
+                            color = colors.textTertiary,
+                        )
+                    }
                 }
             }
         }

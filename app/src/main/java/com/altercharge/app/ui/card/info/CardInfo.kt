@@ -1,7 +1,7 @@
 package com.altercharge.app.ui.card.info
 
-import androidx.annotation.StringRes
 import android.graphics.BlurMaskFilter
+import androidx.annotation.StringRes
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.PathParser
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
@@ -144,29 +145,31 @@ fun CardInfo(
             }
             if (state.recordedDays != null) {
                 CollectingContent(recordedDays = state.recordedDays, spec = spec)
-            } else Row(
-                modifier = Modifier
-                    .padding(start = AlterPadding.XSmall)
-                    .widthIn(max = spec.placeMaxWidth),
-                horizontalArrangement = Arrangement.spacedBy(AlterMargin.Normal),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (showIcon) {
-                    // TODO 디자이너 확인: 시안이 장소 아이콘 자리에 Loading 아이콘을 쓰고 있다. 확정 아이콘이 오면 바꾼다.
-                    Image(
-                        painter = painterResource(R.drawable.card_info_ic_place),
-                        contentDescription = null,
-                        colorFilter = ColorFilter.tint(PlaceColor),
-                        modifier = Modifier.size(PlaceIconSize),
+            } else {
+                Row(
+                    modifier = Modifier
+                        .padding(start = AlterPadding.XSmall)
+                        .widthIn(max = spec.placeMaxWidth),
+                    horizontalArrangement = Arrangement.spacedBy(AlterMargin.Normal),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (showIcon) {
+                        // TODO 디자이너 확인: 시안이 장소 아이콘 자리에 Loading 아이콘을 쓰고 있다. 확정 아이콘이 오면 바꾼다.
+                        Image(
+                            painter = painterResource(R.drawable.card_info_ic_place),
+                            contentDescription = null,
+                            colorFilter = ColorFilter.tint(PlaceColor),
+                            modifier = Modifier.size(PlaceIconSize),
+                        )
+                    }
+                    Text(
+                        text = state.placeName,
+                        style = spec.placeStyle(),
+                        color = PlaceColor,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
-                Text(
-                    text = state.placeName,
-                    style = spec.placeStyle(),
-                    color = PlaceColor,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
             }
         }
     }
@@ -212,7 +215,7 @@ private fun CollectingContent(recordedDays: Int, spec: ModeSpec) {
             )
         }
         Text(
-            text = stringResource(R.string.card_info_collecting_progress, recordedDays),
+            text = stringResource(R.string.card_info_collecting_progress, recordedDays, COLLECTING_TOTAL_DAYS),
             style = spec.eyebrowStyle(),
             color = EyebrowColor,
             maxLines = 1,
@@ -417,31 +420,37 @@ private const val COLLECTING_GLOW_SIGMA = 32f
 private fun CollectingBoltGraphic(fillColor: Color, modifier: Modifier = Modifier) {
     val track = remember { PathParser().parsePathString(COLLECTING_BOLT_PATH).toPath() }
     val nub = remember { PathParser().parsePathString(COLLECTING_FILL_PATH).toPath() }
+    val density = LocalDensity.current.density
+    // 블러 필터는 density(와 색)로만 정해지므로 그릴 때마다 만들지 않고 한 번 만든다.
+    val trackPaint = remember(density) { blurPaint(BoltTrackColor, COLLECTING_BLUR_SIGMA, density) }
+    // 꼭지 바깥 빛(표준편차 32, 55%)과 꼭지 자체(표준편차 10). 합쳐서 퍼지는 정도는 √(32² + 10²) ≈ 33.5
+    val glowPaint = remember(density) {
+        blurPaint(BoltGlowColor, kotlin.math.hypot(COLLECTING_GLOW_SIGMA, COLLECTING_BLUR_SIGMA), density)
+    }
+    val nubPaint = remember(density, fillColor) { blurPaint(fillColor, COLLECTING_BLUR_SIGMA, density) }
     Canvas(modifier) {
-        val density = this.density
-        // Figma 블러 표준편차(σ) → 안드로이드 BlurMaskFilter 반지름: r = (σ − 0.5) / 0.57735
-        fun blurRadiusPx(sigmaDp: Float) = ((sigmaDp * density - 0.5f) / 0.57735f).coerceAtLeast(0.1f)
-        fun draw(path: Path, origin: Offset, scaleX: Float, color: Color, sigmaDp: Float) {
+        fun draw(path: Path, origin: Offset, scaleX: Float, paint: android.graphics.Paint) {
             withTransform({
                 translate(origin.x * density, origin.y * density)
                 scale(scaleX * density, density, pivot = Offset.Zero)
             }) {
-                drawIntoCanvas { canvas ->
-                    val paint = Paint().asFrameworkPaint().apply {
-                        isAntiAlias = true
-                        this.color = color.toArgb()
-                        maskFilter = BlurMaskFilter(blurRadiusPx(sigmaDp), BlurMaskFilter.Blur.NORMAL)
-                    }
-                    canvas.nativeCanvas.drawPath(path.asAndroidPath(), paint)
-                }
+                drawIntoCanvas { canvas -> canvas.nativeCanvas.drawPath(path.asAndroidPath(), paint) }
             }
         }
-        draw(track, CollectingBoltOrigin, COLLECTING_BOLT_SCALE_X, BoltTrackColor, COLLECTING_BLUR_SIGMA)
-        // 꼭지 바깥 빛(표준편차 32, 55%)과 꼭지 자체(표준편차 10). 합쳐서 퍼지는 정도는 √(32² + 10²) ≈ 33.5
-        draw(nub, CollectingFillOrigin, 1f, BoltGlowColor, kotlin.math.hypot(COLLECTING_GLOW_SIGMA, COLLECTING_BLUR_SIGMA))
-        draw(nub, CollectingFillOrigin, 1f, fillColor, COLLECTING_BLUR_SIGMA)
+        draw(track, CollectingBoltOrigin, COLLECTING_BOLT_SCALE_X, trackPaint)
+        draw(nub, CollectingFillOrigin, 1f, glowPaint)
+        draw(nub, CollectingFillOrigin, 1f, nubPaint)
     }
 }
+
+/** 블러 페인트. Figma 블러 표준편차(σ, dp) → 안드로이드 BlurMaskFilter 반지름: r = (σ × density − 0.5) / 0.57735 */
+private fun blurPaint(color: Color, sigmaDp: Float, density: Float): android.graphics.Paint =
+    android.graphics.Paint().apply {
+        isAntiAlias = true
+        this.color = color.toArgb()
+        val radius = ((sigmaDp * density - 0.5f) / 0.57735f).coerceAtLeast(0.1f)
+        maskFilter = BlurMaskFilter(radius, BlurMaskFilter.Blur.NORMAL)
+    }
 
 // 미리보기: 오늘 · 내일 · 3일내 × 라이트 · 다크 × 가로 · 세로 (+ WF). 높이는 카드가 mode로 정한다.
 

@@ -6,7 +6,7 @@
     <string name="card_info_title_within_three_days">In 3 days</string>
     <!-- TODO 디자이너 확인: 기록 수집 중 영문 시안이 없어 임시 문구다. 확정되면 바꾼다. -->
     <string name="card_info_title_collecting">Collecting data</string>
-    <string name="card_info_collecting_progress">%1$d / 14 days</string>
+    <string name="card_info_collecting_progress">%1$d / %2$d days</string>
     <string name="card_info_collecting_message">We\'ll show your charge day\nin %1$d days</string>
     <string name="card_info_collecting_message_tomorrow">We\'ll show your charge day\ntomorrow</string>
 </resources>
