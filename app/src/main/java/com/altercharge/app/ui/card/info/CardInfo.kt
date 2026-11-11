@@ -1,5 +1,6 @@
 package com.altercharge.app.ui.card.info
 
+import android.graphics.BlurMaskFilter
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -33,6 +35,7 @@ import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.PathParser
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
@@ -106,12 +109,16 @@ fun CardInfo(
             .background(CardBackground)
             .semantics(mergeDescendants = true) {},
     ) {
-        BoltGraphic(
-            status = status,
-            spec = spec,
-            fillColor = AlterTheme.colors.blue500,
-            modifier = Modifier.matchParentSize(),
-        )
+        if (status == CardInfoStatus.COLLECTING) {
+            CollectingBoltGraphic(fillColor = AlterTheme.colors.blue500, modifier = Modifier.matchParentSize())
+        } else {
+            BoltGraphic(
+                status = status,
+                spec = spec,
+                fillColor = AlterTheme.colors.blue500,
+                modifier = Modifier.matchParentSize(),
+            )
+        }
         Column(
             modifier = Modifier
                 .padding(AlterPadding.XSmall)
@@ -136,29 +143,33 @@ fun CardInfo(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            Row(
-                modifier = Modifier
-                    .padding(start = AlterPadding.XSmall)
-                    .widthIn(max = spec.placeMaxWidth),
-                horizontalArrangement = Arrangement.spacedBy(AlterMargin.Normal),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (showIcon) {
-                    // TODO 디자이너 확인: 시안이 장소 아이콘 자리에 Loading 아이콘을 쓰고 있다. 확정 아이콘이 오면 바꾼다.
-                    Image(
-                        painter = painterResource(R.drawable.card_info_ic_place),
-                        contentDescription = null,
-                        colorFilter = ColorFilter.tint(PlaceColor),
-                        modifier = Modifier.size(PlaceIconSize),
+            if (state.recordedDays != null) {
+                CollectingContent(recordedDays = state.recordedDays, spec = spec)
+            } else {
+                Row(
+                    modifier = Modifier
+                        .padding(start = AlterPadding.XSmall)
+                        .widthIn(max = spec.placeMaxWidth),
+                    horizontalArrangement = Arrangement.spacedBy(AlterMargin.Normal),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (showIcon) {
+                        // TODO 디자이너 확인: 시안이 장소 아이콘 자리에 Loading 아이콘을 쓰고 있다. 확정 아이콘이 오면 바꾼다.
+                        Image(
+                            painter = painterResource(R.drawable.card_info_ic_place),
+                            contentDescription = null,
+                            colorFilter = ColorFilter.tint(PlaceColor),
+                            modifier = Modifier.size(PlaceIconSize),
+                        )
+                    }
+                    Text(
+                        text = state.placeName,
+                        style = spec.placeStyle(),
+                        color = PlaceColor,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
-                Text(
-                    text = state.placeName,
-                    style = spec.placeStyle(),
-                    color = PlaceColor,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
             }
         }
     }
@@ -170,7 +181,64 @@ private val CardInfoStatus.titleRes: Int
         CardInfoStatus.TODAY -> R.string.card_info_title_today
         CardInfoStatus.TOMORROW -> R.string.card_info_title_tomorrow
         CardInfoStatus.WITHIN_THREE_DAYS -> R.string.card_info_title_within_three_days
+        CardInfoStatus.COLLECTING -> R.string.card_info_title_collecting
     }
+
+/**
+ * 기록 수집 중 본문: 진행 막대 "N / 14일"과 안내 문구. Figma status = collecting (647:58207).
+ * 막대 트랙 220 × 8, 라벨은 막대 오른쪽 16 간격. 13일차는 "내일부터"로 바뀐다.
+ * TODO 디자이너 확인: 시안이 세로(378×358)뿐이라 다른 모드도 같은 구성에 모드별 글자 크기를 쓴다.
+ */
+@Composable
+private fun CollectingContent(recordedDays: Int, spec: ModeSpec) {
+    Row(
+        // Figma progress 프레임은 13일차에 폭 333으로 안쪽 폭 330을 3 넘어 오른쪽 여백까지 간다. 눌러서 글자가 잘리지 않게 한다.
+        modifier = Modifier
+            .wrapContentWidth(align = Alignment.Start, unbounded = true)
+            .padding(start = AlterPadding.XSmall),
+        horizontalArrangement = Arrangement.spacedBy(AlterMargin.Normal),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .width(ProgressTrackWidth)
+                .height(ProgressHeight)
+                .clip(RoundedCornerShape(ProgressRadius))
+                .background(ProgressTrackColor),
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(collectingFillWidthDp(recordedDays, ProgressTrackWidth.value.toInt()).dp)
+                    .height(ProgressHeight)
+                    .clip(RoundedCornerShape(ProgressRadius))
+                    .background(AlterTheme.colors.blue500),
+            )
+        }
+        Text(
+            text = stringResource(R.string.card_info_collecting_progress, recordedDays, COLLECTING_TOTAL_DAYS),
+            style = spec.eyebrowStyle(),
+            color = EyebrowColor,
+            maxLines = 1,
+        )
+    }
+    val daysLeft = COLLECTING_TOTAL_DAYS - recordedDays
+    Text(
+        text = if (daysLeft <= 1) {
+            stringResource(R.string.card_info_collecting_message_tomorrow)
+        } else {
+            stringResource(R.string.card_info_collecting_message, daysLeft)
+        },
+        style = spec.placeStyle().copy(fontWeight = AlterFontWeight.Strong),
+        color = PlaceColor,
+        modifier = Modifier.padding(start = AlterPadding.XSmall),
+    )
+}
+
+private val ProgressTrackWidth = 220.dp
+private val ProgressHeight = 8.dp
+private val ProgressRadius = 4.dp
+/** card_info/chip/border (흰색 24%) */
+private val ProgressTrackColor = Color.White.copy(alpha = 0.24f)
 
 // 카드 고유 값 (Figma card_info/* 변수, 라이트/다크 같은 값)
 private val CardBackground = Color(0xFF020417)
@@ -272,6 +340,8 @@ private fun CardInfoStatus.boltLevel(): BoltLevel = when (this) {
     CardInfoStatus.TODAY -> BoltLevel(left = 0.75f, middle = 0.705f, right = 0.66f, shift = 0f)
     CardInfoStatus.TOMORROW -> BoltLevel(left = 0.43f, middle = 0.48f, right = 0.50f, shift = 0f)
     CardInfoStatus.WITHIN_THREE_DAYS -> BoltLevel(left = 0.29f, middle = 0.275f, right = 0.27f, shift = 0.143f)
+    // 수집 중은 채움 수위를 쓰지 않는다 (CollectingBoltGraphic). 자리 채움 값.
+    CardInfoStatus.COLLECTING -> BoltLevel(left = 1f, middle = 1f, right = 1f, shift = 0f)
 }
 
 @Composable
@@ -324,6 +394,63 @@ private fun BoltGraphic(
         }
     }
 }
+
+// 기록 수집 중 번개. Figma status = collecting (647:58207)의 bolt_track · bolt_fill SVG 값 그대로.
+// 판정 상태와 달리 번개 전체에 가우시안 블러(표준편차 10)가 걸려 있고, 크기와 자리도 다르다.
+// 모양: svg(411.6 × 417)를 카드 안 x 113, y -29.4(= -50 + 458.2 × 4.5%)에 놓는다. 왼쪽 x 고정은 판정 상태와 같다.
+// TODO 디자이너 확인: 시안이 세로(378×358)뿐이라 다른 모드도 같은 자리에 그린다.
+private const val COLLECTING_BOLT_PATH =
+    "M221.092 40.2897C223.32 22.4555 200.91 12.7278 189.404 26.5345L24.2068 224.756" +
+        "C14.4363 236.48 22.773 254.28 38.0344 254.28H185.413C196.24 254.28 204.616 263.768 203.274 274.511" +
+        "L190.511 376.67C188.283 394.504 210.694 404.232 222.2 390.425L387.397 192.204" +
+        "C397.167 180.48 388.831 162.68 373.569 162.68H226.191C215.364 162.68 206.987 153.191 208.329 142.449" +
+        "L221.092 40.2897Z"
+
+/** 아래 끝 파란 꼭지 (bolt_fill). svg(160.4 × 138.2)를 카드 안 x 242.48, y 293.41에 놓는다. */
+private const val COLLECTING_FILL_PATH =
+    "M93.3584 67.6357C84.6971 78.0284 69.8588 75.0853 64 65.3887C74.5418 65.3805 85.3377 64.9178 96.3877 64L93.3584 67.6357Z"
+
+private val CollectingBoltOrigin = Offset(113f, -29.38f)
+private val CollectingFillOrigin = Offset(242.48f, 293.41f)
+private const val COLLECTING_BOLT_SCALE_X = 412.4f / 411.604f
+private const val COLLECTING_BLUR_SIGMA = 10f
+private const val COLLECTING_GLOW_SIGMA = 32f
+
+@Composable
+private fun CollectingBoltGraphic(fillColor: Color, modifier: Modifier = Modifier) {
+    val track = remember { PathParser().parsePathString(COLLECTING_BOLT_PATH).toPath() }
+    val nub = remember { PathParser().parsePathString(COLLECTING_FILL_PATH).toPath() }
+    val density = LocalDensity.current.density
+    // 블러 필터는 density(와 색)로만 정해지므로 그릴 때마다 만들지 않고 한 번 만든다.
+    val trackPaint = remember(density) { blurPaint(BoltTrackColor, COLLECTING_BLUR_SIGMA, density) }
+    // 꼭지 바깥 빛(표준편차 32, 55%)과 꼭지 자체(표준편차 10). 합쳐서 퍼지는 정도는 √(32² + 10²) ≈ 33.5
+    val glowPaint = remember(density) {
+        blurPaint(BoltGlowColor, kotlin.math.hypot(COLLECTING_GLOW_SIGMA, COLLECTING_BLUR_SIGMA), density)
+    }
+    val nubPaint = remember(density, fillColor) { blurPaint(fillColor, COLLECTING_BLUR_SIGMA, density) }
+    Canvas(modifier) {
+        fun draw(path: Path, origin: Offset, scaleX: Float, paint: android.graphics.Paint) {
+            withTransform({
+                translate(origin.x * density, origin.y * density)
+                scale(scaleX * density, density, pivot = Offset.Zero)
+            }) {
+                drawIntoCanvas { canvas -> canvas.nativeCanvas.drawPath(path.asAndroidPath(), paint) }
+            }
+        }
+        draw(track, CollectingBoltOrigin, COLLECTING_BOLT_SCALE_X, trackPaint)
+        draw(nub, CollectingFillOrigin, 1f, glowPaint)
+        draw(nub, CollectingFillOrigin, 1f, nubPaint)
+    }
+}
+
+/** 블러 페인트. Figma 블러 표준편차(σ, dp) → 안드로이드 BlurMaskFilter 반지름: r = (σ × density − 0.5) / 0.57735 */
+private fun blurPaint(color: Color, sigmaDp: Float, density: Float): android.graphics.Paint =
+    android.graphics.Paint().apply {
+        isAntiAlias = true
+        this.color = color.toArgb()
+        val radius = ((sigmaDp * density - 0.5f) / 0.57735f).coerceAtLeast(0.1f)
+        maskFilter = BlurMaskFilter(radius, BlurMaskFilter.Blur.NORMAL)
+    }
 
 // 미리보기: 오늘 · 내일 · 3일내 × 라이트 · 다크 × 가로 · 세로 (+ WF). 높이는 카드가 mode로 정한다.
 

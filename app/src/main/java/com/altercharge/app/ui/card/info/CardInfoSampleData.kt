@@ -20,5 +20,11 @@ internal object CardInfoSampleData {
         placeName = "아주 긴 예시 장소 이름이 들어가면 한 줄로 말줄임",
     )
 
+    /** 기록 수집 중: 첫날 · 3일차 · 13일차 */
+    val CollectingFirstDay = CardInfoUiState.collecting(recordedDays = 0)
+    val CollectingDay3 = CardInfoUiState.collecting(recordedDays = 3)
+    val CollectingDay13 = CardInfoUiState.collecting(recordedDays = 13)
+
     val all: List<CardInfoUiState> = listOf(Today, Tomorrow, WithinThreeDaysLongPlace)
+    val collecting: List<CardInfoUiState> = listOf(CollectingFirstDay, CollectingDay3, CollectingDay13)
 }

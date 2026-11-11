@@ -1,6 +1,7 @@
 package com.altercharge.app.ui.card.info
 
 import com.altercharge.app.domain.judgment.Judgment
+import com.altercharge.app.domain.judgment.JudgmentResult
 import com.altercharge.app.ui.card.common.ChargeVerdict
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -47,5 +48,35 @@ class CardInfoJudgmentTest {
     @Test
     fun 장소_이름은_그대로() {
         assertEquals("예시 아파트", card(0).placeName)
+    }
+
+    // ---- 기록 수집 중 ----
+
+    @Test
+    fun 수집_중_결과는_수집_중_카드로_바뀐다() {
+        val state = JudgmentResult.Collecting(recordedDays = 3, chargeRecommended = false).toCardInfoUiState("예시 아파트")
+        assertEquals(3, state.recordedDays)
+        assertEquals(CardInfoStatus.COLLECTING, state.toStatus())
+    }
+
+    @Test
+    fun 준비된_결과는_기존_판정_카드() {
+        val ready = JudgmentResult.Ready(judgment(daysLeft = 1)).toCardInfoUiState("예시 아파트")
+        assertEquals(null, ready.recordedDays)
+        assertEquals(CardInfoStatus.TOMORROW, ready.toStatus())
+    }
+
+    @Test
+    fun 수집_일수는_0에서_13으로_맞춘다() {
+        assertEquals(0, CardInfoUiState.collecting(-3).recordedDays)
+        assertEquals(13, CardInfoUiState.collecting(20).recordedDays)
+    }
+
+    @Test
+    fun 진행_막대_폭은_시안_값과_같다() {
+        assertEquals(8, collectingFillWidthDp(0)) // 첫날 최소 8
+        assertEquals(16, collectingFillWidthDp(1))
+        assertEquals(47, collectingFillWidthDp(3))
+        assertEquals(204, collectingFillWidthDp(13))
     }
 }

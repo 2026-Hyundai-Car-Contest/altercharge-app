@@ -5,4 +5,9 @@
     <string name="card_info_title_today">오늘 충전</string>
     <string name="card_info_title_tomorrow">내일 충전</string>
     <string name="card_info_title_within_three_days">3일내 충전</string>
+    <!-- 기록 수집 중 (1~13일차). Figma 647:58207 -->
+    <string name="card_info_title_collecting">기록 수집 중</string>
+    <string name="card_info_collecting_progress">%1$d / %2$d일</string>
+    <string name="card_info_collecting_message">충전일은 %1$d일 뒤부터\n알려드려요</string>
+    <string name="card_info_collecting_message_tomorrow">충전일은 내일부터\n알려드려요</string>
 </resources>

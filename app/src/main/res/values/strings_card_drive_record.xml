@@ -45,4 +45,7 @@
     <!-- 요일 막대 화면 읽기 문구 (요일, 주행 km). 예: 월 42킬로미터 -->
     <string name="card_drive_record_bar_description">%1$s %2$d킬로미터</string>
     <string name="card_drive_record_collapse">접기</string>
+    <!-- 기록 없음 (state = empty). Figma 648:58837 -->
+    <string name="card_drive_record_empty_message">이번 주 주행 기록이 없어요</string>
+    <string name="card_drive_record_empty_description">오늘부터 주행 기록을 모아요\n운전한 날마다 막대가 채워져요</string>
 </resources>

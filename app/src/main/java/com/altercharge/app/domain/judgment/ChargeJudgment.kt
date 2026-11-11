@@ -7,8 +7,7 @@ package com.altercharge.app.domain.judgment
  * @property socPercent 배터리 잔량(%)
  * @property recentDailyKm 최근 일별 주행거리(km). 오래된 날 → 오늘 순, 운행하지 않은 날은 0.
  *   기록이 있는 날만 담는다(앱을 쓴 지 10일이면 10개). 14일보다 많으면 마지막 14일만 쓴다.
- *   7개 미만이면 기본값을 쓰고, 7~13개여도 일 평균은 명세서대로 14로 나눈다.
- *   TODO 기획 확인: 기록이 7~13일일 때 14 대신 기록 일수로 나눌지(지금은 평균이 낮게 나온다).
+ *   14개 미만이면 "기록 수집 중"이라 일 평균 · 버틸 일수를 계산하지 않는다 (REQ_JD_002 예외).
  */
 data class JudgmentInput(
     val rangeKm: Int,
@@ -17,7 +16,7 @@ data class JudgmentInput(
 )
 
 /**
- * 판정 결과. 화면 쪽이 L1·C 카드 값으로 바꿔 쓴다.
+ * 기록이 14일 이상 쌓였을 때의 판정. 화면 쪽이 L1·C 카드 값으로 바꿔 쓴다.
  * 판정 문구(오늘 / 내일 / 3일내)는 화면 쪽에서 [daysLeft]로 고른다.
  *
  * @property averageDailyKm 일 평균 주행거리(km, 반올림). 표시용이고, 버틸 일수 계산은 반올림 전 값으로 한다.
@@ -32,14 +31,24 @@ data class Judgment(
     val chargeRecommended: Boolean,
 )
 
-/** 기록이 이 일수보다 적으면 기본값을 쓴다 (REQ_JD_002 예외) */
-const val MIN_RECORD_DAYS = 7
+/** [judge]의 결과. 기록이 14일 미만이면 [Collecting], 이상이면 [Ready]. */
+sealed interface JudgmentResult {
+    /** 지금 충전을 권장하는지. 수집 중에도 배터리 잔량만으로 판정한다 (REQ_ST_005 예외). */
+    val chargeRecommended: Boolean
 
-/** 일 평균과 예비 거리를 계산하는 기간 (REQ_JD_002) */
+    /**
+     * 기록 수집 중 (REQ_JD_002 예외). 다음 충전일(버틸 일수)은 없고, 주행거리 · 배터리 상태 · 충전소 안내만 보여 준다.
+     * @property recordedDays 지금까지 쌓인 기록 일수 (0~13). L1 진행 바 "N/14"에 쓴다.
+     */
+    data class Collecting(val recordedDays: Int, override val chargeRecommended: Boolean) : JudgmentResult
+
+    data class Ready(val judgment: Judgment) : JudgmentResult {
+        override val chargeRecommended: Boolean get() = judgment.chargeRecommended
+    }
+}
+
+/** 일 평균과 예비 거리를 계산하는 기간. 기록이 이 일수보다 적으면 수집 중이다 (REQ_JD_002) */
 const val WINDOW_DAYS = 14
-
-/** 기록이 부족할 때 쓰는 일 평균 · 예비 거리(km) (REQ_JD_002 예외) */
-const val DEFAULT_DAILY_KM = 40
 
 /** 예비 거리 최솟값(km) (REQ_JD_002) */
 const val MIN_RESERVE_KM = 30
@@ -59,40 +68,39 @@ const val MAX_DAYS_LEFT = 99
  * 숫자만 받아 결과를 돌려주는 순수 함수다. 저장 · 차량 SDK · 현재 시각을 모르고,
  * 언제 다시 계산할지(REQ_JD_004)는 부르는 쪽이 정한다.
  *
+ * - 기록이 14일 미만이면 [JudgmentResult.Collecting]. 충전 권장은 배터리 30% 이하로만 판정한다.
  * - 일 평균 = 최근 14일 주행거리 합 ÷ 14 (운행하지 않은 날 포함)
  * - 예비 거리 = 최근 14일 중 운행한 날 주행거리의 중앙값, 최소 30km
- * - 기록이 7일 미만이면 일 평균 40km, 예비 거리 40km
  * - 버틸 일수 = (주행가능거리 − 예비 거리) ÷ 일 평균, 소수점 버림, 0 미만은 0
  * - 충전 권장 = 버틸 일수 1 이하 또는 배터리 30% 이하
  */
-fun judge(input: JudgmentInput): Judgment {
+fun judge(input: JudgmentInput): JudgmentResult {
     val records = input.recentDailyKm.takeLast(WINDOW_DAYS).map { it.coerceAtLeast(0) }
-    val enoughRecords = records.size >= MIN_RECORD_DAYS
+    val lowBattery = input.socPercent <= RECOMMEND_SOC_PERCENT
+    if (records.size < WINDOW_DAYS) {
+        return JudgmentResult.Collecting(recordedDays = records.size, chargeRecommended = lowBattery)
+    }
 
     val totalKm = records.sum()
-    val averageDailyKm: Double =
-        if (enoughRecords) totalKm.toDouble() / WINDOW_DAYS else DEFAULT_DAILY_KM.toDouble()
-    val reserveKm: Int =
-        if (enoughRecords) reserveFrom(records) else DEFAULT_DAILY_KM
+    val averageDailyKm = totalKm.toDouble() / WINDOW_DAYS
+    val reserveKm = reserveFrom(records)
 
     val drivableKm = (input.rangeKm.coerceAtLeast(0) - reserveKm).coerceAtLeast(0)
     // 소수로 나누면 딱 떨어지는 경계에서 하루 모자라게 나올 수 있어(예: 9 ÷ (9/14) = 13.99…) 정수로 계산한다.
     // 거리 ÷ (합 ÷ 14) = 거리 × 14 ÷ 합
     val daysLeft = when {
         drivableKm == 0 -> 0
-        !enoughRecords -> drivableKm / DEFAULT_DAILY_KM
         totalKm == 0 -> MAX_DAYS_LEFT
         else -> (drivableKm.toLong() * WINDOW_DAYS / totalKm).toInt()
     }.coerceIn(0, MAX_DAYS_LEFT)
 
-    val chargeRecommended =
-        daysLeft <= RECOMMEND_DAYS_LEFT || input.socPercent <= RECOMMEND_SOC_PERCENT
-
-    return Judgment(
-        averageDailyKm = Math.round(averageDailyKm).toInt(),
-        reserveKm = reserveKm,
-        daysLeft = daysLeft,
-        chargeRecommended = chargeRecommended,
+    return JudgmentResult.Ready(
+        Judgment(
+            averageDailyKm = Math.round(averageDailyKm).toInt(),
+            reserveKm = reserveKm,
+            daysLeft = daysLeft,
+            chargeRecommended = daysLeft <= RECOMMEND_DAYS_LEFT || lowBattery,
+        ),
     )
 }
 

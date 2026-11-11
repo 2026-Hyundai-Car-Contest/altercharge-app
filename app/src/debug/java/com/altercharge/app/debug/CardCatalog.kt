@@ -145,6 +145,12 @@ fun CardsCatalog() {
                     CardInfo(state = state, mode = mode, modifier = Modifier.width(CardInfoWidths.getValue(mode)))
                 }
             }
+            // 기록 수집 중: 첫날 · 3일차 · 13일차
+            Row(horizontalArrangement = Arrangement.spacedBy(AlterMargin.Large)) {
+                CardInfoSampleData.collecting.forEach { state ->
+                    CardInfo(state = state, mode = mode, modifier = Modifier.width(CardInfoWidths.getValue(mode)))
+                }
+            }
         }
         // L2: 모드마다 접힘 · 펼침 (버튼으로 바꿀 수 있다)
         CardDriveRecordMode.entries.forEach { mode ->
@@ -153,6 +159,11 @@ fun CardsCatalog() {
                 DriveRecordSample(CardDriveRecordSampleData.ThisWeek, mode)
                 DriveRecordSample(CardDriveRecordSampleData.ThisWeek.copy(expanded = true), mode)
                 DriveRecordSample(CardDriveRecordSampleData.LastWeek, mode)
+            }
+            // 기록 없음(첫날): 시안은 세로(378×576)만 있다
+            if (mode == CardDriveRecordMode.PORTRAIT) {
+                CatalogLabel("L2 card_drive_record · PORTRAIT · 기록 없음(empty)")
+                DriveRecordSample(CardDriveRecordSampleData.Empty, mode)
             }
         }
         // C: 모드마다 충전 중 · 미연결 배터리 위험 (Figma variant charging · unplugged/critical)
