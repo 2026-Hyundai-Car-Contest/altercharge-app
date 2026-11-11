@@ -25,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.altercharge.app.R
+import com.altercharge.app.ui.card.station.ChargerStatus
 import com.altercharge.app.ui.card.station.ChargingType
 import com.altercharge.app.ui.designsystem.theme.AlterChargeTheme
 import com.altercharge.app.ui.designsystem.theme.AlterFontWeight
@@ -70,7 +71,7 @@ fun StationItem(
                     .padding(vertical = 2.dp, horizontal = 6.dp)
             ) {
                 Image(
-                    painter = painterResource(R.drawable.ic_charger_slow),
+                    painter = painterResource(state.chargingType.image()),
                     contentDescription = null,
                     modifier = modifier
                         .size(16.dp)
@@ -133,6 +134,17 @@ fun StationItem(
                 modifier = Modifier.weight(1f)
             )
         }
+    }
+}
+
+// extension
+
+@Composable
+private fun ChargingType.image(): Int {
+    return when(this) {
+        ChargingType.ULTRA_FAST -> R.drawable.ic_charger_ultra
+        ChargingType.DC -> R.drawable.ic_charger_fast
+        ChargingType.AC -> R.drawable.ic_charger_slow
     }
 }
 
