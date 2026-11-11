@@ -289,7 +289,7 @@ private fun ChipStatus(chip: ConnectionChip, modifier: Modifier = Modifier) {
                         val blur = figmaBlurToAndroidRadius(ChipDotGlowBlur.toPx())
                         val paint = android.graphics.Paint().apply {
                             isAntiAlias = true
-                            color = ChipDotGlowColor.toArgb()
+                            color = (if (chip == ConnectionChip.UNPLUGGED) dotColor.copy(alpha = ChipDotGlowAlpha) else ChipDotGlowColor).toArgb()
                             if (blur > 0f) maskFilter = BlurMaskFilter(blur, BlurMaskFilter.Blur.NORMAL)
                         }
                         drawIntoCanvas { it.nativeCanvas.drawCircle(center.x, center.y, glowRadius, paint) }
@@ -577,10 +577,13 @@ private val SocGlowWideBlur = 64.dp
 private const val SocGlowNearAlpha = 0.10f
 private val SocGlowNearBlur = 24.dp
 
-/** 칩 점 빛번짐 (dot drop shadow 0 0 blur 6 spread 2, #99C6CF 35%. 라이트 · 다크 같음) */
+/** 칩 점 빛번짐 (dot drop shadow 0 0 blur 6 spread 2, 연결됨 · 대기는 #99C6CF 35%. 라이트 · 다크 같음) */
 private val ChipDotGlowSpread = 2.dp
 private val ChipDotGlowBlur = 6.dp
 private val ChipDotGlowColor = Color(0x5999C6CF)
+
+/** 연결 안 됨(빨강 점)은 빛번짐도 점과 같은 색 35% (Figma 칩 점 SVG) */
+private const val ChipDotGlowAlpha = 0.35f
 
 /**
  * Figma blur(= 가우스 표준편차 × 2)를 안드로이드 blur 반지름(px)으로 바꾼다.

@@ -34,6 +34,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.input.InputMode
+import androidx.compose.ui.platform.LocalInputModeManager
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -92,6 +94,9 @@ fun IviButton(
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val focused by interaction.collectIsFocusedAsState()
+    // 포커스 링은 로터리 · 스티어링 · 키보드로 조작할 때만 보인다(Figma Focused 상태).
+    // 터치로 쓸 때는 포커스가 자동으로 가 있어도 링을 그리지 않는다.
+    val keyboardInput = LocalInputModeManager.current.inputMode == InputMode.Keyboard
     val iconOnly = text == null
     val isGhost = hierarchy == IviButtonHierarchy.Ghost
 
@@ -137,12 +142,20 @@ fun IviButton(
                 .height(size.height)
                 .then(if (iconOnly) Modifier.width(size.height) else Modifier)
                 .then(if (fullWidth) Modifier.fillMaxWidth() else Modifier)
-                .focusRing(visible = focused, color = palette.focusRing, radius = size.radius)
+                .focusRing(visible = focused && keyboardInput, color = palette.focusRing, radius = size.radius)
                 .background(container, shape)
                 .then(
-                    if (isGhost && !pressed) Modifier.border(GhostOutlineWidth, palette.outline, shape) else Modifier,
+                    // Ghost 외곽선은 Enabled일 때만. Disabled · Restricted는 배경도 테두리도 없다 (Figma 366:36970)
+                    if (isGhost && !pressed && enabled && !restricted) {
+                        Modifier.border(GhostOutlineWidth, palette.outline, shape)
+                    } else {
+                        Modifier
+                    },
                 )
-                .padding(horizontal = if (iconOnly) 0.dp else size.paddingHorizontal),
+                // Ghost는 외곽선 두께만큼 폭이 더 넓다 (Figma 인스턴스 폭 253 → 256)
+                .padding(
+                    horizontal = if (iconOnly) 0.dp else size.paddingHorizontal + (if (isGhost) GhostOutlineWidth else 0.dp),
+                ),
             horizontalArrangement = Arrangement.spacedBy(size.gap, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -158,7 +171,8 @@ fun IviButton(
             }
             if (!restricted) {
                 trailingIcon?.let {
-                    Icon(it, contentDescription = null, tint = content, modifier = Modifier.size(size.iconSize))
+                    // trailing 아이콘은 leading보다 4 작다: Large 32 · Medium 28 · Small 24 (Figma trailing_icon)
+                    Icon(it, contentDescription = null, tint = content, modifier = Modifier.size(size.iconSize - TrailingIconInset))
                 }
             }
         }
@@ -168,14 +182,16 @@ fun IviButton(
 /** Ghost 테두리: 1.5dp, 안쪽 정렬, basic_300. 누른 동안에는 테두리 없음 (디자이너 확정) */
 private val GhostOutlineWidth = 1.5.dp
 
-private fun IviButtonSize.textStyle(type: AlterTypography): TextStyle = when (this) {
-    IviButtonSize.Large -> type.titleSmall
-    IviButtonSize.Medium -> type.bodyMedium
-    IviButtonSize.Small -> type.bodySmall
-}
+/** 포커스 링 두께 · 버튼과의 간격 (button/focus/ring_width, ring_offset) */
+private val FocusRingWidth = 4.dp
+private val FocusRingOffset = 4.dp
+
+/** 뒤쪽 아이콘은 앞쪽 아이콘보다 4 작다 (Figma trailing_icon: 32 · 28 · 24) */
+private val TrailingIconInset = 4.dp
 
 /**
- * 포커스 테두리: 두께 4, 버튼에서 4 바깥 (button/focus/ring_width, ring_offset)
+ * 포커스 링: 두께 4, 버튼에서 4 바깥 (button/focus/ring_width, ring_offset). 디자이너 확정(2026-11-11).
+ * Primary 같은 파란 배경에서 안쪽 테두리는 보이지 않고 라벨 공간도 줄어서 바깥에 둔다.
  * 버튼 바깥에 그리므로 부모가 잘라내면(clip, 스크롤) 안 보일 수 있다. 카드 가장자리에 둘 때 여유를 둔다.
  */
 private fun Modifier.focusRing(visible: Boolean, color: Color, radius: Dp): Modifier =
@@ -183,8 +199,8 @@ private fun Modifier.focusRing(visible: Boolean, color: Color, radius: Dp): Modi
         this
     } else {
         drawBehind {
-            val stroke = 4.dp.toPx()
-            val inset = 4.dp.toPx() + stroke / 2
+            val stroke = FocusRingWidth.toPx()
+            val inset = FocusRingOffset.toPx() + stroke / 2
             drawRoundRect(
                 color = color,
                 topLeft = Offset(-inset, -inset),
@@ -194,6 +210,12 @@ private fun Modifier.focusRing(visible: Boolean, color: Color, radius: Dp): Modi
             )
         }
     }
+
+private fun IviButtonSize.textStyle(type: AlterTypography): TextStyle = when (this) {
+    IviButtonSize.Large -> type.titleSmall
+    IviButtonSize.Medium -> type.bodyMedium
+    IviButtonSize.Small -> type.bodySmall
+}
 
 private data class IviButtonPalette(
     val container: Color,
