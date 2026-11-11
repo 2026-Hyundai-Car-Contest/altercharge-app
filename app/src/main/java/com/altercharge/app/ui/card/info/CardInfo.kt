@@ -110,7 +110,7 @@ fun CardInfo(
             .semantics(mergeDescendants = true) {},
     ) {
         if (status == CardInfoStatus.COLLECTING) {
-            CollectingBoltGraphic(fillColor = AlterTheme.colors.blue500, modifier = Modifier.matchParentSize())
+            CollectingBoltGraphic(spec = spec, fillColor = AlterTheme.colors.blue500, modifier = Modifier.matchParentSize())
         } else {
             BoltGraphic(
                 status = status,
@@ -273,6 +273,14 @@ private class ModeSpec(
     val boltTop: Dp,
     val boltWidth: Dp,
     val boltHeight: Dp,
+    /** 판정별로 번개가 오늘보다 오른쪽으로 밀린 거리. Figma 판정별 variant의 bolt_track x 차이. */
+    val tomorrowShift: Dp,
+    val threeDaysShift: Dp,
+    /** Figma bolt_track 상자 그대로(x · y · 폭 · 높이). 수집 중 번개를 모드 크기에 맞출 때 쓴다. */
+    val trackLeft: Dp,
+    val trackTop: Dp,
+    val trackWidth: Dp,
+    val trackHeight: Dp,
 ) {
     @Composable
     fun eyebrowStyle(): TextStyle =
@@ -294,21 +302,29 @@ private class ModeSpec(
 private val LandscapeSpec = ModeSpec(
     AlterPadding.Large, 252.dp, 279.dp, isWf = false,
     boltLeft = 151.0.dp, boltTop = (-9.7).dp, boltWidth = 381.9.dp, boltHeight = 387.4.dp,
+    tomorrowShift = 11.0.dp, threeDaysShift = 68.0.dp,
+    trackLeft = 130.0.dp, trackTop = (-51.5).dp, trackWidth = 423.9.dp, trackHeight = 471.0.dp,
 )
 // 세로 제목 영역 232 (개발자 Q&A Q5: 212 → 232, 영문 "Tomorrow" 213이 잘리지 않게)
 private val PortraitSpec = ModeSpec(
     AlterPadding.Normal, 232.dp, 279.dp, isWf = false,
     boltLeft = 133.4.dp, boltTop = (-9.4).dp, boltWidth = 371.6.dp, boltHeight = 376.9.dp,
+    tomorrowShift = 0.dp, threeDaysShift = 53.3.dp,
+    trackLeft = 113.0.dp, trackTop = (-50.0).dp, trackWidth = 412.4.dp, trackHeight = 458.2.dp,
 )
 private val WfLandscapeSpec = ModeSpec(
     AlterPadding.Normal, 217.dp, 262.dp, isWf = true,
     boltLeft = 144.1.dp, boltTop = (-7.9).dp, boltWidth = 311.4.dp, boltHeight = 315.9.dp,
+    tomorrowShift = 10.0.dp, threeDaysShift = 43.3.dp,
+    trackLeft = 127.0.dp, trackTop = (-42.0).dp, trackWidth = 345.6.dp, trackHeight = 384.0.dp,
 )
 // WF 세로는 카드 폭이 584(Q&A Q4, 화면 인스턴스 452:54383)이고 번개는 왼쪽 x 319 그대로라
 // bolt_track x 319 + 14.8
 private val WfPortraitSpec = ModeSpec(
     AlterPadding.Normal, 290.dp, 262.dp, isWf = true,
     boltLeft = 333.8.dp, boltTop = (-6.9).dp, boltWidth = 269.8.dp, boltHeight = 273.8.dp,
+    tomorrowShift = 0.dp, threeDaysShift = 0.dp,
+    trackLeft = 319.0.dp, trackTop = (-36.4).dp, trackWidth = 299.5.dp, trackHeight = 332.8.dp,
 )
 
 private fun CardInfoMode.spec(): ModeSpec = when (this) {
@@ -330,18 +346,22 @@ private const val BOLT_HEIGHT = 389.74f
 
 
 
-/**
- * 판정별 채움 수위. 번개 높이 기준 왼쪽 · 가운데 · 오른쪽 수면 높이(위에서부터)와,
- * 판정별로 번개가 오른쪽으로 밀린 정도(번개 너비 기준). Figma: 오늘·내일은 같은 위치, 3일내만 53.3 (번개 너비 371.6 중 0.143).
- */
-private class BoltLevel(val left: Float, val middle: Float, val right: Float, val shift: Float)
+/** 판정별 채움 수위. 번개 높이 기준 왼쪽 · 가운데 · 오른쪽 수면 높이(위에서부터). */
+private class BoltLevel(val left: Float, val middle: Float, val right: Float)
 
 private fun CardInfoStatus.boltLevel(): BoltLevel = when (this) {
-    CardInfoStatus.TODAY -> BoltLevel(left = 0.75f, middle = 0.705f, right = 0.66f, shift = 0f)
-    CardInfoStatus.TOMORROW -> BoltLevel(left = 0.43f, middle = 0.48f, right = 0.50f, shift = 0f)
-    CardInfoStatus.WITHIN_THREE_DAYS -> BoltLevel(left = 0.29f, middle = 0.275f, right = 0.27f, shift = 0.143f)
+    CardInfoStatus.TODAY -> BoltLevel(left = 0.75f, middle = 0.705f, right = 0.66f)
+    CardInfoStatus.TOMORROW -> BoltLevel(left = 0.43f, middle = 0.48f, right = 0.50f)
+    CardInfoStatus.WITHIN_THREE_DAYS -> BoltLevel(left = 0.29f, middle = 0.275f, right = 0.27f)
     // 수집 중은 채움 수위를 쓰지 않는다 (CollectingBoltGraphic). 자리 채움 값.
-    CardInfoStatus.COLLECTING -> BoltLevel(left = 1f, middle = 1f, right = 1f, shift = 0f)
+    CardInfoStatus.COLLECTING -> BoltLevel(left = 1f, middle = 1f, right = 1f)
+}
+
+/** 판정별로 번개가 오늘 자리보다 오른쪽으로 밀린 거리 (모드마다 Figma 값이 다르다). */
+private fun ModeSpec.boltShift(status: CardInfoStatus): Dp = when (status) {
+    CardInfoStatus.TOMORROW -> tomorrowShift
+    CardInfoStatus.WITHIN_THREE_DAYS -> threeDaysShift
+    CardInfoStatus.TODAY, CardInfoStatus.COLLECTING -> 0.dp
 }
 
 @Composable
@@ -375,7 +395,7 @@ private fun BoltGraphic(
         val scaleX = boltWidth / BOLT_WIDTH
         val scaleY = spec.boltHeight.toPx() / BOLT_HEIGHT
         val scale = minOf(scaleX, scaleY)
-        val left = spec.boltLeft.toPx() + boltWidth * level.shift
+        val left = (spec.boltLeft + spec.boltShift(status)).toPx()
         val top = spec.boltTop.toPx()
         withTransform({
             translate(left, top)
@@ -397,8 +417,7 @@ private fun BoltGraphic(
 
 // 기록 수집 중 번개. Figma status = collecting (647:58207)의 bolt_track · bolt_fill SVG 값 그대로.
 // 판정 상태와 달리 번개 전체에 가우시안 블러(표준편차 10)가 걸려 있고, 크기와 자리도 다르다.
-// 모양: svg(411.6 × 417)를 카드 안 x 113, y -29.4(= -50 + 458.2 × 4.5%)에 놓는다. 왼쪽 x 고정은 판정 상태와 같다.
-// TODO 디자이너 확인: 시안이 세로(378×358)뿐이라 다른 모드도 같은 자리에 그린다.
+// 모양: 세로에서 svg(411.6 × 417)를 카드 안 x 113, y -29.4(= -50 + 458.2 × 4.5%)에 놓는다. 왼쪽 x 고정은 판정 상태와 같다.
 private const val COLLECTING_BOLT_PATH =
     "M221.092 40.2897C223.32 22.4555 200.91 12.7278 189.404 26.5345L24.2068 224.756" +
         "C14.4363 236.48 22.773 254.28 38.0344 254.28H185.413C196.24 254.28 204.616 263.768 203.274 274.511" +
@@ -410,14 +429,18 @@ private const val COLLECTING_BOLT_PATH =
 private const val COLLECTING_FILL_PATH =
     "M93.3584 67.6357C84.6971 78.0284 69.8588 75.0853 64 65.3887C74.5418 65.3805 85.3377 64.9178 96.3877 64L93.3584 67.6357Z"
 
-private val CollectingBoltOrigin = Offset(113f, -29.38f)
-private val CollectingFillOrigin = Offset(242.48f, 293.41f)
+// 위 SVG 위치는 세로(portrait) variant 기준이다. bolt_track 상자(113, -50, 412.4 × 458.2) 안에서의 자리로 바꿔 두고,
+// 다른 모드는 그 모드의 bolt_track 상자 크기 비율(s = 상자 폭 / 412.4)로 키우거나 줄인다.
+// Figma collecting variant의 bolt_track 상자는 모드마다 오늘 variant와 같다.
+private const val COLLECTING_REF_TRACK_WIDTH = 412.4f
+private val CollectingBoltInTrack = Offset(0f, 20.62f) // (113 - 113, -29.38 - -50)
+private val CollectingFillInTrack = Offset(129.48f, 343.41f) // (242.48 - 113, 293.41 - -50)
 private const val COLLECTING_BOLT_SCALE_X = 412.4f / 411.604f
 private const val COLLECTING_BLUR_SIGMA = 10f
 private const val COLLECTING_GLOW_SIGMA = 32f
 
 @Composable
-private fun CollectingBoltGraphic(fillColor: Color, modifier: Modifier = Modifier) {
+private fun CollectingBoltGraphic(spec: ModeSpec, fillColor: Color, modifier: Modifier = Modifier) {
     val track = remember { PathParser().parsePathString(COLLECTING_BOLT_PATH).toPath() }
     val nub = remember { PathParser().parsePathString(COLLECTING_FILL_PATH).toPath() }
     val density = LocalDensity.current.density
@@ -428,18 +451,22 @@ private fun CollectingBoltGraphic(fillColor: Color, modifier: Modifier = Modifie
         blurPaint(BoltGlowColor, kotlin.math.hypot(COLLECTING_GLOW_SIGMA, COLLECTING_BLUR_SIGMA), density)
     }
     val nubPaint = remember(density, fillColor) { blurPaint(fillColor, COLLECTING_BLUR_SIGMA, density) }
+    // 모드별 bolt_track 상자에 맞춘 배율 (세로 = 1)
+    val s = spec.trackWidth.value / COLLECTING_REF_TRACK_WIDTH
+    val trackLeft = spec.trackLeft.value
+    val trackTop = spec.trackTop.value
     Canvas(modifier) {
-        fun draw(path: Path, origin: Offset, scaleX: Float, paint: android.graphics.Paint) {
+        fun draw(path: Path, inTrack: Offset, scaleX: Float, paint: android.graphics.Paint) {
             withTransform({
-                translate(origin.x * density, origin.y * density)
-                scale(scaleX * density, density, pivot = Offset.Zero)
+                translate((trackLeft + inTrack.x * s) * density, (trackTop + inTrack.y * s) * density)
+                scale(scaleX * s * density, s * density, pivot = Offset.Zero)
             }) {
                 drawIntoCanvas { canvas -> canvas.nativeCanvas.drawPath(path.asAndroidPath(), paint) }
             }
         }
-        draw(track, CollectingBoltOrigin, COLLECTING_BOLT_SCALE_X, trackPaint)
-        draw(nub, CollectingFillOrigin, 1f, glowPaint)
-        draw(nub, CollectingFillOrigin, 1f, nubPaint)
+        draw(track, CollectingBoltInTrack, COLLECTING_BOLT_SCALE_X, trackPaint)
+        draw(nub, CollectingFillInTrack, 1f, glowPaint)
+        draw(nub, CollectingFillInTrack, 1f, nubPaint)
     }
 }
 
