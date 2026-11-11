@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    C 차량 상태 카드 영문. Figma EN 보드 439:22894 문구 그대로.
+    C 차량 상태 카드 영문. Figma EN 보드 439:22894 문구 그대로. 영문은 이름 없이 항상 "Your car"로 통일 (기획 확정 2026-11-11, 개발자 Q&A Q7).
     세로(portrait_*)는 가로 영문과 같은 문구를 쓰고, 길면 헤드라인을 자동으로 줄인다 (개발자 Q&A Q1).
 -->
 <resources>
-    <string name="card_vehicle_status_headline_charge_recommended">%1$s, charge\nbefore you go</string>
-    <string name="card_vehicle_status_headline_ready">%1$s, your car\nis ready to go</string>
-    <string name="card_vehicle_status_headline_charging">%1$s, your car\nis charging</string>
+    <string name="card_vehicle_status_headline_charge_recommended">Charge\nbefore you go</string>
+    <string name="card_vehicle_status_headline_ready">Your car\nis ready to go</string>
+    <string name="card_vehicle_status_headline_charging">Your car\nis charging</string>
     <string name="card_vehicle_status_headline_charging_low">Charging\nyour battery</string>
     <string name="card_vehicle_status_headline_charging_critical">Battery low\nCharging now</string>
-    <string name="card_vehicle_status_headline_charged">%1$s, your car\nis fully charged</string>
+    <string name="card_vehicle_status_headline_charged">Your car\nis fully charged</string>
     <string name="card_vehicle_status_headline_paused">Charging paused\nResuming soon</string>
     <string name="card_vehicle_status_headline_scheduled">%1$s\nCharging scheduled</string>
     <string name="card_vehicle_status_headline_critical_unplugged">Battery low\nCharge needed</string>
