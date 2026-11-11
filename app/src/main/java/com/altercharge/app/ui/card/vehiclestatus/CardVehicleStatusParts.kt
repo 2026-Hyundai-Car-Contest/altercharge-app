@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -23,15 +24,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -43,6 +48,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.altercharge.app.R
@@ -530,13 +536,36 @@ internal fun RowScope.InfoTile(
  */
 @Composable
 fun VehicleImage(kind: VehicleImageKind, modifier: Modifier = Modifier) {
+    val description = stringResource(R.string.card_vehicle_status_vehicle_image)
+    if (kind == VehicleImageKind.DRIVING) {
+        // Figma vehicle_driving(371:9513)은 같은 1440×444 파일을 CROP으로 쓴다. 자리의 (u, v) → 이미지의
+        // (0.2138 + 0.5723u, -0.2144 + v): 가로는 21.4%~78.6%만 보이고, 세로는 자리 위 21.4%가 비고 아래가 잘린다.
+        val bitmap = ImageBitmap.imageResource(kind.drawableRes)
+        Canvas(modifier.clipToBounds().semantics { contentDescription = description }) {
+            val dstWidth = size.width / DRIVING_CROP_SCALE_X
+            val dstHeight = size.height / DRIVING_CROP_SCALE_Y
+            drawImage(
+                image = bitmap,
+                dstOffset = IntOffset((-DRIVING_CROP_OFFSET_X * dstWidth).roundToInt(), (-DRIVING_CROP_OFFSET_Y * dstHeight).roundToInt()),
+                dstSize = IntSize(dstWidth.roundToInt(), dstHeight.roundToInt()),
+                filterQuality = FilterQuality.High,
+            )
+        }
+        return
+    }
     Image(
         painter = painterResource(kind.drawableRes),
-        contentDescription = stringResource(R.string.card_vehicle_status_vehicle_image),
+        contentDescription = description,
         contentScale = ContentScale.Fit,
         modifier = modifier,
     )
 }
+
+/** Figma vehicle_driving imageTransform [[0.5723, 0, 0.2138], [0, 1, -0.2144]] */
+private const val DRIVING_CROP_SCALE_X = 0.5723f
+private const val DRIVING_CROP_OFFSET_X = 0.2138f
+private const val DRIVING_CROP_SCALE_Y = 1f
+private const val DRIVING_CROP_OFFSET_Y = -0.2144f
 
 @get:DrawableRes
 private val VehicleImageKind.drawableRes: Int
