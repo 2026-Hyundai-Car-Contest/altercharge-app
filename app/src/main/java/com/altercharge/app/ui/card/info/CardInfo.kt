@@ -444,15 +444,17 @@ private fun CollectingBoltGraphic(spec: ModeSpec, fillColor: Color, modifier: Mo
     val track = remember { PathParser().parsePathString(COLLECTING_BOLT_PATH).toPath() }
     val nub = remember { PathParser().parsePathString(COLLECTING_FILL_PATH).toPath() }
     val density = LocalDensity.current.density
-    // 블러 필터는 density(와 색)로만 정해지므로 그릴 때마다 만들지 않고 한 번 만든다.
-    val trackPaint = remember(density) { blurPaint(BoltTrackColor, COLLECTING_BLUR_SIGMA, density) }
-    // 꼭지 바깥 빛(표준편차 32, 55%)과 꼭지 자체(표준편차 10). 합쳐서 퍼지는 정도는 √(32² + 10²) ≈ 33.5
-    val glowPaint = remember(density) {
-        blurPaint(BoltGlowColor, kotlin.math.hypot(COLLECTING_GLOW_SIGMA, COLLECTING_BLUR_SIGMA), density)
-    }
-    val nubPaint = remember(density, fillColor) { blurPaint(fillColor, COLLECTING_BLUR_SIGMA, density) }
     // 모드별 bolt_track 상자에 맞춘 배율 (세로 = 1)
     val s = spec.trackWidth.value / COLLECTING_REF_TRACK_WIDTH
+    // 블러 필터는 density(와 색)로만 정해지므로 그릴 때마다 만들지 않고 한 번 만든다.
+    // 번개·꼭지의 LAYER_BLUR(σ10)는 Figma 모드 4개가 같아 s로 키우지 않는다.
+    val trackPaint = remember(density) { blurPaint(BoltTrackColor, COLLECTING_BLUR_SIGMA, density) }
+    // 꼭지 바깥 빛(DROP_SHADOW)은 모드 크기에 비례한다: 세로 64 · 가로 66 · WF 가로 54 · WF 세로 47 → 표준편차 32 × s.
+    // 꼭지 자체(표준편차 10)와 합쳐서 퍼지는 정도는 √((32s)² + 10²)
+    val glowPaint = remember(density, s) {
+        blurPaint(BoltGlowColor, kotlin.math.hypot(COLLECTING_GLOW_SIGMA * s, COLLECTING_BLUR_SIGMA), density)
+    }
+    val nubPaint = remember(density, fillColor) { blurPaint(fillColor, COLLECTING_BLUR_SIGMA, density) }
     val trackLeft = spec.trackLeft.value
     val trackTop = spec.trackTop.value
     Canvas(modifier) {

@@ -320,6 +320,7 @@ private fun ChipStatus(chip: ConnectionChip, modifier: Modifier = Modifier) {
 /**
  * pleos basic/gray/basic_300 (라이트 #C7C9CE · 다크 #686A72). 디자인 값(AlterColors)에 없는 단계라 C 카드 안에서만 쓴다.
  * 칩 점(standby · offline)과 값 없는 SOC "--"가 이 색이다.
+ * 공용 팔레트(AlterColors)에 gray300이 생기면 이 확장을 지운다 — 멤버가 확장보다 우선해 조용히 무시된다.
  */
 internal val AlterColors.gray300: Color
     get() = if (isDark) Color(0xFF686A72) else Color(0xFFC7C9CE)
@@ -533,6 +534,7 @@ internal fun RowScope.InfoTile(
 /**
  * 차량 이미지. 종류별 에셋(이슈 #4)을 주어진 자리 크기에 맞춰 그린다.
  * 자리 크기는 시안에서 회전한 뒤 화면에 차지하는 크기라 이미지를 돌리지 않고 가운데에 맞춘다.
+ * DRIVING은 자리 비율이 Figma 슬롯(774×411)과 같다는 전제로 자른다. 자리 비율을 바꾸면 이미지가 늘어난다.
  */
 @Composable
 fun VehicleImage(kind: VehicleImageKind, modifier: Modifier = Modifier) {
