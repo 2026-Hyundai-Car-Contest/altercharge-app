@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -75,7 +76,7 @@ fun StationItem(
                         .size(16.dp)
                 )
                 Text(
-                    text = "2",
+                    text = state.occupiedChargerCount.toString(),
                     fontSize = 16.sp,
                     lineHeight = 24.sp,
                     fontWeight = AlterFontWeight.Strong,
@@ -84,7 +85,7 @@ fun StationItem(
                 )
 
                 Text(
-                    text = "/4",
+                    text = state.availableChargerCount.toString(),
                     fontSize = 16.sp,
                     lineHeight = 24.sp,
                     color = AlterTheme.colors.textTertiary,
@@ -92,7 +93,7 @@ fun StationItem(
                 )
 
                 Text(
-                    text = "대",
+                    text = stringResource(R.string.card_item_avaliable_unit_text, "대"),
                     fontSize = 16.sp,
                     lineHeight = 24.sp,
                     color = AlterTheme.colors.textTertiary,
@@ -109,7 +110,7 @@ fun StationItem(
                 .padding(top = 6.dp)
         ) {
             Text(
-                text = "1.2km",
+                text = "${state.distance}km",
                 color = AlterTheme.colors.textPrimary,
                 fontWeight = AlterFontWeight.Strong,
                 fontSize = 24.sp,
@@ -124,9 +125,12 @@ fun StationItem(
             )
 
             Text(
-                text = "서울 마포구 동교로 263",
+                text = state.chargeStationAddress,
                 fontSize = 16.sp,
-                color = AlterTheme.colors.textTertiary.copy(alpha = 0.64f)
+                color = AlterTheme.colors.textTertiary.copy(alpha = 0.64f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
             )
         }
     }
