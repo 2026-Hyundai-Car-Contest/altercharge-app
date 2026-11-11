@@ -172,7 +172,7 @@ fun IviButton(
             if (!restricted) {
                 trailingIcon?.let {
                     // trailing 아이콘은 leading보다 4 작다: Large 32 · Medium 28 · Small 24 (Figma trailing_icon)
-                    Icon(it, contentDescription = null, tint = content, modifier = Modifier.size(size.iconSize - 4.dp))
+                    Icon(it, contentDescription = null, tint = content, modifier = Modifier.size(size.iconSize - TrailingIconInset))
                 }
             }
         }
@@ -181,6 +181,13 @@ fun IviButton(
 
 /** Ghost 테두리: 1.5dp, 안쪽 정렬, basic_300. 누른 동안에는 테두리 없음 (디자이너 확정) */
 private val GhostOutlineWidth = 1.5.dp
+
+/** 포커스 링 두께 · 버튼과의 간격 (button/focus/ring_width, ring_offset) */
+private val FocusRingWidth = 4.dp
+private val FocusRingOffset = 4.dp
+
+/** 뒤쪽 아이콘은 앞쪽 아이콘보다 4 작다 (Figma trailing_icon: 32 · 28 · 24) */
+private val TrailingIconInset = 4.dp
 
 /**
  * 포커스 링: 두께 4, 버튼에서 4 바깥 (button/focus/ring_width, ring_offset). 디자이너 확정(2026-11-11).
@@ -192,8 +199,8 @@ private fun Modifier.focusRing(visible: Boolean, color: Color, radius: Dp): Modi
         this
     } else {
         drawBehind {
-            val stroke = 4.dp.toPx()
-            val inset = 4.dp.toPx() + stroke / 2
+            val stroke = FocusRingWidth.toPx()
+            val inset = FocusRingOffset.toPx() + stroke / 2
             drawRoundRect(
                 color = color,
                 topLeft = Offset(-inset, -inset),
