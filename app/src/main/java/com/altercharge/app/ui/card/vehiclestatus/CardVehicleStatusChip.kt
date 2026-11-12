@@ -1,6 +1,4 @@
-/**
- * 스테이지 왼쪽 위 연결 칩(chip_status)과 그 치수 · 점 빛번짐 값.
- */
+/** 스테이지 왼쪽 위 연결 칩 */
 package com.altercharge.app.ui.card.vehiclestatus
 
 import android.graphics.BlurMaskFilter
@@ -29,7 +27,7 @@ import com.altercharge.app.ui.designsystem.theme.AlterPadding
 import com.altercharge.app.ui.designsystem.theme.AlterRadius
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
 
-/** 연결 칩 (chip_status). 바깥 고리 + 안쪽 알약. */
+/** chip_status */
 @Composable
 internal fun ChipStatus(chip: ConnectionChip, modifier: Modifier = Modifier) {
     val colors = AlterTheme.colors
@@ -79,14 +77,14 @@ internal fun ChipStatus(chip: ConnectionChip, modifier: Modifier = Modifier) {
     }
 }
 
-/** chip/ring_padding, 점 크기 */
+/** chip/ring_padding */
 private val ChipRingPadding = 8.dp
 private val ChipDotSize = 12.dp
 
-/** 칩 점 빛번짐 (dot drop shadow 0 0 blur 6 spread 2, 연결됨 · 대기는 #99C6CF 35%. 라이트 · 다크 같음) */
+/** dot drop shadow. 라이트 · 다크 같음 */
 private val ChipDotGlowSpread = 2.dp
 private val ChipDotGlowBlur = 6.dp
 private val ChipDotGlowColor = Color(0x5999C6CF)
 
-/** 연결 안 됨(빨강 점)은 빛번짐도 점과 같은 색 35% (Figma 칩 점 SVG) */
+/** 연결 안 됨(빨강 점)은 빛번짐도 점과 같은 색 (Figma 칩 점 SVG) */
 private const val ChipDotGlowAlpha = 0.35f

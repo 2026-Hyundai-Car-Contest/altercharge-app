@@ -12,10 +12,6 @@ import com.altercharge.app.ui.designsystem.theme.AlterChargeTheme
 import com.altercharge.app.ui.designsystem.theme.AlterPadding
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
 
-// ---------------------------------------------------------------------------
-// 미리보기 (샘플: CardVehicleStatusSampleData)
-// ---------------------------------------------------------------------------
-
 @Composable
 private fun LandscapePreview(state: CardVehicleStatusUiState, dark: Boolean = false) {
     AlterChargeTheme(darkTheme = dark) {

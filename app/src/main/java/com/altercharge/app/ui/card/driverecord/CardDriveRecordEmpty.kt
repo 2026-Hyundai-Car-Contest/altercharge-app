@@ -32,16 +32,13 @@ import com.altercharge.app.ui.designsystem.theme.ShadowLayer
 import com.altercharge.app.ui.designsystem.theme.alterShadow
 
 /**
- * 기록 없음 안내 (Figma state = empty, empty_overlay 648:58509). 막대 위를 흐리게 덮고 가운데에 차 그림과 문구를 둔다.
- * 요일 라벨 줄(30)은 덮지 않는다.
- *
- * 막 색: 시안 설명은 "chart/background 40% + 배경 블러 6"이지만, 그려진 인스턴스는 막 아래가 거의 순백(254~255)이다.
- * 40%로 얹으면 빗금이 약 250으로 비쳐 달라서 그려진 값에 맞춰 불투명하게 얹는다. 위쪽 둥근 모서리 틈으로만 트랙 끝이 보인다.
+ * Figma state = empty, empty_overlay 648:58509. 요일 라벨 줄은 덮지 않는다.
+ * 시안 설명은 "chart/background 40% + 배경 블러 6"이지만 그려진 인스턴스는 막 아래가 거의 순백이라 불투명하게 얹는다.
  * TODO 디자이너 확인: 막 불투명도와 블러 값이 설명과 그림이 다르다.
  */
 @Composable
 internal fun ChartEmptyOverlay(mode: CardDriveRecordMode, modifier: Modifier = Modifier) {
-    // WF 가로는 차트가 160으로 낮아 그림이 85×68로 작다 (Figma 648:58515). 다른 모드는 200×160 (648:58230 · 58325 · 58420 · 58610).
+    // WF 가로는 차트가 낮아 그림이 작다 (648:58515). 다른 모드는 648:58230 · 58325 · 58420 · 58610
     val illust = if (mode == CardDriveRecordMode.WF_LANDSCAPE) EmptyIllustCompact else EmptyIllustRegular
     Box(modifier = modifier.padding(bottom = EmptyOverlayBottomInset)) {
         Column(
@@ -74,7 +71,7 @@ internal fun ChartEmptyOverlay(mode: CardDriveRecordMode, modifier: Modifier = M
     }
 }
 
-/** 말풍선 느낌표 (badge_alert). 왼쪽 아래 모서리만 4로 뾰족하다. */
+/** badge_alert. 왼쪽 아래 모서리만 4로 뾰족하다 */
 @Composable
 private fun AlertBadge(illust: EmptyIllustSpec, modifier: Modifier = Modifier) {
     val size = illust.badgeSize
@@ -95,7 +92,7 @@ private fun AlertBadge(illust: EmptyIllustSpec, modifier: Modifier = Modifier) {
     }
 }
 
-/** 그림 상자 크기와 그 안의 차 · 느낌표 자리 (Figma illust_no_record) */
+/** Figma illust_no_record */
 private class EmptyIllustSpec(
     val width: Dp,
     val height: Dp,

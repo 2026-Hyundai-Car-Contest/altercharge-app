@@ -1,6 +1,4 @@
-/**
- * L2 그래프 패널 위 기간 헤더: "이번 주" 라벨 + 날짜 범위 + 이전 · 다음 주 버튼.
- */
+/** L2 기간 헤더 */
 package com.altercharge.app.ui.card.driverecord
 
 import androidx.compose.foundation.layout.Arrangement
@@ -61,7 +59,7 @@ internal fun PeriodHeader(
                 overflow = TextOverflow.Ellipsis,
             )
         }
-        // 두 버튼의 터치 영역은 원 사이 간격 가운데에서 맞닿고 겹치지 않는다.
+        // 두 버튼의 터치 영역은 원 사이 간격 가운데에서 맞닿고 겹치지 않는다
         val halfGap = PeriodNavGap / 2
         Row(Modifier.bleedTouchInset()) {
             CircleIconButton(

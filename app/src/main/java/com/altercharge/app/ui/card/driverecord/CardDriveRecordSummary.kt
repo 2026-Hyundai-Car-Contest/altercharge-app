@@ -1,6 +1,4 @@
-/**
- * L2 그래프 아래 요약(summary_block)과 펼침 상세 통계 4개(details · tile_stat).
- */
+/** L2 그래프 아래 summary_block과 펼침 상세 통계(details) */
 package com.altercharge.app.ui.card.driverecord
 
 import androidx.compose.foundation.layout.Arrangement
@@ -44,7 +42,7 @@ internal fun ContentBlock(state: CardDriveRecordUiState, onToggleExpanded: () ->
                     color = colors.textPrimary,
                     modifier = Modifier.weight(1f),
                 )
-                // 기록 없음에서는 펼칠 내용이 없어 펼침 버튼을 숨긴다 (Figma state = empty)
+                // Figma state = empty
                 if (!state.empty) {
                     CircleIconButton(
                         contentDescription = stringResource(
@@ -90,7 +88,6 @@ internal fun ContentBlock(state: CardDriveRecordUiState, onToggleExpanded: () ->
     }
 }
 
-/** 상세 통계 4개 (details). 2열 2줄 */
 @Composable
 private fun StatTiles(state: CardDriveRecordUiState) {
     val unknown = stringResource(R.string.card_drive_record_value_unknown)
@@ -134,7 +131,7 @@ private fun StatTiles(state: CardDriveRecordUiState) {
     }
 }
 
-/** 숫자 타일 (tile_stat). 박스 없이 위 구분선. emphasis는 값만 한 단계 크게 */
+/** tile_stat. emphasis는 값만 한 단계 크게 */
 @Composable
 private fun TileStat(
     label: String,
@@ -152,7 +149,7 @@ private fun TileStat(
             .drawBehind {
                 drawRect(divider, size = Size(size.width, TileDividerThickness.toPx()))
             }
-            // Figma는 위 구분선 1이 자리를 차지한다(border-top 1 + 여백 16 → 타일 97)
+            // Figma는 위 구분선 1이 자리를 차지한다(→ 타일 97)
             .padding(top = TileDividerThickness + AlterPadding.Normal),
         verticalArrangement = Arrangement.spacedBy(AlterMargin.XSmall),
     ) {

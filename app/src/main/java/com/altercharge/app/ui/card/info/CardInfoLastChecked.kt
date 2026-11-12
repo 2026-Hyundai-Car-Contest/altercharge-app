@@ -1,8 +1,4 @@
-/**
- * L1 추천 충전소 줄 아래 "N분 전 기준" (오프라인 · 받아 둔 충전소 정보 있음, REQ_CM_006).
- * 받은 시각과 지금 시각으로 표시 단계를 고르는 함수(lastCheckedOf)와 단계별 문구(lastCheckedText)를 둔다.
- * Figma: CM_006 핸드오프 798:56855 "② 마지막 확인 시각 형식"의 L1 · card_station(짧게) 열.
- */
+/** L1 오프라인 "N분 전 기준" (REQ_CM_006). Figma CM_006 핸드오프 798:56855 "② 마지막 확인 시각 형식" */
 package com.altercharge.app.ui.card.info
 
 import androidx.compose.runtime.Composable
@@ -14,29 +10,21 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 
-/**
- * 충전소 정보를 마지막으로 받은 뒤 지난 시간을 표시 단계로 나눈 값.
- * 기준값은 "마지막으로 충전소 정보를 받은 시각"이다 (Figma 확정 2026-11-12).
- */
+/** 기준은 "마지막으로 충전소 정보를 받은 시각"이다 (Figma 확정 2026-11-12) */
 @Immutable
 sealed interface LastChecked {
-    /** 1분 미만 → "방금 기준" */
     data object JustNow : LastChecked
 
-    /** 1~59분 → "N분 전 기준" */
     data class MinutesAgo(val minutes: Int) : LastChecked
 
-    /** 1~23시간 → "N시간 전 기준" */
     data class HoursAgo(val hours: Int) : LastChecked
 
-    /** 24시간 이상 → "11.11 기준" (받은 날짜) */
     data class OnDate(val month: Int, val day: Int) : LastChecked
 }
 
 /**
- * 받은 시각([checkedAt])과 지금([now])으로 표시 단계를 고른다.
  * 기기 시계가 어긋나 받은 시각이 미래면 "방금"으로 본다.
- * 날짜는 [zone] 기준이다. 기본은 한국시간 (기기 시간대가 UTC여도 같은 날짜가 나오게).
+ * 기본 zone이 한국시간이라 기기 시간대가 UTC여도 같은 날짜가 나온다.
  */
 fun lastCheckedOf(checkedAt: Instant, now: Instant, zone: ZoneId = KoreaZone): LastChecked {
     val elapsed = Duration.between(checkedAt, now)

@@ -10,17 +10,14 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.altercharge.app.R
 
-/**
- * 서체. Figma 기준 Asta Sans (42dot, SIL OFL 1.1). 라이선스 전문은 assets/licenses/AstaSans-OFL.txt.
- * 시안이 쓰는 굵기 400 · 700 · 800만 넣는다.
- */
+/** Asta Sans (42dot, SIL OFL 1.1, assets/licenses/AstaSans-OFL.txt). 시안이 쓰는 굵기만 넣는다 */
 val AstaSans: FontFamily = FontFamily(
     Font(R.font.asta_sans_regular, FontWeight.W400),
     Font(R.font.asta_sans_bold, FontWeight.W700),
     Font(R.font.asta_sans_extrabold, FontWeight.W800),
 )
 
-/** Figma font_style: normal 400 · strong 700 · extra_strong 800 */
+/** Figma font_style */
 object AlterFontWeight {
     val Normal = FontWeight.W400
     val Strong = FontWeight.W700
@@ -28,8 +25,7 @@ object AlterFontWeight {
 }
 
 /**
- * Figma처럼 줄 높이 전체를 차지하게 한다. Compose 기본값은 첫 줄 위 · 끝 줄 아래 여백을 잘라
- * 글자 블록이 시안(줄 높이 × 줄 수)보다 짧아진다. 글자는 줄 가운데에 놓는다.
+ * Compose 기본값은 첫 줄 위 · 끝 줄 아래 여백을 잘라 시안보다 짧아져서 Figma처럼 줄 높이 전체를 쓴다.
  * 카드에서 TextStyle을 직접 만들 때도 이 값을 넣는다.
  */
 val AlterLineHeightStyle = LineHeightStyle(
@@ -37,10 +33,8 @@ val AlterLineHeightStyle = LineHeightStyle(
     trim = LineHeightStyle.Trim.None,
 )
 
-/** 모든 글자 공통 자간 −3% */
 val AlterLetterSpacing = (-0.03).em
 
-/** 모든 글자 공통: 줄 높이 = 크기 × 1.5, 자간 −3%, 줄 높이 자르지 않음 */
 private fun style(sizeSp: Int, weight: FontWeight) = TextStyle(
     fontFamily = AstaSans,
     fontWeight = weight,
@@ -50,10 +44,7 @@ private fun style(sizeSp: Int, weight: FontWeight) = TextStyle(
     lineHeightStyle = AlterLineHeightStyle,
 )
 
-/**
- * 글자 스타일. Figma Typography (103:46833, 변수 pleos Typography) 값 그대로.
- * 굵기는 Figma 기본 굵기다. 시안이 다른 굵기를 쓰면 copy(fontWeight = AlterFontWeight.Strong)로 바꾼다.
- */
+/** Figma Typography (103:46833). 시안이 다른 굵기를 쓰면 copy(fontWeight = …)로 바꾼다 */
 @Immutable
 data class AlterTypography(
     val headlineLarge: TextStyle = style(60, AlterFontWeight.ExtraStrong),
@@ -66,7 +57,7 @@ data class AlterTypography(
     val bodyMedium: TextStyle = style(28, AlterFontWeight.Strong),
     val bodySmall: TextStyle = style(26, AlterFontWeight.Strong),
     val bodyXSmall: TextStyle = style(24, AlterFontWeight.Strong),
-    /** body/xxsmall: Style Guide 표에는 없고 카드 시안에서 쓴다 (20/30) */
+    /** Style Guide 표에는 없고 카드 시안에서 쓴다 */
     val bodyXXSmall: TextStyle = style(20, AlterFontWeight.Strong),
     val labelLarge: TextStyle = style(28, AlterFontWeight.Normal),
     val labelMedium: TextStyle = style(24, AlterFontWeight.Normal),
@@ -75,6 +66,6 @@ data class AlterTypography(
     val numericLarge: TextStyle = style(60, AlterFontWeight.Strong),
     val numericMedium: TextStyle = style(40, AlterFontWeight.Strong),
     val numericSmall: TextStyle = style(28, AlterFontWeight.Strong),
-    /** 큰 숫자 (C 카드 배터리 %, driving/speed_kmh와 같은 112/168) */
+    /** driving/speed_kmh와 같은 112/168 */
     val numericHero: TextStyle = style(112, AlterFontWeight.Strong),
 )

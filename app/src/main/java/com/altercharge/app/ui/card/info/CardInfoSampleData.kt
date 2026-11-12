@@ -2,31 +2,23 @@ package com.altercharge.app.ui.card.info
 
 import com.altercharge.app.ui.card.common.ChargeVerdict
 
-/**
- * L1 카드 샘플 값. 미리보기 · 디버그 카탈로그 · 화면 개발 중 임시 데이터로 쓴다.
- * 실데이터가 아니다 (장소는 "예시 아파트").
- */
+/** L1 카드 샘플. 실데이터가 아니다 */
 internal object CardInfoSampleData {
-    /** 오늘 충전 */
     val Today = CardInfoUiState(ChargeVerdict.TODAY, daysUntilCharge = 0, placeName = "예시 아파트")
 
-    /** 내일 충전 */
     val Tomorrow = CardInfoUiState(ChargeVerdict.WITHIN_TWO_DAYS, daysUntilCharge = 1, placeName = "예시 아파트 지하주차장")
 
-    /** 2일내 충전 · 긴 장소 이름(한 줄 말줄임) */
     val WithinTwoDaysLongPlace = CardInfoUiState(
         ChargeVerdict.WITHIN_TWO_DAYS,
         daysUntilCharge = 2,
         placeName = "아주 긴 예시 장소 이름이 들어가면 한 줄로 말줄임",
     )
 
-    /** 두 자리 일수 "12일내 충전": 제목 폭이 가장 넓은 경우. 충전소 정보 없음(오프라인)이라 추천 충전소 줄을 숨긴다 */
+    /** 제목 폭이 가장 넓은 경우 + 충전소 정보 없음 */
     val WithinTwelveDaysNoPlace = CardInfoUiState(ChargeVerdict.THREE_DAYS_OR_MORE, daysUntilCharge = 12, placeName = "")
 
-    /** 오프라인 · 받아 둔 충전소 정보 있음: 장소 줄 아래 "10분 전 기준" (Figma show_last_checked = true) */
     val TodayOffline = Today.copy(placeLastChecked = LastChecked.MinutesAgo(10))
 
-    /** 오프라인 · 다른 날 받은 정보: "11.11 기준" */
     val WithinFiveDaysOfflineOtherDay = CardInfoUiState(
         ChargeVerdict.THREE_DAYS_OR_MORE,
         daysUntilCharge = 5,
@@ -34,7 +26,6 @@ internal object CardInfoSampleData {
         placeLastChecked = LastChecked.OnDate(month = 11, day = 11),
     )
 
-    /** 기록 수집 중: 첫날 · 3일차 · 13일차 */
     val CollectingFirstDay = CardInfoUiState.collecting(recordedDays = 0)
     val CollectingDay3 = CardInfoUiState.collecting(recordedDays = 3)
     val CollectingDay13 = CardInfoUiState.collecting(recordedDays = 13)

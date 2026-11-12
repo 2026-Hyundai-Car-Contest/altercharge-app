@@ -1,6 +1,4 @@
-/**
- * W-Standard 세로(PORTRAIT_COMPACT) 배치와 그 mode에서만 쓰는 치수. 패널이 스테이지 옆에 있어 StageWithPanel을 쓰지 않는다.
- */
+/** C 카드 W-Standard 세로 배치. 패널이 스테이지 옆에 있어 StageWithPanel을 쓰지 않는다 */
 package com.altercharge.app.ui.card.vehiclestatus
 
 import androidx.compose.foundation.layout.Arrangement
@@ -22,10 +20,7 @@ import com.altercharge.app.ui.designsystem.theme.AlterMargin
 import com.altercharge.app.ui.designsystem.theme.AlterPadding
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
 
-/**
- * W-Standard 세로 776×338 (598:57477 충전 중 · 598:57512 미연결).
- * 왼쪽 status_block(헤드라인 + 배터리 타일), 오른쪽 stage 300. 정보 타일은 없다.
- */
+/** 598:57477 충전 중 · 598:57512 미연결 */
 @Composable
 internal fun CompactLayout(
     state: CardVehicleStatusUiState,
@@ -43,7 +38,6 @@ internal fun CompactLayout(
                 .fillMaxHeight(),
             verticalArrangement = Arrangement.spacedBy(AlterMargin.Small),
         ) {
-            // 48 → 최소 40, 2줄 말줄임
             AutoShrinkHeadline(
                 text = content.portraitHeadline,
                 styles = listOf(typography.headlineSmall, typography.titleLarge),
@@ -84,7 +78,6 @@ internal fun CompactLayout(
                 .width(CompactStageWidth)
                 .fillMaxHeight(),
         ) {
-            // portrait_compact는 패널이 스테이지 옆에 있어 겹치지 않는다 (흐림 복사본 없음)
             Stage(chip = state.chip) {
                 StageVehicle(spec = CompactStage, vehicleImage = vehicleImage)
             }
@@ -92,7 +85,6 @@ internal fun CompactLayout(
     }
 }
 
-/** portrait_compact stage 폭 */
 private val CompactStageWidth = 300.dp
 
 /** portrait_compact (두 variant 같음): 원 240 세로 가운데 · 오른쪽 여백 30, 차 242×153(-90도) 가운데 */
@@ -104,5 +96,5 @@ private val CompactStage = StageImageSpec(
     imageHeight = 153.dp,
 )
 
-/** portrait_compact SOC 숫자 56 (디자인 값에 없는 크기, 줄 높이 1.5배 · 굵기 · 자간은 numericHero와 같다) */
+/** 56은 디자인 값에 없는 크기 */
 private fun compactSocStyle(base: TextStyle): TextStyle = base.copy(fontSize = 56.sp, lineHeight = 84.sp)

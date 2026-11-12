@@ -47,10 +47,10 @@ import com.altercharge.app.ui.designsystem.theme.AlterColors
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
 import com.altercharge.app.ui.designsystem.theme.AlterTypography
 
-/** 버튼 위계. 화면(카드)마다 Primary는 하나만 쓴다. */
+/** 화면(카드)마다 Primary는 하나만 쓴다 */
 enum class IviButtonHierarchy { Primary, Contrast, Secondary, Tonal, Ghost, Danger }
 
-/** 버튼 크기. Figma button/{large, medium, small} */
+/** Figma button/{large, medium, small} */
 enum class IviButtonSize(
     val height: Dp,
     val paddingHorizontal: Dp,
@@ -63,17 +63,14 @@ enum class IviButtonSize(
     Small(height = 64.dp, paddingHorizontal = 16.dp, gap = 8.dp, radius = 16.dp, iconSize = 28.dp),
 }
 
-/** 차량 화면 최소 터치 영역 (button/touch_target/min) */
+/** button/touch_target/min */
 private val TouchTargetMin = 76.dp
 
 /**
- * 차량용 기본 버튼. Figma ivi_button (366:38848).
- *
- * - 누름: 한 단계 진한 색 / 포커스(로터리 · 키보드): 4dp 테두리를 4dp 바깥에 그린다.
- * - [restricted]: 주행 중 잠금. 아이콘이 자물쇠로 바뀌고 눌리지 않는다. 사유 문구는 버튼 밖에 따로 둔다.
- * - Small(64)도 누르는 범위는 76을 확보한다. 그래서 Small은 레이아웃 높이가 76이다.
+ * Figma ivi_button (366:38848). Small(64)도 터치 영역 76을 확보해 레이아웃 높이가 76이다.
  *
  * @param text null이면 아이콘만 있는 버튼이다. 이때 [contentDescription]을 꼭 넣는다.
+ * @param restricted 주행 중 잠금. 사유 문구는 버튼 밖에 따로 둔다.
  */
 @Composable
 fun IviButton(
@@ -87,15 +84,13 @@ fun IviButton(
     leadingIcon: Painter? = null,
     trailingIcon: Painter? = null,
     contentDescription: String? = text,
-    /** true면 버튼 배경을 받은 폭 전체로 채운다 (카드 하단 전폭 버튼 등) */
     fullWidth: Boolean = false,
 ) {
     val palette = iviButtonPalette(hierarchy, AlterTheme.colors)
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val focused by interaction.collectIsFocusedAsState()
-    // 포커스 링은 로터리 · 스티어링 · 키보드로 조작할 때만 보인다(Figma Focused 상태).
-    // 터치로 쓸 때는 포커스가 자동으로 가 있어도 링을 그리지 않는다.
+    // 포커스 링은 로터리 · 키보드로 조작할 때만. 터치 중에는 포커스가 가 있어도 그리지 않는다
     val keyboardInput = LocalInputModeManager.current.inputMode == InputMode.Keyboard
     val iconOnly = text == null
     val isGhost = hierarchy == IviButtonHierarchy.Ghost
@@ -120,7 +115,6 @@ fun IviButton(
             .heightIn(min = TouchTargetMin)
             .then(if (iconOnly) Modifier.widthIn(min = TouchTargetMin) else Modifier)
             .then(if (fullWidth) Modifier.fillMaxWidth() else Modifier)
-            // 글자가 있으면 글자를 읽고, 아이콘만 있을 때만 설명 문구를 붙인다.
             .then(
                 if (iconOnly && contentDescription != null) {
                     Modifier.semantics { this.contentDescription = contentDescription }
@@ -145,7 +139,7 @@ fun IviButton(
                 .focusRing(visible = focused && keyboardInput, color = palette.focusRing, radius = size.radius)
                 .background(container, shape)
                 .then(
-                    // Ghost 외곽선은 Enabled일 때만. Disabled · Restricted는 배경도 테두리도 없다 (Figma 366:36970)
+                    // Disabled · Restricted Ghost는 배경도 테두리도 없다 (Figma 366:36970)
                     if (isGhost && !pressed && enabled && !restricted) {
                         Modifier.border(GhostOutlineWidth, palette.outline, shape)
                     } else {
@@ -171,7 +165,6 @@ fun IviButton(
             }
             if (!restricted) {
                 trailingIcon?.let {
-                    // trailing 아이콘은 leading보다 4 작다: Large 32 · Medium 28 · Small 24 (Figma trailing_icon)
                     Icon(it, contentDescription = null, tint = content, modifier = Modifier.size(size.iconSize - TrailingIconInset))
                 }
             }
@@ -179,20 +172,19 @@ fun IviButton(
     }
 }
 
-/** Ghost 테두리: 1.5dp, 안쪽 정렬, basic_300. 누른 동안에는 테두리 없음 (디자이너 확정) */
+/** 누른 동안에는 테두리 없음 (디자이너 확정) */
 private val GhostOutlineWidth = 1.5.dp
 
-/** 포커스 링 두께 · 버튼과의 간격 (button/focus/ring_width, ring_offset) */
+/** button/focus/ring_width, ring_offset */
 private val FocusRingWidth = 4.dp
 private val FocusRingOffset = 4.dp
 
-/** 뒤쪽 아이콘은 앞쪽 아이콘보다 4 작다 (Figma trailing_icon: 32 · 28 · 24) */
+/** Figma trailing_icon: 32 · 28 · 24 */
 private val TrailingIconInset = 4.dp
 
 /**
- * 포커스 링: 두께 4, 버튼에서 4 바깥 (button/focus/ring_width, ring_offset). 디자이너 확정(2026-11-11).
- * Primary 같은 파란 배경에서 안쪽 테두리는 보이지 않고 라벨 공간도 줄어서 바깥에 둔다.
- * 버튼 바깥에 그리므로 부모가 잘라내면(clip, 스크롤) 안 보일 수 있다. 카드 가장자리에 둘 때 여유를 둔다.
+ * 디자이너 확정(2026-11-11). 파란 배경에서 안쪽 테두리는 안 보이고 라벨 공간도 줄어 바깥에 그린다.
+ * 그래서 부모가 잘라내면(clip, 스크롤) 안 보일 수 있다.
  */
 private fun Modifier.focusRing(visible: Boolean, color: Color, radius: Dp): Modifier =
     if (!visible) {
@@ -229,13 +221,10 @@ private data class IviButtonPalette(
     val focusRing: Color,
 )
 
-/**
- * 버튼 색. Figma 05 Components › button 변수의 라이트(366:38848) · 다크(439:16558) 값.
- * Ghost 누름 배경은 basic_100 (디자이너 확정).
- */
+/** Figma 05 Components › button 변수 라이트(366:38848) · 다크(439:16558). Ghost 누름 배경은 디자이너 확정 */
 private fun iviButtonPalette(hierarchy: IviButtonHierarchy, colors: AlterColors): IviButtonPalette {
     val isDark = colors.isDark
-    // 디자인 값에 있는 색은 토큰으로 쓴다. 토큰에 없는 버튼 전용 색만 숫자로 둔다.
+    // 토큰에 없는 버튼 전용 색만 숫자로 둔다
     val disabledContainer = colors.buttonDisabledContainer
     fun palette(container: Color, pressed: Color, label: Color, outline: Color = Color.Transparent) = IviButtonPalette(
         container = container,
@@ -258,7 +247,6 @@ private fun iviButtonPalette(hierarchy: IviButtonHierarchy, colors: AlterColors)
         )
         IviButtonHierarchy.Secondary -> palette(colors.surfaceHigh, colors.surfaceAccent, colors.textPrimary)
         IviButtonHierarchy.Tonal -> palette(colors.blue50, colors.blue100, colors.textPrimary)
-        // 테두리는 basic_300
         IviButtonHierarchy.Ghost -> palette(
             Color.Transparent,
             colors.surfaceHigh,

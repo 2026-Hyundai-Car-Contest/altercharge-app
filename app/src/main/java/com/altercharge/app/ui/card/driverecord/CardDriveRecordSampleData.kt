@@ -2,9 +2,7 @@ package com.altercharge.app.ui.card.driverecord
 
 import java.time.LocalDate
 
-/**
- * L2 카드 샘플 값. 미리보기 · 디버그 카탈로그 · 화면 개발 중 임시 데이터로 쓴다. 실데이터가 아니다.
- */
+/** L2 카드 샘플. 실데이터가 아니다 */
 internal object CardDriveRecordSampleData {
     /** 이번 주 (오늘 = 금, 토 · 일은 아직) */
     val ThisWeek = CardDriveRecordUiState(

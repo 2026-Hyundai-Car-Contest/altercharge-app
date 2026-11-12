@@ -1,6 +1,4 @@
-/**
- * WF 가로 · 세로(WF_LANDSCAPE · WF_PORTRAIT) 배치와 그 mode에서만 쓰는 치수.
- */
+/** C 카드 WF 가로 · 세로 배치 */
 package com.altercharge.app.ui.card.vehiclestatus
 
 import androidx.compose.foundation.layout.Arrangement
@@ -18,7 +16,7 @@ import com.altercharge.app.ui.designsystem.theme.AlterMargin
 import com.altercharge.app.ui.designsystem.theme.AlterPadding
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
 
-/** WF 가로 (폭 387). 배터리 패널 안에 값 / 게이지 · 남은 시간 / 요약 한 줄을 세로로 쌓는다. */
+/** 배터리 패널 안에 값 / 게이지 · 남은 시간 / 요약 한 줄을 세로로 쌓는다 */
 @Composable
 internal fun WfLandscapeLayout(
     state: CardVehicleStatusUiState,
@@ -42,7 +40,6 @@ internal fun WfLandscapeLayout(
     }
 }
 
-/** WF 세로 (584). 배터리 값 · 게이지 줄 아래에 요약 한 줄. */
 @Composable
 internal fun WfPortraitLayout(
     state: CardVehicleStatusUiState,
@@ -73,10 +70,7 @@ internal fun WfPortraitLayout(
     }
 }
 
-/**
- * WF 가로 · 세로 공통 뼈대: 위에 헤드라인, 아래 차 무대(stage)에 겹친 유리 패널.
- * 두 mode는 헤드라인 글자 · 줄 수, 차 이미지 자리, 패널 안 배터리 배치([panelContent])만 다르다.
- */
+/** WF 가로 · 세로 공통 뼈대. 헤드라인 · 차 자리 · [panelContent]만 다르다 */
 @Composable
 private fun WfLayout(
     state: CardVehicleStatusUiState,
@@ -121,7 +115,6 @@ private fun WfLayout(
     }
 }
 
-/** WF 배터리 값: 라벨 label/small, SOC는 세로 카드와 같은 큰 숫자 */
 @Composable
 private fun WfBatteryValue(state: CardVehicleStatusUiState, content: CardContent) {
     val typography = AlterTheme.typography
@@ -133,7 +126,6 @@ private fun WfBatteryValue(state: CardVehicleStatusUiState, content: CardContent
     )
 }
 
-/** WF 게이지 · 남은 시간. 가로는 왼쪽, 세로는 오른쪽 정렬 */
 @Composable
 private fun WfBatteryDetail(content: CardContent, horizontalAlignment: Alignment.Horizontal) {
     BatteryDetail(
@@ -143,10 +135,9 @@ private fun WfBatteryDetail(content: CardContent, horizontalAlignment: Alignment
     )
 }
 
-/** WF 가로 헤드라인 칸은 높이가 내용을 따른다(시안 2줄). 긴 문구는 3줄까지 */
+/** 시안은 2줄, 긴 문구는 3줄까지 */
 private const val WF_LANDSCAPE_HEADLINE_MAX_LINES = 3
 
-/** WF 세로 헤드라인 칸은 높이 192 고정(2줄) */
 private const val WF_PORTRAIT_HEADLINE_MAX_LINES = 2
 
 /** WF 가로 (366:37801 · 366:37818, 두 variant 같음): 원 226.1 세로 가운데 · 오른쪽 밖으로 8.3, 차 162×134(-90도) 오른쪽 여백 24 */

@@ -1,6 +1,4 @@
-/**
- * L1 카드 모드별 크기 · 글자 · 번개 자리(ModeSpec)와 mode → ModeSpec 고르기. 글자(CardInfo.kt)와 번개(CardInfoBolt.kt)가 같이 쓴다.
- */
+/** L1 카드 모드별 크기 · 글자 · 번개 자리 */
 package com.altercharge.app.ui.card.info
 
 import androidx.compose.runtime.Composable
@@ -11,26 +9,25 @@ import com.altercharge.app.ui.designsystem.theme.AlterFontWeight
 import com.altercharge.app.ui.designsystem.theme.AlterPadding
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
 
-/** 모드별 크기 · 글자. 너비 값은 Figma 인스턴스의 고정 너비를 최대 너비로 쓴다. */
+/** 너비 값은 Figma 인스턴스의 고정 너비를 최대 너비로 쓴다 */
 internal class ModeSpec(
     val contentPadding: Dp,
     val headerMaxWidth: Dp,
     val placeMaxWidth: Dp,
     val isWf: Boolean,
     /**
-     * 번개(bolt_track) 영역. Figma 인스턴스 값 그대로(오늘·내일 기준).
-     * 번개는 왼쪽 x가 고정이다([boltLeft]). 카드 폭이 달라도 같은 자리에 있고, 좁으면 오른쪽이 더 잘린다
+     * 왼쪽 x 고정이라 카드 폭이 좁으면 오른쪽이 더 잘린다
      * (가로 450 · 383 인스턴스 모두 bolt_track x 130, WF 세로 580 · 584 모두 x 319).
      */
     val boltLeft: Dp,
     val boltTop: Dp,
     val boltWidth: Dp,
     val boltHeight: Dp,
-    /** 판정별로 번개가 오늘보다 오른쪽으로 밀린 거리. Figma 판정별 variant의 bolt_track x 차이. */
+    /** Figma 판정별 variant의 bolt_track x 차이 */
     val tomorrowShift: Dp,
-    /** N일내(Figma status=3days variant) 번개 이동 거리 */
+    /** Figma status=3days variant */
     val threeDaysShift: Dp,
-    /** Figma bolt_track 상자 그대로(x · y · 폭 · 높이). 수집 중 번개를 모드 크기에 맞출 때 쓴다. */
+    /** Figma bolt_track 상자 그대로. 수집 중 번개를 모드 크기에 맞출 때 쓴다 */
     val trackLeft: Dp,
     val trackTop: Dp,
     val trackWidth: Dp,
@@ -50,16 +47,15 @@ internal class ModeSpec(
         if (isWf) AlterTheme.typography.bodySmall else AlterTheme.typography.bodyMedium
 }
 
-// 번개 값은 Figma card_info mode별 인스턴스(366:38751 · 38755 · 38759 · 38763)의 bolt_track에서
-// 그림이 실제로 차지하는 영역(상자 안쪽 위아래 8.87% · 좌우 4.95%)이다.
-// boltLeft = bolt_track x + 상자 폭 × 4.95%
+// 번개 값은 Figma mode별 인스턴스(366:38751 · 38755 · 38759 · 38763) bolt_track에서
+// 그림이 차지하는 영역(상자 안쪽 위아래 8.87% · 좌우 4.95%)이다. boltLeft = bolt_track x + 상자 폭 × 4.95%
 private val LandscapeSpec = ModeSpec(
     AlterPadding.Large, 252.dp, 279.dp, isWf = false,
     boltLeft = 151.0.dp, boltTop = (-9.7).dp, boltWidth = 381.9.dp, boltHeight = 387.4.dp,
     tomorrowShift = 11.0.dp, threeDaysShift = 68.0.dp,
     trackLeft = 130.0.dp, trackTop = (-51.5).dp, trackWidth = 423.9.dp, trackHeight = 471.0.dp,
 )
-// 세로 제목 영역 232 (개발자 Q&A Q5: 212 → 232, 영문 "Tomorrow" 213이 잘리지 않게)
+// 제목 영역 232 (Q&A Q5: 212 → 232, 영문 "Tomorrow" 213이 잘리지 않게)
 private val PortraitSpec = ModeSpec(
     AlterPadding.Normal, 232.dp, 279.dp, isWf = false,
     boltLeft = 133.4.dp, boltTop = (-9.4).dp, boltWidth = 371.6.dp, boltHeight = 376.9.dp,
@@ -72,8 +68,7 @@ private val WfLandscapeSpec = ModeSpec(
     tomorrowShift = 10.0.dp, threeDaysShift = 43.3.dp,
     trackLeft = 127.0.dp, trackTop = (-42.0).dp, trackWidth = 345.6.dp, trackHeight = 384.0.dp,
 )
-// WF 세로는 카드 폭이 584(Q&A Q4, 화면 인스턴스 452:54383)이고 번개는 왼쪽 x 319 그대로라
-// bolt_track x 319 + 14.8
+// 카드 폭 584(Q&A Q4, 452:54383)여도 bolt_track x 319 그대로
 private val WfPortraitSpec = ModeSpec(
     AlterPadding.Normal, 290.dp, 262.dp, isWf = true,
     boltLeft = 333.8.dp, boltTop = (-6.9).dp, boltWidth = 269.8.dp, boltHeight = 273.8.dp,

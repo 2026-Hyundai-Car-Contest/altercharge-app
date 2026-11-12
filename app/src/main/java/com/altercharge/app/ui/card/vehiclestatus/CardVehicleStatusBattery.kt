@@ -1,6 +1,4 @@
-/**
- * 상태 패널 안의 배터리 조각: 유리 면(GlassPanel), 라벨 + SOC 숫자(BatteryValue · Soc), 게이지 + 남은 시간(BatteryDetail · BatteryGauge · StatusText)과 그 치수.
- */
+/** 상태 패널 안의 유리 면 · SOC 숫자 · 배터리 게이지 */
 package com.altercharge.app.ui.card.vehiclestatus
 
 import androidx.compose.foundation.background
@@ -34,7 +32,7 @@ import com.altercharge.app.ui.designsystem.theme.AlterPadding
 import com.altercharge.app.ui.designsystem.theme.AlterRadius
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
 
-/** 상태 패널의 유리 면 (glass + glass_edge). */
+/** glass + glass_edge */
 @Composable
 internal fun GlassPanel(
     modifier: Modifier,
@@ -58,8 +56,8 @@ internal fun GlassPanel(
 }
 
 /**
- * 배터리 라벨 + SOC 큰 숫자 (battery_value).
- * @param glow SOC 숫자 빛번짐. 세로 시안에만 있고 tall · WF 시안(366:37686 · 366:37763 · 366:37801 · 366:37835 등)에는 없다.
+ * battery_value.
+ * @param glow 세로 시안에만 있고 tall · WF 시안(366:37686 · 366:37763 · 366:37801 · 366:37835 등)에는 없다.
  */
 @Composable
 internal fun BatteryValue(
@@ -89,8 +87,8 @@ internal fun BatteryValue(
 }
 
 /**
- * 게이지 + 남은 시간 (battery_detail). statusStyle은 숫자 · 단위 글자 크기(굵기는 보통으로 바꾼다).
- * 세로 · tall · WF 시안은 gauge/outline · gauge/cell_empty(#EDEEF2) 변수를 쓴다: 테두리가 한 단계 연하고 빈 칸에 2 테두리
+ * battery_detail. statusStyle의 굵기는 보통으로 바꿔 쓴다.
+ * 세로 · tall · WF 시안은 gauge/outline · gauge/cell_empty 변수라 테두리가 한 단계 연하고 빈 칸에 2 테두리가 있다.
  */
 @Composable
 internal fun BatteryDetail(
@@ -123,7 +121,6 @@ internal fun BatteryDetail(
     }
 }
 
-/** 배터리 % 큰 숫자와 단위. 바깥 Row의 글자 기준선에 맞춘다. */
 @Composable
 internal fun RowScope.Soc(
     state: CardVehicleStatusUiState,
@@ -138,11 +135,10 @@ internal fun RowScope.Soc(
         modifier = Modifier.alignByBaseline(),
         horizontalArrangement = Arrangement.spacedBy(SocGap),
     ) {
-        // 센서 값이 범위를 벗어나도 0~100으로 보여 준다.
         val socText = state.socPercent?.coerceIn(0, MAX_SOC)?.toString()
             ?: stringResource(R.string.card_vehicle_status_soc_unknown)
         if (known && glow) {
-            // Compose 글자 그림자는 한 겹이라 같은 글자를 두 번 겹쳐 그림자 두 겹을 낸다 (글자 색이 불투명이라 겹쳐도 같다)
+            // Compose 글자 그림자는 한 겹이라 같은 글자를 두 번 겹쳐 두 겹을 낸다
             val density = LocalDensity.current
             val wide = with(density) { figmaBlurToAndroidRadius(SocGlowWideBlur.toPx()) }
             val near = with(density) { figmaBlurToAndroidRadius(SocGlowNearBlur.toPx()) }
@@ -178,7 +174,7 @@ internal fun RowScope.Soc(
     }
 }
 
-/** 배터리 게이지 (battery_gauge). level = 채운 칸 수 0~4. */
+/** battery_gauge. level = 채운 칸 수 0~4 */
 @Composable
 internal fun BatteryGauge(
     level: Int,
@@ -191,7 +187,7 @@ internal fun BatteryGauge(
         Row(
             modifier = Modifier
                 .border(GaugeOutlineWidth, outline, RoundedCornerShape(AlterRadius.Large))
-                // Figma는 테두리 2가 자리를 차지한다(2 + 여백 8 → 159×60). Compose border는 자리를 안 차지해 따로 띄운다
+                // Figma는 테두리 2가 자리를 차지한다(→ 159×60). Compose border는 자리를 안 차지해 따로 띄운다
                 .padding(GaugeOutlineWidth)
                 .padding(AlterPadding.XSmall),
             horizontalArrangement = Arrangement.spacedBy(AlterMargin.XXSmall),
@@ -221,7 +217,7 @@ internal fun BatteryGauge(
     }
 }
 
-/** SOC 옆 상태 문구. 남은 시간은 숫자만 강조한다. */
+/** 남은 시간은 숫자만 강조한다 */
 @Composable
 internal fun StatusText(
     status: StatusLine,
@@ -249,15 +245,12 @@ internal fun StatusText(
     }
 }
 
-/** 유리 면 */
 private const val GlassAlpha = 0.55f
 
 /**
- * 민무늬 스테이지(세로 · tall · WF) 위 유리 면 불투명도.
- * Figma는 surface_high 55% + 뒤 흐림 20 + 그림자라, 렌더 결과가 스테이지(#F7F8FA) 위든 흰 카드 위든 #EFF0F3 근처로 고르다
- * (366:37686 · 366:37763 · 366:37801 · 366:37835, 세로 455:60518 캡처 실측). 55%만 쓰면 스테이지가 끝나는 줄에 이음새가 보여
- * 렌더 색에 맞춰 90%로 둔다(흰 위 #EFF0F3, #F7F8FA 위 #EEEFF2). 가로는 뒤에 차 이미지가 있어 55% 그대로.
- * 다크는 Figma 렌더가 55% 그대로와 같다(EN 다크 07 세로 457:78886 실측 #28292D = #313236 55% · 카드 #1D1E21 45%).
+ * 민무늬 스테이지(세로 · tall · WF) 위 유리 면.
+ * Figma 렌더는 뒤 흐림 덕에 스테이지 위든 흰 카드 위든 #EFF0F3 근처로 고르다 (455:60518 캡처 실측).
+ * 55%만 쓰면 스테이지 끝 줄에 이음새가 보여 라이트는 90%로 둔다. 다크는 55% 그대로와 같다 (457:78886 실측).
  */
 internal val FlatStageGlassAlpha: Float
     @Composable get() = if (AlterTheme.colors.isDark) GlassAlpha else FLAT_STAGE_GLASS_ALPHA_LIGHT
@@ -266,14 +259,13 @@ private const val FLAT_STAGE_GLASS_ALPHA_LIGHT = 0.9f
 private const val GlassEdgeAlpha = 0.8f
 private val GlassEdgeWidth = 1.5.dp
 
-/** soc/gap, SOC 숫자 빛번짐 두 겹 (soc_value text-shadow 0 0 64 22% · 0 0 24 10%, 457:78886) */
+/** soc/gap, soc_value text-shadow (457:78886) */
 private val SocGap = 4.dp
 private const val SocGlowWideAlpha = 0.22f
 private val SocGlowWideBlur = 64.dp
 private const val SocGlowNearAlpha = 0.10f
 private val SocGlowNearBlur = 24.dp
 
-/** gauge: 칸 30×40, 테두리 2, 꼭지 7×22 (칸 수는 Spec의 GaugeCells) */
 private val GaugeCellWidth = 30.dp
 private val GaugeCellHeight = 40.dp
 private val GaugeOutlineWidth = 2.dp

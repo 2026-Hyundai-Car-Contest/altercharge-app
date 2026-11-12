@@ -1,6 +1,4 @@
-/**
- * L1 카드 Android Studio 미리보기: 판정별 카드 × 라이트 · 다크 × 모드.
- */
+/** L1 카드 미리보기 */
 package com.altercharge.app.ui.card.info
 
 import androidx.compose.foundation.background
@@ -17,8 +15,6 @@ import com.altercharge.app.ui.designsystem.theme.AlterChargeTheme
 import com.altercharge.app.ui.designsystem.theme.AlterMargin
 import com.altercharge.app.ui.designsystem.theme.AlterPadding
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
-
-// 미리보기: 오늘 · 내일 · N일내 × 라이트 · 다크 × 가로 · 세로 (+ WF). 높이는 카드가 mode로 정한다.
 
 @Composable
 private fun CardInfoPreviewColumn(mode: CardInfoMode, width: Dp, darkTheme: Boolean) {
