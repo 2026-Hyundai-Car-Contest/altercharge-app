@@ -1,3 +1,7 @@
+/**
+ * C 카드 상황별 내용 만들기: 상황(VehicleSituation)과 모드로 헤드라인 · 상태 줄 · 타일 · 강조색을 고른다(buildContent).
+ * 오류 문구는 CardVehicleStatusFaultText.kt, 강조색 · 게이지 칸 계산은 CardVehicleStatusAccent.kt에 있다.
+ */
 package com.altercharge.app.ui.card.vehiclestatus
 
 import androidx.annotation.StringRes
@@ -260,7 +264,6 @@ internal fun emphasizeArgs(
 private val ArgPattern = Regex("%(\\d+)\\$[sd]")
 private const val MINUTES_PER_HOUR = 60
 
-/** WF 요약 줄에서 타일 사이 구분 */
-/** 앞 공백은 줄바꿈 없는 공백이라 "·"가 줄 맨 앞에 오지 않는다 */
+/** WF 요약 줄에서 타일 사이 구분. 앞 공백은 줄바꿈 없는 공백이라 "·"가 줄 맨 앞에 오지 않는다 */
 private const val SUMMARY_SEPARATOR = "\u00A0· "
 private const val NO_BREAK_SPACE = '\u00A0'
