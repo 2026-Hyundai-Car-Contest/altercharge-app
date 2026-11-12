@@ -3,10 +3,15 @@
     <string name="card_info_eyebrow">When to charge</string>
     <string name="card_info_title_today">Today</string>
     <string name="card_info_title_tomorrow">Tomorrow</string>
+    <!-- 영문 보드(card_info · EN 439:15613) 문구 "In 3 days". v2 컴포넌트 설명의 "Charge within N days"는 제목 폭을 넘어 잘려서 보드 문구를 따른다. -->
     <string name="card_info_title_within_days">In %1$d days</string>
-    <!-- TODO 디자이너 확인: 기록 수집 중 영문 시안이 없어 임시 문구다. 확정되면 바꾼다. -->
-    <string name="card_info_title_collecting">Collecting data</string>
-    <string name="card_info_collecting_progress">%1$d / %2$d days</string>
-    <string name="card_info_collecting_message">We\'ll show your charge day\nin %1$d days</string>
-    <string name="card_info_collecting_message_tomorrow">We\'ll show your charge day\ntomorrow</string>
+    <!-- 기록 수집 중 · 마지막 확인 시각: 영문 시안이 없어 개발에서 정한 문구 (2026-11-12, 디자이너 공유). 제목 · 진행 숫자는 카드 폭에 맞게 짧게 -->
+    <string name="card_info_title_collecting">Learning</string>
+    <string name="card_info_collecting_progress">%1$d / %2$d</string>
+    <string name="card_info_collecting_message">Charge day ready\nin %1$d days</string>
+    <string name="card_info_collecting_message_tomorrow">Charge day ready\ntomorrow</string>
+    <string name="card_info_last_checked_just_now">Updated just now</string>
+    <string name="card_info_last_checked_minutes">Updated %1$d min ago</string>
+    <string name="card_info_last_checked_hours">Updated %1$d hr ago</string>
+    <string name="card_info_last_checked_date">Updated %1$d/%2$d</string>
 </resources>

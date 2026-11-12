@@ -23,11 +23,24 @@ internal object CardInfoSampleData {
     /** 두 자리 일수 "12일내 충전": 제목 폭이 가장 넓은 경우. 충전소 정보 없음(오프라인)이라 추천 충전소 줄을 숨긴다 */
     val WithinTwelveDaysNoPlace = CardInfoUiState(ChargeVerdict.THREE_DAYS_OR_MORE, daysUntilCharge = 12, placeName = "")
 
+    /** 오프라인 · 받아 둔 충전소 정보 있음: 장소 줄 아래 "10분 전 기준" (Figma show_last_checked = true) */
+    val TodayOffline = Today.copy(placeLastChecked = LastChecked.MinutesAgo(10))
+
+    /** 오프라인 · 다른 날 받은 정보: "11.11 기준" */
+    val WithinFiveDaysOfflineOtherDay = CardInfoUiState(
+        ChargeVerdict.THREE_DAYS_OR_MORE,
+        daysUntilCharge = 5,
+        placeName = "예시 아파트",
+        placeLastChecked = LastChecked.OnDate(month = 11, day = 11),
+    )
+
     /** 기록 수집 중: 첫날 · 3일차 · 13일차 */
     val CollectingFirstDay = CardInfoUiState.collecting(recordedDays = 0)
     val CollectingDay3 = CardInfoUiState.collecting(recordedDays = 3)
     val CollectingDay13 = CardInfoUiState.collecting(recordedDays = 13)
 
-    val all: List<CardInfoUiState> = listOf(Today, Tomorrow, WithinTwoDaysLongPlace, WithinTwelveDaysNoPlace)
+    val all: List<CardInfoUiState> = listOf(
+        Today, Tomorrow, WithinTwoDaysLongPlace, WithinTwelveDaysNoPlace, TodayOffline, WithinFiveDaysOfflineOtherDay,
+    )
     val collecting: List<CardInfoUiState> = listOf(CollectingFirstDay, CollectingDay3, CollectingDay13)
 }

@@ -11,4 +11,9 @@
     <string name="card_info_collecting_progress">%1$d / %2$d일</string>
     <string name="card_info_collecting_message">충전일은 %1$d일 뒤부터\n알려드려요</string>
     <string name="card_info_collecting_message_tomorrow">충전일은 내일부터\n알려드려요</string>
+    <!-- 오프라인 · 받아 둔 충전소 정보를 받은 뒤 지난 시간 (REQ_CM_006). Figma 798:56855 L1 · card_station(짧게) -->
+    <string name="card_info_last_checked_just_now">방금 기준</string>
+    <string name="card_info_last_checked_minutes">%1$d분 전 기준</string>
+    <string name="card_info_last_checked_hours">%1$d시간 전 기준</string>
+    <string name="card_info_last_checked_date">%1$d.%2$d 기준</string>
 </resources>
