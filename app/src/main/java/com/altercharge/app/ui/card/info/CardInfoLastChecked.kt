@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.res.stringResource
 import com.altercharge.app.R
+import com.altercharge.app.domain.time.KoreaZone
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
@@ -35,9 +36,9 @@ sealed interface LastChecked {
 /**
  * 받은 시각([checkedAt])과 지금([now])으로 표시 단계를 고른다.
  * 기기 시계가 어긋나 받은 시각이 미래면 "방금"으로 본다.
- * 날짜는 [zone] 기준이다 (테스트에서 고정하려고 인자로 받는다).
+ * 날짜는 [zone] 기준이다. 기본은 한국시간 (기기 시간대가 UTC여도 같은 날짜가 나오게).
  */
-fun lastCheckedOf(checkedAt: Instant, now: Instant, zone: ZoneId = ZoneId.systemDefault()): LastChecked {
+fun lastCheckedOf(checkedAt: Instant, now: Instant, zone: ZoneId = KoreaZone): LastChecked {
     val elapsed = Duration.between(checkedAt, now)
     return when {
         elapsed.toMinutes() < 1 -> LastChecked.JustNow
