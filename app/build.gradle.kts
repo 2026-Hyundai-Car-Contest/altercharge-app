@@ -70,6 +70,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     debugImplementation(libs.androidx.compose.ui.tooling)
     testImplementation(libs.junit)
+    testImplementation(libs.org.json) // 서버 응답 JSON 테스트용. APK에는 안 들어간다
 
     // Pleos Connect SDK
     implementation(libs.pleos.vehicle)
