@@ -113,10 +113,10 @@ class DriveHistoryMapperTest {
     // ---- toJudgmentInput ----
 
     @Test
-    fun 판정_입력은_최근_14일만() {
-        val h = daysOf(today.minusDays(19), List(20) { it + 1 }) // 1 … 20
+    fun 판정_입력은_어제까지_14일만() {
+        val h = daysOf(today.minusDays(19), List(20) { it + 1 }) // 1 … 20, 오늘이 20
         val input = h.toJudgmentInput(rangeKm = 300, socPercent = 80, today = today, zone = zone)
-        assertEquals((7..20).toList(), input.recentDailyKm)
+        assertEquals((6..19).toList(), input.recentDailyKm)
         assertEquals(300, input.rangeKm)
         assertEquals(80, input.socPercent)
     }
@@ -215,5 +215,11 @@ class DriveHistoryMapperTest {
         assertEquals(weekStart, weekStartOf(today))
         assertEquals(weekStart, weekStartOf(weekStart))
         assertEquals(weekStart, weekStartOf(LocalDate.of(2026, 11, 8)))
+    }
+
+    @Test
+    fun 오늘만_있으면_판정_입력은_비어_있다() {
+        val h = history(record(today, LocalTime.of(8, 0), 0.0), record(today, LocalTime.of(18, 0), 40.0))
+        assertEquals(emptyList<Int>(), h.toJudgmentInput(300, 80, today, zone).recentDailyKm)
     }
 }

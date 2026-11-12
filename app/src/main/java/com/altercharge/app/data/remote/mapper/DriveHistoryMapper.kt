@@ -70,9 +70,8 @@ fun VehicleSnapshotHistory.todayKm(currentOdometerKm: Double, today: LocalDate, 
 }
 
 /**
- * 충전 판정 입력. 최근 14일(오래된 날 → 오늘)만 담는다. 기록이 14일 미만이면 judge()가 수집 중으로 판정한다.
- * @param rangeKm 차량 주행가능거리 (차량 SDK)
- * @param socPercent 배터리 잔량 (차량 SDK)
+ * 충전 판정 입력. 어제까지 14일만 넣는다 (기획 확정 2026-11-12):
+ * 오늘은 아직 안 끝나 아침엔 0km에 가까워 평균을 낮춘다. 오늘 주행은 REQ_JD_004 재계산으로 반영된다.
  */
 fun VehicleSnapshotHistory.toJudgmentInput(
     rangeKm: Int,
@@ -82,7 +81,7 @@ fun VehicleSnapshotHistory.toJudgmentInput(
 ): JudgmentInput = JudgmentInput(
     rangeKm = rangeKm,
     socPercent = socPercent,
-    recentDailyKm = dailyDistances(today, zone).takeLast(WINDOW_DAYS).map { it.km },
+    recentDailyKm = dailyDistances(today, zone).filter { it.date < today }.takeLast(WINDOW_DAYS).map { it.km },
 )
 
 /** 날짜가 속한 주의 월요일 */
