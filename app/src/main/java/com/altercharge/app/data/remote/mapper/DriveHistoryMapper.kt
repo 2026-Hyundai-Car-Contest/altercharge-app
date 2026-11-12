@@ -79,7 +79,8 @@ fun weekStartOf(date: LocalDate): LocalDate = date.with(TemporalAdjusters.previo
  *
  * - 아직 안 온 날과 첫 기록 전 날은 null (막대 없음)
  * - 하루 평균 = 값이 있는 날의 합 ÷ 날 수 (반올림)
- * - 지난주 대비 = 이번 주 합 − 지난주 합. 지난주 기록이 없으면 null
+ * - 지난주 대비 = 이 주 합 − 지난주 같은 요일들의 합. 수요일이면 지난주 월~수와 비교한다
+ *   (지난주 7일 전체와 비교하면 주 초에는 늘 "덜 달렸어요"가 된다). 지난주 그 요일들에 기록이 없으면 null
  * - 이전 주 버튼: 첫 기록이 이 주보다 앞이면 / 다음 주 버튼: 오늘이 속한 주보다 앞이면
  * - 마지막 충전은 [latestCharge]에서. 완료 이벤트가 없으면 null ("--")
  * - 이 주에 값이 하나도 없으면 빈 상태 (Figma state = empty)
@@ -104,7 +105,10 @@ fun VehicleSnapshotHistory.toCardDriveRecordUiState(
     val dailyKm = weekDates.map(::kmOn)
     val values = dailyKm.filterNotNull()
     val totalKm = values.sum()
-    val previousWeekValues = (0L until 7L).mapNotNull { kmOn(weekStart.minusWeeks(1).plusDays(it)) }
+    // 이 주에 값이 있는 요일만 지난주에서 골라 같은 기간끼리 비교한다
+    val previousWeekValues = weekDates.indices
+        .filter { dailyKm[it] != null }
+        .mapNotNull { kmOn(weekDates[it].minusWeeks(1)) }
 
     val lastChargeDate = latestCharge?.lastChargeCompletedAt?.atZone(zone)?.toLocalDate()
 

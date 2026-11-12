@@ -112,10 +112,19 @@ class DriveHistoryMapperTest {
         assertEquals(4, s.todayIndex)
         assertEquals(182, s.totalKm)
         assertEquals(36, s.averageKm) // 182 / 5 = 36.4
-        assertEquals(182 - 21, s.diffFromLastWeekKm) // 지난주 금·토·일 5+7+9
+        assertEquals(182 - 5, s.diffFromLastWeekKm) // 같은 요일(월~금)끼리: 지난주는 금요일 5만 기록이 있다
         assertTrue(s.hasPreviousWeek)
         assertFalse(s.hasNextWeek)
         assertFalse(s.empty)
+    }
+
+    @Test
+    fun 지난주_대비는_같은_요일까지만_비교한다() {
+        // 지난주 월~일 10씩(70), 이번 주 월~수 20씩. 오늘 = 수요일
+        val wednesday = LocalDate.of(2026, 11, 4)
+        val h = daysOf(LocalDate.of(2026, 10, 26), List(7) { 10 } + List(3) { 20 })
+        val s = h.toCardDriveRecordUiState(weekStart, wednesday, zone = zone)
+        assertEquals(60 - 30, s.diffFromLastWeekKm) // 지난주 월~수 30과 비교 (70 아님)
     }
 
     @Test
