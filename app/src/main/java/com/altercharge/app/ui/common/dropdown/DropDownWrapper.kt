@@ -41,7 +41,7 @@ fun DropDownWrapper(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier
             .clip(RoundedCornerShape(AlterRadius.Large))
-            .background(AlterTheme.colors.surface)
+            .background(AlterTheme.colors.background)
             .padding(AlterMargin.XSmall)
             .width(351.dp)
     ) {
