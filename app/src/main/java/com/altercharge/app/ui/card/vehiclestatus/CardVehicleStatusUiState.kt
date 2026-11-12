@@ -144,9 +144,9 @@ data class CardVehicleStatusUiState(
             ChargingState.CHARGING -> when (batteryLevel) {
                 BatteryLevel.NORMAL -> VehicleSituation.CHARGING
                 BatteryLevel.LOW -> VehicleSituation.CHARGING_LOW
-                // TODO 디자이너 확인: 충전 중 0%는 시안이 없어 위험 구간으로 보여준다.
+                // 충전 중 0%는 시안이 없어 위험 구간으로 (드문 경우라 지금 처리로 결정)
                 BatteryLevel.CRITICAL, BatteryLevel.EMPTY -> VehicleSituation.CHARGING_CRITICAL
-                // TODO 디자이너 확인: 충전 중인데 SOC를 모르는 경우는 시안이 없어 정보 없음으로 보여준다.
+                // 충전 중 SOC를 모르면 정보 없음으로 (드문 경우라 지금 처리로 결정)
                 BatteryLevel.UNKNOWN -> VehicleSituation.NO_DATA
             }
             ChargingState.UNPLUGGED -> when (batteryLevel) {

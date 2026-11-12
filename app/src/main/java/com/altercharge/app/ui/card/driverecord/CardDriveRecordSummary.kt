@@ -35,7 +35,7 @@ internal fun ContentBlock(state: CardDriveRecordUiState, onToggleExpanded: () ->
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(AlterMargin.Small),
             ) {
-                // TODO 디자이너 확인: 지난 주를 볼 때 제목 시안이 없다. 지금은 "이번 주 주행 기록" 그대로
+                // 지난 주 제목은 시안이 없어 "이번 주 주행 기록" 그대로 둔다 (질문 목록에서 제외하기로 결정)
                 Text(
                     text = stringResource(R.string.card_drive_record_title),
                     style = typography.titleSmall,
@@ -69,7 +69,7 @@ internal fun ContentBlock(state: CardDriveRecordUiState, onToggleExpanded: () ->
                         style = typography.labelSmall,
                         color = colors.textTertiary,
                     )
-                    // TODO 디자이너 확인: 지난주보다 덜 달렸을 때 · 같을 때 · 비교할 주가 없을 때 문구가 시안에 없다.
+                    // 덜 달렸을 때 · 같을 때 · 비교할 주가 없을 때는 시안이 없어 숨긴다 (질문 목록에서 제외하기로 결정)
                     // 지금은 더 달렸을 때만 두 번째 줄을 보여준다.
                     val diff = state.diffFromLastWeekKm
                     if (diff != null && diff > 0) {
@@ -90,7 +90,8 @@ internal fun ContentBlock(state: CardDriveRecordUiState, onToggleExpanded: () ->
 
 @Composable
 private fun StatTiles(state: CardDriveRecordUiState) {
-    val unknown = stringResource(R.string.card_drive_record_value_unknown)
+    // 값을 모르면 "정보 없음" (디자이너 확정: 불러오는 중 = 확인 중, 확인할 수 없음 = 정보 없음)
+    val unknown = stringResource(R.string.common_value_unavailable)
     val km = stringResource(R.string.card_drive_record_unit_km)
     Column(verticalArrangement = Arrangement.spacedBy(AlterMargin.Normal)) {
         Row(horizontalArrangement = Arrangement.spacedBy(AlterMargin.Large)) {

@@ -113,7 +113,7 @@ internal val CardDriveRecordMode.chartWeekHeight: Dp
         CardDriveRecordMode.LANDSCAPE -> 353.dp
         CardDriveRecordMode.LANDSCAPE_TALL -> 521.dp
         CardDriveRecordMode.PORTRAIT -> 281.dp
-        // TODO 디자이너 확인: 스펙 메모는 387×328, 인스턴스는 387×455. 인스턴스 기준으로 맞췄다
+        // 스펙 메모(387×328)와 인스턴스(387×455)가 달라 인스턴스 기준
         CardDriveRecordMode.WF_LANDSCAPE -> 160.dp
         CardDriveRecordMode.WF_PORTRAIT -> 281.dp
     }

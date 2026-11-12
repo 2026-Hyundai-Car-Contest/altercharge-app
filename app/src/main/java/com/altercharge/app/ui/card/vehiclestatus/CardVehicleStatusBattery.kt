@@ -43,7 +43,7 @@ internal fun GlassPanel(
 ) {
     val colors = AlterTheme.colors
     val shape = RoundedCornerShape(AlterRadius.XXLarge)
-    // TODO 서희님: Figma는 뒤를 흐리게(backdrop blur 20) 하고 그림자(0 6 12, 6%)를 준다. Compose 기본으로는 뒤 흐림이 안 돼 면 색만 쓴다.
+    // 뒤 흐림(backdrop blur 20)은 Compose에 없어서 무대 쪽 PanelBackdrop이 흐린 복사본을 깔아 대신한다
     Box(
         modifier = modifier
             .clip(shape)

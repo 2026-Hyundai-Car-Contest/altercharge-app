@@ -42,7 +42,7 @@ internal fun PeriodHeader(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
-            // TODO 디자이너 확인: 지난 주를 볼 때 기간 라벨("지난 주" 등) 시안이 없다. 지금은 날짜만 보인다
+            // 지난 주 기간 라벨은 시안이 없어 날짜만 보인다 (질문 목록에서 제외하기로 결정)
             if (state.todayIndex != null) {
                 Text(
                     text = stringResource(R.string.card_drive_record_period_this_week),

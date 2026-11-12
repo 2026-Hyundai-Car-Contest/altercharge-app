@@ -179,7 +179,7 @@ internal fun buildContent(state: CardVehicleStatusUiState, mode: CardVehicleStat
         VehicleSituation.DEPLETED -> StatusLine.Plain(stringResource(R.string.card_vehicle_status_status_depleted))
         VehicleSituation.CHARGE_ERROR -> StatusLine.Plain(
             state.fault?.let { faultText(it).status }
-                // TODO 디자이너 확인: 오류 종류를 모를 때 문구가 시안에 없다.
+                // 오류 종류를 모르면 시안이 없어 C 카드 값 없음 표기("–")로 둔다 (지금 처리로 결정)
                 ?: unknown,
         )
         VehicleSituation.NO_DATA -> StatusLine.Plain(

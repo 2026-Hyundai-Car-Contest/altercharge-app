@@ -179,7 +179,6 @@ private fun titleText(status: CardInfoStatus, daysUntilCharge: Int): String = wh
 
 /**
  * Figma status = collecting (647:58207). 13일차는 "내일부터"로 바뀐다.
- * TODO 디자이너 확인: 시안이 세로(378×358)뿐이라 다른 모드도 같은 구성에 모드별 글자 크기를 쓴다.
  */
 @Composable
 private fun CollectingContent(recordedDays: Int, spec: ModeSpec) {
