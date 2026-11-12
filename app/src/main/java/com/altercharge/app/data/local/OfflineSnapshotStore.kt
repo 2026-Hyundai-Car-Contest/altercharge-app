@@ -3,6 +3,7 @@
  *
  * 저장하는 것
  * - 충전 판정 결과 (L1 · C 카드). 판정은 오프라인에서도 마지막 값을 유지한다
+ * - 판정 계산 기록 (REQ_JD_004: 앱을 다시 켜도 같은 날이면 판정을 다시 계산하지 않게)
  * - 추천 충전소 이름 · 거리 (L1 장소 줄 · C 가까운 충전소)
  * - 충전소 정보를 받은 시각 ("N분 전 기준", 15분 · 7일 유효 기간의 기준값)
  *
@@ -13,11 +14,15 @@ package com.altercharge.app.data.local
 import android.content.Context
 import com.altercharge.app.domain.judgment.Judgment
 import com.altercharge.app.domain.judgment.JudgmentResult
+import com.altercharge.app.domain.judgment.JudgmentStamp
 import java.time.Instant
+import java.time.LocalDate
 
 /** 오프라인용 마지막 값 묶음. 저장 전이면 각 값이 null이다 */
 data class OfflineSnapshot(
     val judgment: JudgmentResult?,
+    /** 마지막 판정 계산 기록. recomputeReason(last = 이 값, …)에 넘긴다 */
+    val judgmentStamp: JudgmentStamp?,
     /** 추천 충전소 이름. 반경 안에 없었으면 빈 문자열 */
     val placeName: String?,
     /** 추천 충전소까지 거리 km */
@@ -50,12 +55,15 @@ class SharedPreferencesStore(context: Context) : KeyValueStore {
 
 class OfflineSnapshotStore(private val store: KeyValueStore) {
 
-    /** 판정 결과를 저장한다. 판정할 때마다 부른다 */
-    fun saveJudgment(result: JudgmentResult) {
-        store.putStrings(mapOf(KEY_JUDGMENT to encodeJudgment(result)))
+    /** 판정 결과와 그 계산 기록을 한 번에 저장한다. 판정을 다시 계산할 때마다 부른다 */
+    fun saveJudgment(result: JudgmentResult, stamp: JudgmentStamp) {
+        store.putStrings(mapOf(KEY_JUDGMENT to encodeJudgment(result), KEY_JUDGMENT_STAMP to encodeStamp(stamp)))
     }
 
-    /** 추천 충전소와 받은 시각을 같이 저장한다. 서버 응답을 받을 때마다 부른다 */
+    /**
+     * 추천 충전소와 받은 시각을 같이 저장한다. 서버 응답을 받을 때마다 부른다.
+     * @param receivedAt 응답을 받은 기기 시각 (Instant.now()). 서버 statusObservedAt이 아니다 — "N분 전 기준"과 15분 · 7일 유효 기간의 기준값
+     */
     fun saveStation(placeName: String, nearestStationKm: Double?, receivedAt: Instant) {
         store.putStrings(
             mapOf(
@@ -68,6 +76,7 @@ class OfflineSnapshotStore(private val store: KeyValueStore) {
 
     fun load(): OfflineSnapshot = OfflineSnapshot(
         judgment = store.getString(KEY_JUDGMENT)?.let(::decodeJudgment),
+        judgmentStamp = store.getString(KEY_JUDGMENT_STAMP)?.let(::decodeStamp),
         placeName = store.getString(KEY_PLACE_NAME),
         nearestStationKm = store.getString(KEY_NEAREST_KM)?.toDoubleOrNull(),
         stationReceivedAt = store.getString(KEY_STATION_RECEIVED_AT)?.let { runCatching { Instant.parse(it) }.getOrNull() },
@@ -75,6 +84,7 @@ class OfflineSnapshotStore(private val store: KeyValueStore) {
 
     private companion object {
         const val KEY_JUDGMENT = "judgment"
+        const val KEY_JUDGMENT_STAMP = "judgment_stamp"
         const val KEY_PLACE_NAME = "place_name"
         const val KEY_NEAREST_KM = "nearest_station_km"
         const val KEY_STATION_RECEIVED_AT = "station_received_at"
@@ -111,4 +121,19 @@ internal fun decodeJudgment(text: String): JudgmentResult? = runCatching {
         )
         else -> null
     }
+}.getOrNull()
+
+/** 계산 기록: "날짜|시각|예비 거리(없으면 빈칸)|오늘 주행" */
+internal fun encodeStamp(stamp: JudgmentStamp): String = with(stamp) {
+    listOf(computedOn, computedAt, reserveKm ?: "", todayKmAtCompute).joinToString(SEPARATOR)
+}
+
+internal fun decodeStamp(text: String): JudgmentStamp? = runCatching {
+    val (on, at, reserve, todayKm) = text.split(SEPARATOR)
+    JudgmentStamp(
+        computedOn = LocalDate.parse(on),
+        computedAt = Instant.parse(at),
+        reserveKm = reserve.takeIf { it.isNotEmpty() }?.toInt(),
+        todayKmAtCompute = todayKm.toInt(),
+    )
 }.getOrNull()
