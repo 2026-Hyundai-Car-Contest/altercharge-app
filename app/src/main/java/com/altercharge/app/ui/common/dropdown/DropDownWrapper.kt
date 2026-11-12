@@ -77,13 +77,14 @@ fun FilterActionButtons(
     Row(
         modifier = modifier
             .fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         // 초기화 버튼
         Surface(
             modifier = Modifier
                 .weight(1f)
                 .height(64.dp)
+                .clip(RoundedCornerShape(AlterRadius.Small))
                 .clickable { onReset() },
             shape = RoundedCornerShape(AlterRadius.Small),
             color = AlterTheme.colors.surfaceHigh
