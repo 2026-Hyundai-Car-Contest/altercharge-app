@@ -132,32 +132,55 @@ fun CardInfo(
             if (state.recordedDays != null) {
                 CollectingContent(recordedDays = state.recordedDays, spec = spec)
             } else if (state.placeName.isNotBlank()) {
-                // 받아 둔 충전소 정보가 없으면(오프라인 · REQ_CM_006 예외) 추천 충전소 줄을 숨긴다 (디자이너 확정 2026-11-12)
-                Row(
-                    modifier = Modifier
-                        .padding(start = AlterPadding.XSmall)
-                        .widthIn(max = spec.placeMaxWidth),
-                    horizontalArrangement = Arrangement.spacedBy(AlterMargin.Normal),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    if (showIcon) {
-                        // TODO 디자이너 확인: 시안이 장소 아이콘 자리에 Loading 아이콘을 쓰고 있다. 확정 아이콘이 오면 바꾼다.
-                        Image(
-                            painter = painterResource(R.drawable.card_info_ic_place),
-                            contentDescription = null,
-                            colorFilter = ColorFilter.tint(PlaceColor),
-                            modifier = Modifier.size(PlaceIconSize),
-                        )
-                    }
-                    Text(
-                        text = state.placeName,
-                        style = spec.placeStyle(),
-                        color = PlaceColor,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
+                // 받아 둔 충전소 정보가 없으면(오프라인 · REQ_CM_006 예외) 추천 충전소 줄을 숨긴다 (Figma show_place = false)
+                PlaceContent(state = state, spec = spec, showIcon = showIcon)
             }
+        }
+    }
+}
+
+/**
+ * 추천 충전소 칸: 장소 줄과, 오프라인이면 그 아래 "N분 전 기준" 줄. Figma container_text (세로, 간격 10, 왼쪽 8).
+ * 연결되어 있으면([CardInfoUiState.placeLastChecked] = null) 장소 줄만 보인다 (Figma show_last_checked).
+ */
+@Composable
+private fun PlaceContent(state: CardInfoUiState, spec: ModeSpec, showIcon: Boolean) {
+    Column(
+        modifier = Modifier.padding(start = AlterPadding.XSmall),
+        verticalArrangement = Arrangement.spacedBy(PlaceRowGap),
+    ) {
+        Row(
+            modifier = Modifier.widthIn(max = spec.placeMaxWidth),
+            horizontalArrangement = Arrangement.spacedBy(AlterMargin.Normal),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (showIcon) {
+                // TODO 디자이너 확인: 시안이 장소 아이콘 자리에 Loading 아이콘을 쓰고 있다. 확정 아이콘이 오면 바꾼다.
+                Image(
+                    painter = painterResource(R.drawable.card_info_ic_place),
+                    contentDescription = null,
+                    colorFilter = ColorFilter.tint(PlaceColor),
+                    modifier = Modifier.size(PlaceIconSize),
+                )
+            }
+            Text(
+                text = state.placeName,
+                style = spec.placeStyle(),
+                color = PlaceColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        state.placeLastChecked?.let { lastChecked ->
+            Text(
+                text = lastCheckedText(lastChecked),
+                // 글자 크기는 eyebrow와 같은 label (모드별 medium · small), 색은 basic_static_light_300 (흰색 64%)
+                style = spec.eyebrowStyle(),
+                color = LastCheckedColor,
+                maxLines = 1,
+                // Figma row_last_checked 왼쪽 40 = 아이콘 24 + 간격 16. 아이콘을 숨겨도 시안 값 그대로 둔다.
+                modifier = Modifier.padding(start = LastCheckedInset),
+            )
         }
     }
 }
@@ -239,3 +262,12 @@ private val CardShadow = listOf(ShadowLayer(offsetY = 12.dp, blur = 32.dp, color
 private val EyebrowColor = Color.White.copy(alpha = 0.64f)
 private val PlaceColor = Color.White
 private val PlaceIconSize = 24.dp
+
+/** card_info/text/gap: 장소 줄과 "N분 전 기준" 줄 사이 */
+private val PlaceRowGap = 10.dp
+
+/** row_last_checked 왼쪽 여백 = 장소 아이콘 24 + card_info/text/icon_gap 16. 장소 이름 글자와 줄을 맞춘다 */
+private val LastCheckedInset = PlaceIconSize + AlterMargin.Normal
+
+/** basic/static_light/basic_static_light_300 (흰색 64%) */
+private val LastCheckedColor = Color.White.copy(alpha = 0.64f)
