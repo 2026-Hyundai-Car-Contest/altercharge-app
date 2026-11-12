@@ -9,8 +9,10 @@
  */
 package com.altercharge.app.domain.judgment
 
+import com.altercharge.app.domain.time.KoreaZone
 import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 
 /**
  * 마지막으로 판정을 계산한 때의 기록. 계산할 때마다 새로 만들어 저장한다.
@@ -53,9 +55,9 @@ fun recomputeReason(
     else -> null
 }
 
-/** 판정 결과로 다음 비교에 쓸 계산 기록을 만든다 */
-fun JudgmentResult.stamp(computedOn: LocalDate, computedAt: Instant, todayKm: Int): JudgmentStamp = JudgmentStamp(
-    computedOn = computedOn,
+/** 판정 결과로 다음 비교에 쓸 계산 기록을 만든다. 날짜는 계산 시각에서 한국시간으로 구해 둘이 어긋나지 않게 한다 */
+fun JudgmentResult.stamp(computedAt: Instant, todayKm: Int, zone: ZoneId = KoreaZone): JudgmentStamp = JudgmentStamp(
+    computedOn = computedAt.atZone(zone).toLocalDate(),
     computedAt = computedAt,
     reserveKm = (this as? JudgmentResult.Ready)?.judgment?.reserveKm,
     todayKmAtCompute = todayKm,

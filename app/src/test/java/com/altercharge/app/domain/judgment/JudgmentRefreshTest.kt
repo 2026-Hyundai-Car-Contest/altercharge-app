@@ -65,9 +65,16 @@ class JudgmentRefreshTest {
     @Test
     fun 판정_결과로_계산_기록을_만든다() {
         val ready = JudgmentResult.Ready(Judgment(averageDailyKm = 40, reserveKm = 35, daysLeft = 3, chargeRecommended = false))
-        assertEquals(JudgmentStamp(today, computedAt, 35, 12), ready.stamp(today, computedAt, todayKm = 12))
+        assertEquals(JudgmentStamp(today, computedAt, 35, 12), ready.stamp(computedAt, todayKm = 12))
 
         val collecting = JudgmentResult.Collecting(recordedDays = 3, chargeRecommended = false)
-        assertNull(collecting.stamp(today, computedAt, todayKm = 0).reserveKm)
+        assertNull(collecting.stamp(computedAt, todayKm = 0).reserveKm)
+    }
+
+    @Test
+    fun 계산_날짜는_한국시간() {
+        // UTC 11.11 15:30 = 한국 11.12 00:30
+        val result = JudgmentResult.Collecting(recordedDays = 3, chargeRecommended = false)
+        assertEquals(today, result.stamp(Instant.parse("2026-11-11T15:30:00Z"), todayKm = 0).computedOn)
     }
 }
