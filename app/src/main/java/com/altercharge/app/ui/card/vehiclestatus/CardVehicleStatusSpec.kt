@@ -34,3 +34,9 @@ internal val WideSidePadding = 40.dp
 
 /** 세로 SOC 숫자 80 (디자인 값에 없는 크기, 굵기 · 자간은 numericHero와 같다) */
 internal fun portraitSocStyle(base: TextStyle): TextStyle = base.copy(fontSize = 80.sp, lineHeight = 120.sp)
+
+/** battery_tile/gap. 패널 배터리 묶음(Battery)과 WF 레이아웃이 같이 쓴다 */
+internal val BatteryTileGap = 12.dp
+
+/** 배터리 게이지 칸 수. 게이지 그리기(Battery)와 칸 수 계산(Accent)이 같이 쓴다 */
+internal const val GaugeCells = 4

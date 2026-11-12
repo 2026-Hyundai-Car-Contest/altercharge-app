@@ -249,9 +249,6 @@ internal fun StatusText(
     }
 }
 
-/** battery_tile/gap */
-internal val BatteryTileGap = 12.dp
-
 /** 유리 면 */
 private const val GlassAlpha = 0.55f
 
@@ -276,8 +273,7 @@ private val SocGlowWideBlur = 64.dp
 private const val SocGlowNearAlpha = 0.10f
 private val SocGlowNearBlur = 24.dp
 
-/** gauge: 칸 4개, 칸 30×40, 테두리 2, 꼭지 7×22 */
-internal const val GaugeCells = 4
+/** gauge: 칸 30×40, 테두리 2, 꼭지 7×22 (칸 수는 Spec의 GaugeCells) */
 private val GaugeCellWidth = 30.dp
 private val GaugeCellHeight = 40.dp
 private val GaugeOutlineWidth = 2.dp
