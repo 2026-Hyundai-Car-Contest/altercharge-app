@@ -1,7 +1,4 @@
-/**
- * 추천 충전소 · 충전소 목록 · 마지막 충전 이력 응답을 L1 · C 카드가 받는 값으로 바꾼다.
- * R1 · R2(충전소 카드 · 목록) 변환은 담당자(석기님) 쪽에서 한다.
- */
+/** 충전소 · 마지막 충전 응답 → L1 · C 카드 값. R1 · R2 변환은 석기님 쪽 */
 package com.altercharge.app.data.remote.mapper
 
 import com.altercharge.app.data.remote.model.LatestChargeHistory
@@ -13,25 +10,18 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 
-/** L1 추천 충전소 줄 이름. 반경 안에 충전소가 없으면 빈 문자열이고, L1은 빈 값이면 줄을 숨긴다 */
+/** 빈 문자열이면 L1이 장소 줄을 숨긴다 */
 fun Recommendation.placeName(): String = station?.name.orEmpty()
 
-/**
- * C 카드 "가까운 충전소" 거리 km, 소수 첫째 자리 (1234m → 1.2). 반경 안에 충전소가 없으면 null ("--").
- * 충전소 목록 API(01)는 거리순으로 정렬해 주므로 첫 항목이 가장 가깝다 (OpenAPI 01 설명에 REQ_VS_006 명시).
- * 추천 충전소(03)는 방문 횟수를 먼저 보므로 가장 가까운 곳이 아닐 수 있어 쓰지 않는다.
- */
+/** 추천 충전소는 방문 횟수를 먼저 봐서 가장 가깝지 않을 수 있어, 거리순 목록에서 구한다 (REQ_VS_006) */
 fun StationPage.nearestStationKm(): Double? = items.minByOrNull { it.distanceMeters }?.let { metersToKm(it.distanceMeters) }
 
-/** 미터 → km 소수 첫째 자리 반올림. 50m 미만도 "0.0km"가 아니라 0.1km로 보인다 (바로 옆인데 0으로 보이면 어색하다) */
+/** 바로 옆인데 "0.0km"로 보이면 어색해서 최소 0.1km */
 private fun metersToKm(meters: Int): Double = ((meters / 100.0).roundToInt() / 10.0).coerceAtLeast(MIN_DISPLAY_KM)
 
 private const val MIN_DISPLAY_KM = 0.1
 
-/**
- * C 카드 "마지막 충전" 시각 글자. 오늘이면 "07:30", 다른 날이면 "11.11" (디자이너 확정 2026-11-12 날짜 형식).
- * 완료 이벤트가 없으면 null ("--").
- */
+/** 오늘이면 "07:30", 다른 날이면 "11.11" */
 fun LatestChargeHistory.lastChargedAtText(today: LocalDate, zone: ZoneId = KoreaZone): String? {
     val at = lastChargeCompletedAt?.atZone(zone) ?: return null
     val pattern = if (at.toLocalDate() == today) "HH:mm" else "M.d"
