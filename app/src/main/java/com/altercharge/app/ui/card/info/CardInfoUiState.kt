@@ -19,6 +19,12 @@ data class CardInfoUiState(
      * 값이 있으면 [verdict] · [daysUntilCharge] · [placeName]은 쓰지 않는다. [collecting]으로 만든다.
      */
     val recordedDays: Int? = null,
+    /**
+     * 오프라인일 때 추천 충전소 정보를 받은 시점. 장소 줄 아래 "N분 전 기준"으로 보인다 (REQ_CM_006).
+     * null이면 연결되어 최신 정보라 표시하지 않는다. [placeName]이 비어 있으면 같이 숨는다.
+     * 만들 때는 [lastCheckedOf]를 쓴다.
+     */
+    val placeLastChecked: LastChecked? = null,
 ) {
     companion object {
         /** 기록 수집 중 카드 값 (Figma status = collecting). 판정 값은 쓰지 않는 자리 채움이다. */
