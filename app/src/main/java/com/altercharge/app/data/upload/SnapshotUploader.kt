@@ -30,24 +30,32 @@ class SnapshotUploader(
     }
 
     /**
-     * 대기열을 오래된 것부터 보낸다. 연결이 안 되면 멈추고 남은 것은 다음에 보낸다.
-     * 서버가 거절한 값(400 · 404 · 409)은 다시 보내도 같으므로 버린다.
-     * @return 이번에 보낸 개수
+     * 오래된 것부터 보낸다. 연결 안 됨 · 5xx · 408 · 429는 멈추고 남긴다.
+     * 다른 4xx는 다시 보내도 같아서 버린다.
+     * 보내는 동안 record가 새로 넣은 값을 덮어쓰지 않게, 끝날 때 대기열을 다시 읽어 처리한 것만 뺀다.
+     * @return 보낸 개수
      */
     suspend fun flush(now: Instant = Instant.now()): Int {
-        var queue = pending().filter { Duration.between(it.recordedAt, now) <= SERVER_RETENTION }
+        val toSend = pending().filter { isWithinRetention(it, now) }
+        val done = mutableSetOf<Instant>()
         var sent = 0
-        while (queue.isNotEmpty()) {
-            when (val r = api.postSnapshot(queue.first())) {
-                is ApiResult.Success -> sent++
-                is ApiResult.HttpError -> if (r.status >= 500) break
-                is ApiResult.NetworkError, ApiResult.NotConfigured -> break
-                is ApiResult.ParseError -> Unit
-            }
-            queue = queue.drop(1)
+        for (request in toSend) {
+            val r = api.postSnapshot(request)
+            if (r.shouldRetryLater()) break
+            if (r is ApiResult.Success) sent++
+            done += request.recordedAt
         }
-        save(queue, lastQueuedAt())
+        save(pending().filter { it.recordedAt !in done && isWithinRetention(it, now) }, lastQueuedAt())
         return sent
+    }
+
+    private fun isWithinRetention(r: VehicleSnapshotRequest, now: Instant) =
+        Duration.between(r.recordedAt, now) <= SERVER_RETENTION
+
+    private fun ApiResult<*>.shouldRetryLater(): Boolean = when (this) {
+        is ApiResult.NetworkError, ApiResult.NotConfigured -> true
+        is ApiResult.HttpError -> status >= 500 || status == 408 || status == 429
+        else -> false
     }
 
     fun pendingCount(): Int = pending().size

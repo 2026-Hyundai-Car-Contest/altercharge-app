@@ -122,4 +122,24 @@ class SnapshotUploaderTest {
         val reopened = SnapshotUploader(AlterChargeApi("https://example.test/api/v1/", server), memory)
         assertEquals(1, reopened.pendingCount())
     }
+
+    @Test
+    fun 요청이_너무_많으면_429_남겨_둔다() = runBlocking {
+        uploader.record(reading, t0)
+        server.respond = { HttpResponse(429, "") }
+        uploader.flush(t0)
+        assertEquals(1, uploader.pendingCount())
+    }
+
+    @Test
+    fun 보내는_동안_새로_쌓인_값은_지우지_않는다() = runBlocking {
+        uploader.record(reading, t0)
+        server.respond = {
+            // 전송 중에 다음 값이 들어온다
+            uploader.record(reading, t0.plus(Duration.ofHours(1)))
+            HttpResponse(201, """{"snapshotId":"s","saved":true,"recordedAt":"2026-11-12T00:00:00Z"}""")
+        }
+        assertEquals(1, uploader.flush(t0.plus(Duration.ofHours(1))))
+        assertEquals(1, uploader.pendingCount())
+    }
 }
