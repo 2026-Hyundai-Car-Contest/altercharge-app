@@ -29,14 +29,14 @@ class CardInfoJudgmentTest {
     }
 
     @Test
-    fun 이틀은_3일내() {
+    fun 이틀은_N일내() {
         val state = card(2)
         assertEquals(ChargeVerdict.WITHIN_TWO_DAYS, state.verdict)
         assertEquals(CardInfoStatus.WITHIN_N_DAYS, state.toStatus())
     }
 
     @Test
-    fun 사흘_이상은_3일이상_단계이고_화면은_3일내() {
+    fun 사흘_이상은_3일이상_단계이고_화면은_N일내() {
         listOf(3, 10, 99).forEach { days ->
             val state = card(days)
             assertEquals("days=$days", ChargeVerdict.THREE_DAYS_OR_MORE, state.verdict)

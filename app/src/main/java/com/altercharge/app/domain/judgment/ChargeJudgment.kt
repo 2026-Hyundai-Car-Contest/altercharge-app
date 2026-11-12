@@ -17,7 +17,7 @@ data class JudgmentInput(
 
 /**
  * 기록이 14일 이상 쌓였을 때의 판정. 화면 쪽이 L1·C 카드 값으로 바꿔 쓴다.
- * 판정 문구(오늘 / 내일 / 3일내)는 화면 쪽에서 [daysLeft]로 고른다.
+ * 판정 문구(오늘 / 내일 / N일내)는 화면 쪽에서 [daysLeft]로 고른다.
  *
  * @property averageDailyKm 일 평균 주행거리(km, 반올림). 표시용이고, 버틸 일수 계산은 반올림 전 값으로 한다.
  * @property reserveKm 예비 거리(km)
