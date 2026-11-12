@@ -4,7 +4,7 @@
  * 저장하는 것
  * - 충전 판정 결과 (L1 · C 카드). 판정은 오프라인에서도 마지막 값을 유지한다
  * - 판정 계산 기록 (REQ_JD_004: 앱을 다시 켜도 같은 날이면 판정을 다시 계산하지 않게)
- * - 추천 충전소 이름 · 거리 (L1 장소 줄 · C 가까운 충전소)
+ * - 추천 충전소 이름 (L1 장소 줄) · 가까운 충전소 거리 (C 카드, 거리순 목록 첫 항목)
  * - 충전소 정보를 받은 시각 ("N분 전 기준", 15분 · 7일 유효 기간의 기준값)
  *
  * 저장소는 [KeyValueStore]로 감싸 SharedPreferences(앱)와 메모리(테스트)를 바꿔 끼운다. 새 라이브러리를 쓰지 않는다.
@@ -25,7 +25,7 @@ data class OfflineSnapshot(
     val judgmentStamp: JudgmentStamp?,
     /** 추천 충전소 이름. 반경 안에 없었으면 빈 문자열 */
     val placeName: String?,
-    /** 추천 충전소까지 거리 km */
+    /** 가까운 충전소까지 거리 km (거리순 충전소 목록 첫 항목, StationPage.nearestStationKm) */
     val nearestStationKm: Double?,
     /** 충전소 정보를 받은 시각 */
     val stationReceivedAt: Instant?,
@@ -61,7 +61,7 @@ class OfflineSnapshotStore(private val store: KeyValueStore) {
     }
 
     /**
-     * 추천 충전소와 받은 시각을 같이 저장한다. 서버 응답을 받을 때마다 부른다.
+     * 추천 충전소 이름 · 가까운 충전소 거리와 받은 시각을 같이 저장한다. 서버 응답을 받을 때마다 부른다.
      * @param receivedAt 응답을 받은 기기 시각 (Instant.now()). 서버 statusObservedAt이 아니다 — "N분 전 기준"과 15분 · 7일 유효 기간의 기준값
      */
     fun saveStation(placeName: String, nearestStationKm: Double?, receivedAt: Instant) {
