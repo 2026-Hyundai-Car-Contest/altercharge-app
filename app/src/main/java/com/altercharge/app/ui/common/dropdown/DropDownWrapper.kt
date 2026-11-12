@@ -18,9 +18,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.altercharge.app.R
+import com.altercharge.app.ui.designsystem.theme.AlterChargeTheme
 import com.altercharge.app.ui.designsystem.theme.AlterFontWeight
 import com.altercharge.app.ui.designsystem.theme.AlterMargin
 import com.altercharge.app.ui.designsystem.theme.AlterRadius
@@ -38,7 +41,7 @@ fun DropDownWrapper(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier
             .clip(RoundedCornerShape(AlterRadius.Large))
-            .background(AlterTheme.colors.containerBackground)
+            .background(AlterTheme.colors.surface)
             .padding(AlterMargin.XSmall)
             .width(351.dp)
     ) {
@@ -48,7 +51,8 @@ fun DropDownWrapper(
             Text(
                 text = title,
                 fontSize = 24.sp,
-                fontWeight = AlterFontWeight.Strong
+                fontWeight = AlterFontWeight.Strong,
+                color = AlterTheme.colors.textPrimary
             )
             Text(
                 text = subTitle,
@@ -93,7 +97,7 @@ fun FilterActionButtons(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "초기화",
+                    text = stringResource(R.string.strings_common_dropdown_wrapper_reset_button),
                     fontSize = 26.sp,
                     fontWeight = AlterFontWeight.Strong,
                     color = AlterTheme.colors.textPrimary
@@ -114,10 +118,10 @@ fun FilterActionButtons(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "적용",
+                    text = stringResource(R.string.strings_common_dropdown_wrapper_apply_button),
                     fontSize = 26.sp,
                     fontWeight = AlterFontWeight.Strong,
-                    color = AlterTheme.colors.surfaceAccent
+                    color = Color.White
                 )
             }
         }
@@ -125,19 +129,78 @@ fun FilterActionButtons(
 }
 
 
-@Preview(name = "DropDownWrapper")
+@Preview(name = "DropDownWrapper(Light/KO)", locale = "ko")
 @Composable
-private fun DropDownWrapperPreview() {
-    DropDownWrapper(
-        title = "연결타입",
-        subTitle = "여러 개 선택",
-        onReset = {},
-        onApply = {}
-    ) {
-        Text(
-            text = "\"Some Component\"",
-            Modifier.background(Color.Red)
-                .height(300.dp)
-        )
+private fun DropDownWrapperLightKoPreview() {
+    AlterChargeTheme() {
+        DropDownWrapper(
+            title = "연결타입",
+            subTitle = "여러 개 선택",
+            onReset = {},
+            onApply = {}
+        ) {
+            Text(
+                text = "\"Some Component\"",
+                Modifier.background(Color.Red)
+                    .height(300.dp)
+            )
+        }
+    }
+}
+
+@Preview(name = "DropDownWrapper(Dark/KO)", locale = "ko")
+@Composable
+private fun DropDownWrapperDarkKoPreview() {
+    AlterChargeTheme(darkTheme = true) {
+        DropDownWrapper(
+            title = "연결타입",
+            subTitle = "여러 개 선택",
+            onReset = {},
+            onApply = {}
+        ) {
+            Text(
+                text = "\"Some Component\"",
+                Modifier.background(Color.Red)
+                    .height(300.dp)
+            )
+        }
+    }
+}
+
+@Preview(name = "DropDownWrapper(Light/EN)", locale = "en")
+@Composable
+private fun DropDownWrapperLightEnPreview() {
+    AlterChargeTheme() {
+        DropDownWrapper(
+            title = "연결타입",
+            subTitle = "여러 개 선택",
+            onReset = {},
+            onApply = {}
+        ) {
+            Text(
+                text = "\"Some Component\"",
+                Modifier.background(Color.Red)
+                    .height(300.dp)
+            )
+        }
+    }
+}
+
+@Preview(name = "DropDownWrapper(Dark/EN)", locale = "en")
+@Composable
+private fun DropDownWrapperDarkEnPreview() {
+    AlterChargeTheme(darkTheme = true) {
+        DropDownWrapper(
+            title = "연결타입",
+            subTitle = "여러 개 선택",
+            onReset = {},
+            onApply = {}
+        ) {
+            Text(
+                text = "\"Some Component\"",
+                Modifier.background(Color.Red)
+                    .height(300.dp)
+            )
+        }
     }
 }

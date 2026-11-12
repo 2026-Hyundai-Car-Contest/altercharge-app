@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="strings_common_dropdown_wrapper_reset_button">초기화</string>
+  <string name="strings_common_dropdown_wrapper_apply_button">적용</string>
+</resources>
