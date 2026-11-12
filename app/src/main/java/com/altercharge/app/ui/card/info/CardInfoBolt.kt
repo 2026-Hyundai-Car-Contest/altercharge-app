@@ -47,7 +47,7 @@ private class BoltLevel(val left: Float, val middle: Float, val right: Float)
 private fun CardInfoStatus.boltLevel(): BoltLevel = when (this) {
     CardInfoStatus.TODAY -> BoltLevel(left = 0.75f, middle = 0.705f, right = 0.66f)
     CardInfoStatus.TOMORROW -> BoltLevel(left = 0.43f, middle = 0.48f, right = 0.50f)
-    CardInfoStatus.WITHIN_THREE_DAYS -> BoltLevel(left = 0.29f, middle = 0.275f, right = 0.27f)
+    CardInfoStatus.WITHIN_N_DAYS -> BoltLevel(left = 0.29f, middle = 0.275f, right = 0.27f)
     // 수집 중은 채움 수위를 쓰지 않는다 (CollectingBoltGraphic). 자리 채움 값.
     CardInfoStatus.COLLECTING -> BoltLevel(left = 1f, middle = 1f, right = 1f)
 }
@@ -55,7 +55,7 @@ private fun CardInfoStatus.boltLevel(): BoltLevel = when (this) {
 /** 판정별로 번개가 오늘 자리보다 오른쪽으로 밀린 거리 (모드마다 Figma 값이 다르다). */
 private fun ModeSpec.boltShift(status: CardInfoStatus): Dp = when (status) {
     CardInfoStatus.TOMORROW -> tomorrowShift
-    CardInfoStatus.WITHIN_THREE_DAYS -> threeDaysShift
+    CardInfoStatus.WITHIN_N_DAYS -> threeDaysShift
     CardInfoStatus.TODAY, CardInfoStatus.COLLECTING -> 0.dp
 }
 
