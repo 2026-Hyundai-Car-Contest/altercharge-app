@@ -131,7 +131,8 @@ fun CardInfo(
             }
             if (state.recordedDays != null) {
                 CollectingContent(recordedDays = state.recordedDays, spec = spec)
-            } else {
+            } else if (state.placeName.isNotBlank()) {
+                // 받아 둔 충전소 정보가 없으면(오프라인 · REQ_CM_006 예외) 추천 충전소 줄을 숨긴다 (디자이너 확정 2026-11-12)
                 Row(
                     modifier = Modifier
                         .padding(start = AlterPadding.XSmall)
