@@ -12,6 +12,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -19,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.altercharge.app.ui.common.ChargePowerSlider
 import com.altercharge.app.ui.common.dropdown.SortDropDown
 import com.altercharge.app.ui.common.dropdown.StationSortType
 
@@ -28,7 +30,18 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    HomeScreen()
+//                    HomeScreen()
+                    var minPower by remember { mutableIntStateOf(50) }
+                    var maxPower by remember { mutableIntStateOf(350) }
+
+                    ChargePowerSlider(
+                        minPower = minPower,
+                        maxPower = maxPower,
+                        onRangeChange = { min, max ->
+                            minPower = min
+                            maxPower = max
+                        }
+                    )
                 }
             }
         }
