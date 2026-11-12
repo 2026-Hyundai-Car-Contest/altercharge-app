@@ -8,10 +8,7 @@ import com.altercharge.app.ui.card.common.ChargeVerdict
  * 충전 판정 결과로 L1 카드 값을 만든다. 버틸 일수(daysLeft)로 판정 단계를 고른다.
  * - 0일 → 오늘 충전
  * - 1일 → 내일 충전
- * - 2일 → 3일내 충전
- * - 3일 이상 → 3일 이상 단계. 카드는 지금 3일내로 보여 준다(CardInfoUiState.toStatus).
- *
- * TODO 기획 확인: 3일 이상 남았을 때 L1 표시가 정해지면 toStatus 쪽에서 바꾼다.
+ * - 2일 이상 → N일내 충전 (2일내, 5일내 … 기획 확정 2026-11-12, JD_001)
  *
  * @param placeName 기준 거점 이름
  */

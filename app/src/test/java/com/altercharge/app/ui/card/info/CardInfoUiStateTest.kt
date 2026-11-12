@@ -21,11 +21,11 @@ class CardInfoUiStateTest {
 
     @Test
     fun 이틀_뒤는_3일내() {
-        assertEquals(CardInfoStatus.WITHIN_THREE_DAYS, status(ChargeVerdict.WITHIN_TWO_DAYS, 2))
+        assertEquals(CardInfoStatus.WITHIN_N_DAYS, status(ChargeVerdict.WITHIN_TWO_DAYS, 2))
     }
 
     @Test
     fun 사흘_이상은_3일내로_대신() {
-        assertEquals(CardInfoStatus.WITHIN_THREE_DAYS, status(ChargeVerdict.THREE_DAYS_OR_MORE, 3))
+        assertEquals(CardInfoStatus.WITHIN_N_DAYS, status(ChargeVerdict.THREE_DAYS_OR_MORE, 3))
     }
 }

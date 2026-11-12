@@ -32,7 +32,7 @@ class CardInfoJudgmentTest {
     fun 이틀은_3일내() {
         val state = card(2)
         assertEquals(ChargeVerdict.WITHIN_TWO_DAYS, state.verdict)
-        assertEquals(CardInfoStatus.WITHIN_THREE_DAYS, state.toStatus())
+        assertEquals(CardInfoStatus.WITHIN_N_DAYS, state.toStatus())
     }
 
     @Test
@@ -41,7 +41,7 @@ class CardInfoJudgmentTest {
             val state = card(days)
             assertEquals("days=$days", ChargeVerdict.THREE_DAYS_OR_MORE, state.verdict)
             assertEquals("days=$days", days, state.daysUntilCharge)
-            assertEquals("days=$days", CardInfoStatus.WITHIN_THREE_DAYS, state.toStatus())
+            assertEquals("days=$days", CardInfoStatus.WITHIN_N_DAYS, state.toStatus())
         }
     }
 

@@ -4,7 +4,6 @@
  */
 package com.altercharge.app.ui.card.info
 
-import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -123,7 +122,7 @@ fun CardInfo(
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    text = stringResource(status.titleRes),
+                    text = titleText(status, state.daysUntilCharge),
                     style = spec.titleStyle(),
                     color = AlterTheme.colors.blue500,
                     maxLines = 1,
@@ -132,7 +131,8 @@ fun CardInfo(
             }
             if (state.recordedDays != null) {
                 CollectingContent(recordedDays = state.recordedDays, spec = spec)
-            } else {
+            } else if (state.placeName.isNotBlank()) {
+                // 받아 둔 충전소 정보가 없으면(오프라인 · REQ_CM_006 예외) 추천 충전소 줄을 숨긴다 (디자이너 확정 2026-11-12)
                 Row(
                     modifier = Modifier
                         .padding(start = AlterPadding.XSmall)
@@ -162,14 +162,14 @@ fun CardInfo(
     }
 }
 
-@get:StringRes
-private val CardInfoStatus.titleRes: Int
-    get() = when (this) {
-        CardInfoStatus.TODAY -> R.string.card_info_title_today
-        CardInfoStatus.TOMORROW -> R.string.card_info_title_tomorrow
-        CardInfoStatus.WITHIN_THREE_DAYS -> R.string.card_info_title_within_three_days
-        CardInfoStatus.COLLECTING -> R.string.card_info_title_collecting
-    }
+/** 판정 제목. N일내는 버틸 일수를 넣는다 (2 → "2일내 충전", 5 → "5일내 충전") */
+@Composable
+private fun titleText(status: CardInfoStatus, daysUntilCharge: Int): String = when (status) {
+    CardInfoStatus.TODAY -> stringResource(R.string.card_info_title_today)
+    CardInfoStatus.TOMORROW -> stringResource(R.string.card_info_title_tomorrow)
+    CardInfoStatus.WITHIN_N_DAYS -> stringResource(R.string.card_info_title_within_days, daysUntilCharge)
+    CardInfoStatus.COLLECTING -> stringResource(R.string.card_info_title_collecting)
+}
 
 /**
  * 기록 수집 중 본문: 진행 막대 "N / 14일"과 안내 문구. Figma status = collecting (647:58207).
