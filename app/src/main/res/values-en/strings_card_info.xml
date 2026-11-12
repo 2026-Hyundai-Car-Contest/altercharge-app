@@ -3,7 +3,7 @@
     <string name="card_info_eyebrow">When to charge</string>
     <string name="card_info_title_today">Today</string>
     <string name="card_info_title_tomorrow">Tomorrow</string>
-    <!-- TODO 디자이너 확인: Figma v2 설명은 "Charge within N days"인데 제목 폭(가로 252)을 넘어 "Charge w…"로 잘린다. 짧은 문구가 정해질 때까지 기존 문구를 쓴다. -->
+    <!-- 영문 보드(card_info · EN 439:15613) 문구 "In 3 days". v2 컴포넌트 설명의 "Charge within N days"는 제목 폭을 넘어 잘려서 보드 문구를 따른다. -->
     <string name="card_info_title_within_days">In %1$d days</string>
     <!-- TODO 디자이너 확인: 기록 수집 중 영문 시안이 없어 임시 문구다. 확정되면 바꾼다. -->
     <string name="card_info_title_collecting">Collecting data</string>
