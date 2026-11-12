@@ -1,10 +1,6 @@
 /**
- * 서버 JSON ↔ 응답 · 요청 모델(model/ServerModels.kt) 변환. 안드로이드 기본 org.json만 쓴다 (새 라이브러리 없음).
- *
- * 규칙
- * - 필수 값이 없거나 null이거나 형식이 틀리면 JSONException → 호출부에서 "응답 형식 오류"로 처리한다
- * - null 가능 값은 키가 없거나 JSON null이면 null
- * - 모르는 enum 값은 UNKNOWN이 있으면 UNKNOWN, 없으면 null (서버가 값을 늘려도 앱이 죽지 않게)
+ * 서버 JSON ↔ 모델. 필수 값이 없으면 JSONException (호출부에서 형식 오류).
+ * 모르는 enum은 UNKNOWN으로 받는다: 서버가 값을 늘려도 앱이 죽지 않게.
  */
 package com.altercharge.app.data.remote
 
@@ -161,7 +157,7 @@ internal object ServerJson {
         )
     }
 
-    /** 오류 본문. 형식이 다르면 null (본문 없는 502 등) */
+    /** 본문 없는 502 등은 null */
     fun apiErrorOrNull(text: String?): ApiError? = runCatching {
         JSONObject(text.orEmpty()).run { ApiError(requiredString("error"), requiredString("message")) }
     }.getOrNull()
@@ -197,10 +193,7 @@ internal object ServerJson {
         if (isNull(i)) throw JSONException("배열 $i 번째 값이 null") else getString(i)
     }
 
-    /**
-     * 필수 문자열. 기기의 org.json은 JSON null을 getString으로 읽으면 글자 "null"을 돌려주고,
-     * 테스트용 org.json은 예외를 던진다. 둘이 같게 null이면 예외로 통일한다.
-     */
+    /** 기기 org.json은 JSON null을 글자 "null"로 읽고 테스트용은 예외를 던져서, 예외로 통일한다 */
     private fun JSONObject.requiredString(key: String): String =
         if (isNull(key)) throw JSONException("$key 값이 없음") else getString(key)
 
@@ -212,7 +205,6 @@ internal object ServerJson {
 
     private fun JSONObject.optDoubleOrNull(key: String): Double? = if (isAbsent(key)) null else getDouble(key)
 
-    /** 서버 시각은 오프셋 포함 ISO 8601 ("2026-11-12T14:30:00+09:00", "…Z") */
     private fun JSONObject.instant(key: String): Instant = OffsetDateTime.parse(requiredString(key)).toInstant()
 
     private fun JSONObject.optInstant(key: String): Instant? = optStringOrNull(key)?.let { OffsetDateTime.parse(it).toInstant() }

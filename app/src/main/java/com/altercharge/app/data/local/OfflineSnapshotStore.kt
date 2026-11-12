@@ -1,13 +1,6 @@
 /**
- * 오프라인에서 보여 줄 마지막 값을 기기에 저장한다 (REQ_CM_006: 연결이 끊기면 받아 둔 마지막 값을 보여 준다).
- *
- * 저장하는 것
- * - 충전 판정 결과 (L1 · C 카드). 판정은 오프라인에서도 마지막 값을 유지한다
- * - 판정 계산 기록 (REQ_JD_004: 앱을 다시 켜도 같은 날이면 판정을 다시 계산하지 않게)
- * - 추천 충전소 이름 (L1 장소 줄) · 가까운 충전소 거리 (C 카드, 거리순 목록 첫 항목)
- * - 충전소 정보를 받은 시각 ("N분 전 기준", 15분 · 7일 유효 기간의 기준값)
- *
- * 저장소는 [KeyValueStore]로 감싸 SharedPreferences(앱)와 메모리(테스트)를 바꿔 끼운다. 새 라이브러리를 쓰지 않는다.
+ * 연결이 끊겨도 마지막 값을 보여 주려고 기기에 저장한다 (REQ_CM_006).
+ * 판정 계산 기록도 저장해야 앱을 다시 켜도 같은 날 판정이 유지된다 (REQ_JD_004).
  */
 package com.altercharge.app.data.local
 
@@ -18,20 +11,15 @@ import com.altercharge.app.domain.judgment.JudgmentStamp
 import java.time.Instant
 import java.time.LocalDate
 
-/** 오프라인용 마지막 값 묶음. 저장 전이면 각 값이 null이다 */
 data class OfflineSnapshot(
     val judgment: JudgmentResult?,
-    /** 마지막 판정 계산 기록. recomputeReason(last = 이 값, …)에 넘긴다 */
     val judgmentStamp: JudgmentStamp?,
-    /** 추천 충전소 이름. 반경 안에 없었으면 빈 문자열 */
     val placeName: String?,
-    /** 가까운 충전소까지 거리 km (거리순 충전소 목록 첫 항목, StationPage.nearestStationKm) */
     val nearestStationKm: Double?,
-    /** 충전소 정보를 받은 시각 */
     val stationReceivedAt: Instant?,
 )
 
-/** 문자열 키-값 저장소. 앱은 SharedPreferences, 테스트는 메모리 맵을 쓴다 */
+/** 테스트에서 메모리로 바꿔 끼우려고 SharedPreferences를 감싼다 */
 interface KeyValueStore {
     fun getString(key: String): String?
     fun putStrings(values: Map<String, String?>)
@@ -55,15 +43,11 @@ class SharedPreferencesStore(context: Context) : KeyValueStore {
 
 class OfflineSnapshotStore(private val store: KeyValueStore) {
 
-    /** 판정 결과와 그 계산 기록을 한 번에 저장한다. 판정을 다시 계산할 때마다 부른다 */
     fun saveJudgment(result: JudgmentResult, stamp: JudgmentStamp) {
         store.putStrings(mapOf(KEY_JUDGMENT to encodeJudgment(result), KEY_JUDGMENT_STAMP to encodeStamp(stamp)))
     }
 
-    /**
-     * 추천 충전소 이름 · 가까운 충전소 거리와 받은 시각을 같이 저장한다. 서버 응답을 받을 때마다 부른다.
-     * @param receivedAt 응답을 받은 기기 시각 (Instant.now()). 서버 statusObservedAt이 아니다 — "N분 전 기준"과 15분 · 7일 유효 기간의 기준값
-     */
+    /** receivedAt은 응답을 받은 기기 시각이다 (서버 statusObservedAt 아님) */
     fun saveStation(placeName: String, nearestStationKm: Double?, receivedAt: Instant) {
         store.putStrings(
             mapOf(
@@ -91,7 +75,7 @@ class OfflineSnapshotStore(private val store: KeyValueStore) {
     }
 }
 
-// 판정 결과는 필드가 몇 개뿐이라 "종류|값|값…" 한 줄로 저장한다. 형식이 깨져 있으면 저장 전처럼 null로 읽는다.
+// 필드가 몇 개뿐이라 "값|값|…" 한 줄로 저장한다. 깨진 값은 저장 전처럼 null로 읽는다.
 
 private const val COLLECTING = "collecting"
 private const val READY = "ready"
@@ -123,7 +107,6 @@ internal fun decodeJudgment(text: String): JudgmentResult? = runCatching {
     }
 }.getOrNull()
 
-/** 계산 기록: "날짜|시각|예비 거리(없으면 빈칸)|오늘 주행" */
 internal fun encodeStamp(stamp: JudgmentStamp): String = with(stamp) {
     listOf(computedOn, computedAt, reserveKm ?: "", todayKmAtCompute).joinToString(SEPARATOR)
 }
