@@ -12,7 +12,7 @@
  * 사용 예 (홈 화면 ViewModel)
  *   val cards = loader.load(VehicleReading(soc, rangeKm, odometerKm), location = LatLng(lat, lng))
  *   CardInfo(state = cards.cardInfo, …)
- *   CardDriveRecord(state = cards.driveRecord, …)
+ *   CardDriveRecord(state = cards.driveRecord, onPreviousWeek = { … loader.driveRecordFor(week.minusWeeks(1)) … }, …)
  *   CardVehicleStatus(state = CardVehicleStatusUiState(
  *       …차량 SDK 값…,
  *       chargeRecommended = cards.vehicleStatus.chargeRecommended,
@@ -121,8 +121,7 @@ class HomeCardsLoader(
             placeName = station.placeName,
             placeLastChecked = station.lastChecked,
         )
-        val driveRecord = (history ?: EMPTY_HISTORY.copy(vehicleId = vehicleId))
-            .toCardDriveRecordUiState(weekStart = weekStartOf(today), today = today, latestCharge = charge)
+        val driveRecord = driveRecordFor(weekStartOf(today), today)
 
         return HomeCards(
             cardInfo = cardInfo,
@@ -135,6 +134,23 @@ class HomeCardsLoader(
             offline = historyResult is ApiResult.Failure || chargeResult is ApiResult.Failure || station.offline,
         )
     }
+
+    /**
+     * L2 다른 주 보기 (이전 주 · 다음 주 버튼). 마지막으로 받은 주행 기록으로 만들고 서버를 다시 부르지 않는다.
+     * 홈 화면은 보고 있는 주의 월요일을 들고 있다가 버튼을 누르면 ±1주로 부른다.
+     *
+     *   onPreviousWeek = { week = week.minusWeeks(1); driveRecord = loader.driveRecordFor(week) }
+     *
+     * @param expanded 펼침 상태를 그대로 유지하려면 지금 값을 넘긴다
+     */
+    fun driveRecordFor(
+        weekStart: LocalDate,
+        today: LocalDate = clock.instant().atZone(KoreaZone).toLocalDate(),
+        expanded: Boolean = false,
+    ): CardDriveRecordUiState = (lastHistory ?: emptyHistory())
+        .toCardDriveRecordUiState(weekStart = weekStart, today = today, latestCharge = lastCharge, expanded = expanded)
+
+    private fun emptyHistory() = VehicleSnapshotHistory(vehicleId, records = emptyList(), retentionDays = 0, completeDayCount = 0)
 
     /**
      * 판정. 다시 계산할 때(REQ_JD_004)만 judge()를 부르고 결과 · 계산 기록을 저장한다. 아니면 저장한 판정을 그대로 쓴다.
@@ -201,7 +217,5 @@ class HomeCardsLoader(
     private companion object {
         /** 가까운 충전소만 보면 되므로 첫 페이지 몇 개면 충분하다 (서버가 거리순 정렬) */
         const val NEAREST_PAGE_SIZE = 5
-
-        val EMPTY_HISTORY = VehicleSnapshotHistory(vehicleId = "", records = emptyList(), retentionDays = 0, completeDayCount = 0)
     }
 }

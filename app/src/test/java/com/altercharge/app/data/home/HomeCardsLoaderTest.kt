@@ -169,4 +169,20 @@ class HomeCardsLoaderTest {
         assertEquals(0, cards.driveRecord.daysSinceLastCharge)
         assertEquals(40, cards.driveRecord.kmSinceLastCharge)
     }
+
+    @Test
+    fun 지난_주_보기는_받아_둔_기록으로_서버를_다시_부르지_않는다() = runBlocking {
+        server.snapshots = fourteenDays()
+        val l = loader()
+        val thisWeek = l.load(vehicle, here)
+        server.urls.clear()
+
+        val lastWeek = l.driveRecordFor(thisWeek.driveRecord.weekStart.minusWeeks(1), today, expanded = true)
+        assertTrue(server.urls.isEmpty())
+        assertEquals(LocalDate.of(2026, 11, 2), lastWeek.weekStart)
+        assertEquals(List(7) { 20 }, lastWeek.dailyKm)
+        assertNull(lastWeek.todayIndex)
+        assertTrue(lastWeek.hasNextWeek)
+        assertTrue(lastWeek.expanded)
+    }
 }
