@@ -22,7 +22,7 @@
     <string name="card_drive_record_tile_weekly_total">Weekly total</string>
     <string name="card_drive_record_tile_last_charge">Last charge</string>
     <string name="card_drive_record_tile_since_charge">Since charge</string>
-    <!-- TODO 디자이너 확인: 보드에는 "days ago"만 있다. 1일일 때 단수형은 임시 -->
+    <!-- 보드에는 "days ago"만 있다. 1일은 영어 문법대로 단수형 -->
     <plurals name="card_drive_record_unit_days_ago">
         <item quantity="one">day ago</item>
         <item quantity="other">days ago</item>
@@ -35,7 +35,7 @@
     <!-- 요일 막대 화면 읽기 문구 (요일, 주행 km). 예: 월 42킬로미터 -->
     <string name="card_drive_record_bar_description">%1$s, %2$d km</string>
     <string name="card_drive_record_collapse">Show less</string>
-    <!-- TODO 디자이너 확인: 기록 없음 영문 시안이 없어 임시 문구다. 확정되면 바꾼다. -->
+    <!-- 기록 없음: 영문 시안이 없어 개발에서 정한 문구 (2026-11-12, 디자이너 공유) -->
     <string name="card_drive_record_empty_message">No trips recorded this week</string>
     <string name="card_drive_record_empty_description">We start recording your trips today\nBars fill in on days you drive</string>
 </resources>
