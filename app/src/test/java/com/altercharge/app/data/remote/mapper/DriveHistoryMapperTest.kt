@@ -88,6 +88,28 @@ class DriveHistoryMapperTest {
         assertEquals(listOf(30, 0), h.dailyDistances(today, zone).map { it.km })
     }
 
+    // ---- todayKm ----
+
+    @Test
+    fun 오늘_주행은_지금_누적거리에서_어제_마지막_기록을_뺀다() {
+        val h = history(
+            record(today.minusDays(1), LocalTime.of(22, 0), 1000.0),
+            record(today, LocalTime.of(8, 0), 1010.0),
+        )
+        assertEquals(37, h.todayKm(currentOdometerKm = 1037.2, today = today, zone = zone))
+    }
+
+    @Test
+    fun 오늘_처음_기록했으면_오늘_첫_기록부터() {
+        val h = history(record(today, LocalTime.of(8, 0), 500.0))
+        assertEquals(12, h.todayKm(512.0, today, zone))
+    }
+
+    @Test
+    fun 기록이_없으면_오늘_주행은_0() {
+        assertEquals(0, history().todayKm(1234.0, today, zone))
+    }
+
     // ---- toJudgmentInput ----
 
     @Test

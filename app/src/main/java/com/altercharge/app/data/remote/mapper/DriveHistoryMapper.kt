@@ -1,6 +1,6 @@
 /**
  * 서버 주행 기록(차량 스냅샷)을 충전 판정 입력과 L2 주간 주행 기록 카드 값으로 바꾼다.
- * 날짜는 한국시간(서버 보관 기준과 같다) 같은 하나의 시간대로 자르고, 테스트에서 고정하려고 zone · today를 인자로 받는다.
+ * 날짜는 한국시간(KoreaZone, 서버 보관 기준과 같다)으로 자르고, 테스트에서 고정하려고 zone · today를 인자로 받는다.
  */
 package com.altercharge.app.data.remote.mapper
 
@@ -8,6 +8,7 @@ import com.altercharge.app.data.remote.model.LatestChargeHistory
 import com.altercharge.app.data.remote.model.VehicleSnapshotHistory
 import com.altercharge.app.domain.judgment.JudgmentInput
 import com.altercharge.app.domain.judgment.WINDOW_DAYS
+import com.altercharge.app.domain.time.KoreaZone
 import com.altercharge.app.ui.card.driverecord.CardDriveRecordUiState
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -15,9 +16,6 @@ import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import java.time.temporal.TemporalAdjusters
 import kotlin.math.roundToInt
-
-/** 앱이 날짜를 자르는 시간대. 서버도 한국시간 날짜로 보관한다 */
-val KoreaZone: ZoneId = ZoneId.of("Asia/Seoul")
 
 /** 하루 주행거리. 기록이 없는 날은 0 */
 data class DailyDistance(val date: LocalDate, val km: Int)
@@ -53,6 +51,22 @@ fun VehicleSnapshotHistory.dailyDistances(today: LocalDate, zone: ZoneId = Korea
             }
         }
         .toList()
+}
+
+/**
+ * 오늘 지금까지 달린 거리 (REQ_JD_004 "오늘 주행거리가 예비 거리를 넘었을 때"에 쓴다).
+ * 서버 기록은 다음 스냅샷을 올려야 늘어나므로, 차량 SDK의 지금 누적거리([currentOdometerKm])로 계산한다.
+ *
+ * - 어제까지 마지막 기록이 있으면: 지금 누적거리 − 그 값
+ * - 오늘 처음 기록을 시작했으면: 지금 누적거리 − 오늘 첫 기록
+ * - 기록이 아예 없으면 0 (기준점이 없다)
+ */
+fun VehicleSnapshotHistory.todayKm(currentOdometerKm: Double, today: LocalDate, zone: ZoneId = KoreaZone): Int {
+    val sorted = records.sortedBy { it.recordedAt }
+    val baseline = sorted.lastOrNull { it.recordedAt.atZone(zone).toLocalDate() < today }
+        ?: sorted.firstOrNull { it.recordedAt.atZone(zone).toLocalDate() == today }
+        ?: return 0
+    return (currentOdometerKm - baseline.odometerKm).roundToInt().coerceAtLeast(0)
 }
 
 /**

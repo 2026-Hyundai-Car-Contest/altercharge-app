@@ -6,6 +6,7 @@ package com.altercharge.app.data.remote.mapper
 
 import com.altercharge.app.data.remote.model.LatestChargeHistory
 import com.altercharge.app.data.remote.model.Recommendation
+import com.altercharge.app.domain.time.KoreaZone
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -14,7 +15,10 @@ import kotlin.math.roundToInt
 /** L1 추천 충전소 줄 이름. 반경 안에 충전소가 없으면 빈 문자열이고, L1은 빈 값이면 줄을 숨긴다 */
 fun Recommendation.placeName(): String = station?.name.orEmpty()
 
-/** C 카드 "가까운 충전소" 거리 km, 소수 첫째 자리 (1234m → 1.2). 충전소가 없으면 null ("--") */
+/**
+ * C 카드 "가까운 충전소" 거리 km, 소수 첫째 자리 (1234m → 1.2). 충전소가 없으면 null ("--").
+ * 추천 충전소(방문 · 거리 순)까지의 거리라 가장 가까운 곳과 다를 수 있다 (TODO 디자이너 확인: 문구를 "추천 충전소"로 바꿀지)
+ */
 fun Recommendation.nearestStationKm(): Double? = station?.let { (it.distanceMeters / 100.0).roundToInt() / 10.0 }
 
 /**

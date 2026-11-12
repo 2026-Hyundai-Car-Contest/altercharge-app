@@ -11,22 +11,23 @@ import com.altercharge.app.ui.card.common.ChargeVerdict
  * - 2일 이상 → N일내 충전 (2일내, 5일내 … 기획 확정 2026-11-12, JD_001)
  *
  * @param placeName 기준 거점 이름
+ * @param placeLastChecked 오프라인이면 추천 충전소 정보를 받은 시점 (lastCheckedOf). 연결 중이면 null
  */
-fun Judgment.toCardInfoUiState(placeName: String): CardInfoUiState {
+fun Judgment.toCardInfoUiState(placeName: String, placeLastChecked: LastChecked? = null): CardInfoUiState {
     val days = daysLeft.coerceAtLeast(0)
     val verdict = when {
         days == 0 -> ChargeVerdict.TODAY
         days <= LAST_DAY_WITHIN_TWO_DAYS -> ChargeVerdict.WITHIN_TWO_DAYS
         else -> ChargeVerdict.THREE_DAYS_OR_MORE
     }
-    return CardInfoUiState(verdict = verdict, daysUntilCharge = days, placeName = placeName)
+    return CardInfoUiState(verdict = verdict, daysUntilCharge = days, placeName = placeName, placeLastChecked = placeLastChecked)
 }
 
 /** 1~2일 단계의 마지막 날 */
 private const val LAST_DAY_WITHIN_TWO_DAYS = 2
 
 /** 판정 결과(수집 중 포함)로 L1 카드 값을 만든다. 수집 중이면 진행률 카드, 아니면 판정 카드. */
-fun JudgmentResult.toCardInfoUiState(placeName: String): CardInfoUiState = when (this) {
+fun JudgmentResult.toCardInfoUiState(placeName: String, placeLastChecked: LastChecked? = null): CardInfoUiState = when (this) {
     is JudgmentResult.Collecting -> CardInfoUiState.collecting(recordedDays)
-    is JudgmentResult.Ready -> judgment.toCardInfoUiState(placeName)
+    is JudgmentResult.Ready -> judgment.toCardInfoUiState(placeName, placeLastChecked)
 }
