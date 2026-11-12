@@ -18,8 +18,20 @@ android {
         versionName = "0.1.0"
     }
 
+    // 백엔드 API 주소. 값은 gradle.properties(altercharge.*BaseUrl)에 있고, 앱 코드는 BuildConfig.BASE_URL로 읽는다.
+    val debugBaseUrl = providers.gradleProperty("altercharge.debugBaseUrl").getOrElse("http://10.0.2.2:8080/api/v1/")
+    val releaseBaseUrl = providers.gradleProperty("altercharge.releaseBaseUrl").getOrElse("")
+    // 출시 주소는 HTTPS만 (Pleos 앱 보안 가이드, 출시 빌드는 평문 통신이 막혀 있다). 비어 있으면 아직 배포 전이다.
+    if (releaseBaseUrl.isNotEmpty() && !releaseBaseUrl.startsWith("https://")) {
+        throw GradleException("altercharge.releaseBaseUrl은 https:// 주소여야 해요: $releaseBaseUrl")
+    }
+
     buildTypes {
+        debug {
+            buildConfigField("String", "BASE_URL", "\"$debugBaseUrl\"")
+        }
         release {
+            buildConfigField("String", "BASE_URL", "\"$releaseBaseUrl\"")
             isMinifyEnabled = false
             // 서명은 keystore.properties가 있을 때만 적용한다. (키스토어는 저장소에 올리지 않는다)
             val keystoreFile = rootProject.file("keystore.properties")
@@ -44,6 +56,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true // BuildConfig.BASE_URL
     }
 }
 
