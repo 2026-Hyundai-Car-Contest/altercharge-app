@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- L1 오늘 충전 판정 카드 (card_info). Figma 366:38742, 보드 439:15079 · 439:15613. 담당: 서희님 -->
+<!-- L1 오늘 충전 판정 카드 (card_info). Figma 366:38742, 보드 439:15079 · 439:15613 -->
 <resources>
     <string name="card_info_eyebrow">충전 리포트</string>
     <string name="card_info_title_today">오늘 충전</string>

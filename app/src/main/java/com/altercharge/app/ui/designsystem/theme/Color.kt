@@ -8,7 +8,7 @@ import androidx.compose.ui.graphics.Color
  * - 파란색 팔레트: altercharge / Colors (103:46834)
  * - 나머지: 15상황 보드 라이트(455:58776) · 다크(457:78743)에서 카드가 쓰는 변수
  *
- * 카드 전용 색은 각 카드에서 정한다. 필요한 값이 없으면 직접 만들지 말고 서희님에게 알린다.
+ * 카드 전용 색은 각 카드에서 정한다. 필요한 값이 없으면 직접 만들지 말고 디자인 시스템 담당에게 알린다.
  */
 @Immutable
 data class AlterColors(
