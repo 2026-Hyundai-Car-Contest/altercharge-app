@@ -258,12 +258,12 @@ private fun iviButtonPalette(hierarchy: IviButtonHierarchy, colors: AlterColors)
         )
         IviButtonHierarchy.Secondary -> palette(colors.surfaceHigh, colors.surfaceAccent, colors.textPrimary)
         IviButtonHierarchy.Tonal -> palette(colors.blue50, colors.blue100, colors.textPrimary)
-        // 테두리는 basic_300 (버튼 전용 변수, 다크 값 #686A72)
+        // 테두리는 basic_300
         IviButtonHierarchy.Ghost -> palette(
             Color.Transparent,
             colors.surfaceHigh,
             colors.blue700,
-            outline = if (isDark) Color(0xFF686A72) else Color(0xFFC7C9CE),
+            outline = colors.gray300,
         )
         IviButtonHierarchy.Danger -> palette(colors.negative, if (isDark) Color(0xFFDF4323) else Color(0xFFE73612), Color.White)
     }
