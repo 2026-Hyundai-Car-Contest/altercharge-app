@@ -137,7 +137,7 @@ fun CardsCatalog() {
             .padding(AlterPadding.XLarge),
         verticalArrangement = Arrangement.spacedBy(AlterMargin.XLarge),
     ) {
-        // L1: 모드마다 오늘 · 내일 · 3일내. 높이는 카드가 mode로 정한다.
+        // L1: 모드마다 오늘 · 내일 · N일내(2일 · 12일). 높이는 카드가 mode로 정한다.
         CardInfoMode.entries.forEach { mode ->
             CatalogLabel("L1 card_info · ${mode.name} · ${CardInfoWidths.getValue(mode).value.toInt()}×${mode.height.value.toInt()}")
             Row(horizontalArrangement = Arrangement.spacedBy(AlterMargin.Large)) {

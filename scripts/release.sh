@@ -26,7 +26,7 @@ prepare_env
 
 say "서버 주소 확인"
 # gradle.properties의 altercharge.releaseBaseUrl (출시 빌드의 BuildConfig.BASE_URL)
-RELEASE_BASE_URL="$(grep -E '^altercharge\.releaseBaseUrl=' gradle.properties | cut -d= -f2- || true)"
+RELEASE_BASE_URL="$(grep -E '^altercharge\.releaseBaseUrl=' gradle.properties | cut -d= -f2- | tr -d '\r ' || true)"
 if [ -z "$RELEASE_BASE_URL" ]; then
   warn "출시용 서버 주소(altercharge.releaseBaseUrl)가 비어 있어요. 서버를 쓰는 화면은 동작하지 않아요."
 else

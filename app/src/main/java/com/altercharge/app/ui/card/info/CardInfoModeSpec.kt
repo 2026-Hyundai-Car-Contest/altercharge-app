@@ -28,6 +28,7 @@ internal class ModeSpec(
     val boltHeight: Dp,
     /** 판정별로 번개가 오늘보다 오른쪽으로 밀린 거리. Figma 판정별 variant의 bolt_track x 차이. */
     val tomorrowShift: Dp,
+    /** N일내(Figma status=3days variant) 번개 이동 거리 */
     val threeDaysShift: Dp,
     /** Figma bolt_track 상자 그대로(x · y · 폭 · 높이). 수집 중 번개를 모드 크기에 맞출 때 쓴다. */
     val trackLeft: Dp,

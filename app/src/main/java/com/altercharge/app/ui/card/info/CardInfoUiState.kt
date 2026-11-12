@@ -38,21 +38,18 @@ internal const val MAX_COLLECTING_DAYS = 13
 internal const val COLLECTING_TOTAL_DAYS = 14
 
 /**
- * 카드가 그리는 판정 단계. Figma status: today · tomorrow · 3days.
+ * L1 판정 단계. 0일 오늘 · 1일 내일 · 2일 이상 N일내(예: 2일내, 5일내 · 기획 확정 2026-11-12, JD_001) · 기록 수집 중.
  * 공통 ChargeVerdict(오늘 / 1~2일 / 3일 이상)와 단계가 달라 카드 안에서 바꾼다.
- */
-/**
- * L1 판정 단계. 0일 오늘 · 1일 내일 · 2일 이상 N일내(예: 2일내, 5일내 · 기획 확정 2026-11-12) · 기록 수집 중.
- * N일내 번개 위치 · 채움은 Figma card_info status=3days variant 값을 쓴다.
+ * N일내 번개 위치 · 채움은 Figma card_info status=3days variant 값을 쓴다(그래서 ModeSpec 이름이 threeDaysShift).
  */
 internal enum class CardInfoStatus { TODAY, TOMORROW, WITHIN_N_DAYS, COLLECTING }
 
 internal fun CardInfoUiState.toStatus(): CardInfoStatus = if (recordedDays != null) CardInfoStatus.COLLECTING else when (verdict) {
     ChargeVerdict.TODAY -> CardInfoStatus.TODAY
-    // 1일 후 → 내일 충전, 2일 후 → 3일내 충전
+    // 1일 → 내일 충전, 2일 → 2일내 충전
     ChargeVerdict.WITHIN_TWO_DAYS ->
         if (daysUntilCharge <= 1) CardInfoStatus.TOMORROW else CardInfoStatus.WITHIN_N_DAYS
-    // TODO 기획 확인: 3일 이상 남았을 때 L1 표시가 시안에 없다. 정해질 때까지 가장 여유 있는 단계로 보여 준다.
+    // 3일 이상 → N일내 충전 (3일내, 12일내 …)
     ChargeVerdict.THREE_DAYS_OR_MORE -> CardInfoStatus.WITHIN_N_DAYS
 }
 
