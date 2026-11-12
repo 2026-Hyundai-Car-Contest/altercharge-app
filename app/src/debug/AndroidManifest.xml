@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 디버그 빌드에만 들어가는 확인용 화면 -->
+<!-- 디버그 빌드에만 들어가는 확인용 화면과 로컬 백엔드(http) 접속 설정 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <application>
+    <application android:networkSecurityConfig="@xml/network_security_config">
         <activity
             android:name=".debug.DesignCatalogActivity"
             android:exported="true"
