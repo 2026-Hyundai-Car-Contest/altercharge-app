@@ -174,9 +174,9 @@ private fun PlaceContent(state: CardInfoUiState, spec: ModeSpec, showIcon: Boole
         state.placeLastChecked?.let { lastChecked ->
             Text(
                 text = lastCheckedText(lastChecked),
-                // 글자 크기는 eyebrow와 같은 label (모드별 medium · small), 색은 basic_static_light_300 (흰색 64%)
+                // 글자 · 색 모두 eyebrow와 같다 (모드별 label medium · small, 흰색 64%)
                 style = spec.eyebrowStyle(),
-                color = LastCheckedColor,
+                color = EyebrowColor,
                 maxLines = 1,
                 // Figma row_last_checked 왼쪽 40 = 아이콘 24 + 간격 16. 아이콘을 숨겨도 시안 값 그대로 둔다.
                 modifier = Modifier.padding(start = LastCheckedInset),
@@ -259,6 +259,7 @@ private val CardRadius = 32.dp
 /** card_info/container/shadow (0 12 32, #000000 32%). 다른 카드 · AlterShadows와 값이 달라 카드에 둔다 */
 private val CardShadow = listOf(ShadowLayer(offsetY = 12.dp, blur = 32.dp, color = Color(0x52000000)))
 
+/** card_info/eyebrow와 basic_static_light_300(마지막 확인 시각)이 같은 흰색 64%라 하나로 쓴다 */
 private val EyebrowColor = Color.White.copy(alpha = 0.64f)
 private val PlaceColor = Color.White
 private val PlaceIconSize = 24.dp
@@ -268,6 +269,3 @@ private val PlaceRowGap = 10.dp
 
 /** row_last_checked 왼쪽 여백 = 장소 아이콘 24 + card_info/text/icon_gap 16. 장소 이름 글자와 줄을 맞춘다 */
 private val LastCheckedInset = PlaceIconSize + AlterMargin.Normal
-
-/** basic/static_light/basic_static_light_300 (흰색 64%) */
-private val LastCheckedColor = Color.White.copy(alpha = 0.64f)

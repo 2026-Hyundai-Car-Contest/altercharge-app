@@ -39,6 +39,8 @@ data class AlterColors(
     val textDisabled: Color,
     /** 중립 칩 글자, 목록 아이콘 */
     val contentNeutral: Color,
+    /** pleos basic/gray/basic_300. C 카드 칩 점(대기 · 오프라인) · 값 없는 SOC "--", 고스트 버튼 테두리 */
+    val gray300: Color,
 
     // 면
     /** 앱 화면 전체 배경. 15상황 보드 화면 프레임 (라이트 basic_100, 다크 surface_low) */
@@ -99,6 +101,7 @@ val LightAlterColors = AlterColors(
     textTertiary = Color(0xA3131417),
     textDisabled = Color(0x52131417),
     contentNeutral = Color(0xFF686A72),
+    gray300 = Color(0xFFC7C9CE),
 
     screenBackground = Color(0xFFEDEEF2),
     background = Color(0xFFF7F8FA),
@@ -138,6 +141,7 @@ val DarkAlterColors = AlterColors(
     textTertiary = Color(0xA3FFFFFF),
     textDisabled = Color(0x52FFFFFF),
     contentNeutral = Color(0xFFC7C9CE),
+    gray300 = Color(0xFF686A72),
 
     screenBackground = Color(0xFF131417),
     background = Color(0xFF131417),
