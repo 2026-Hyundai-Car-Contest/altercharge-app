@@ -56,6 +56,12 @@ class StationMapperTest {
     }
 
     @Test
+    fun 바로_옆_충전소도_0이_아니라_0점1km() {
+        // 배포 서버 실제 응답: 25m
+        assertEquals(0.1, page(summary("A", 25)).nearestStationKm()!!, 0.0001)
+    }
+
+    @Test
     fun 목록이_비면_가까운_충전소_거리는_null() {
         assertNull(page().nearestStationKm())
     }

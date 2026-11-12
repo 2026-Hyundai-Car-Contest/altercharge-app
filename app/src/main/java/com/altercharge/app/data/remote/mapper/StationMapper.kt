@@ -23,8 +23,10 @@ fun Recommendation.placeName(): String = station?.name.orEmpty()
  */
 fun StationPage.nearestStationKm(): Double? = items.minByOrNull { it.distanceMeters }?.let { metersToKm(it.distanceMeters) }
 
-/** 미터 → km 소수 첫째 자리 반올림 */
-private fun metersToKm(meters: Int): Double = (meters / 100.0).roundToInt() / 10.0
+/** 미터 → km 소수 첫째 자리 반올림. 50m 미만도 "0.0km"가 아니라 0.1km로 보인다 (바로 옆인데 0으로 보이면 어색하다) */
+private fun metersToKm(meters: Int): Double = ((meters / 100.0).roundToInt() / 10.0).coerceAtLeast(MIN_DISPLAY_KM)
+
+private const val MIN_DISPLAY_KM = 0.1
 
 /**
  * C 카드 "마지막 충전" 시각 글자. 오늘이면 "07:30", 다른 날이면 "11.11" (디자이너 확정 2026-11-12 날짜 형식).
