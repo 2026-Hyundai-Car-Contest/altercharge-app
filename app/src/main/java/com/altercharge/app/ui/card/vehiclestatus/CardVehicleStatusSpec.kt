@@ -4,19 +4,9 @@
  */
 package com.altercharge.app.ui.card.vehiclestatus
 
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.altercharge.app.ui.designsystem.theme.AlterColors
-
-/**
- * pleos basic/gray/basic_300 (라이트 #C7C9CE · 다크 #686A72). 디자인 값(AlterColors)에 없는 단계라 C 카드 안에서만 쓴다.
- * 칩 점(standby · offline)과 값 없는 SOC "--"가 이 색이다.
- * 공용 팔레트(AlterColors)에 gray300이 생기면 이 확장을 지운다 — 멤버가 확장보다 우선해 조용히 무시된다.
- */
-internal val AlterColors.gray300: Color
-    get() = if (isDark) Color(0xFF686A72) else Color(0xFFC7C9CE)
 
 /**
  * Figma blur(= 가우스 표준편차 × 2)를 안드로이드 blur 반지름(px)으로 바꾼다.
