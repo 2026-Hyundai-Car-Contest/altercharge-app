@@ -77,6 +77,21 @@ class AlterChargeApiTest {
     }
 
     @Test
+    fun 기록_기간은_날짜로_보낸다() = runBlocking {
+        val http = FakeHttp { _, _, _ ->
+            HttpResponse(200, """{"vehicleId":"mock-vehicle-001","records":[],"retentionDays":56,"completeDayCount":0}""")
+        }
+        AlterChargeApi(base, http).snapshots(DEMO_VEHICLE_ID, java.time.LocalDate.of(2026, 10, 30), java.time.LocalDate.of(2026, 11, 12))
+        assertEquals("${base}vehicles/snapshots?vehicleId=mock-vehicle-001&from=2026-10-30&to=2026-11-12", http.calls.single().second)
+    }
+
+    @Test
+    fun 연결_전_예외도_네트워크_오류로() = runBlocking {
+        val r = AlterChargeApi(base, FakeHttp { _, _, _ -> throw IllegalArgumentException("bad url") }).stations(37.5, 127.0)
+        assertTrue(r is ApiResult.NetworkError)
+    }
+
+    @Test
     fun 주소가_비어_있으면_호출하지_않는다() = runBlocking {
         val http = FakeHttp { _, _, _ -> HttpResponse(200, "{}") }
         val r = AlterChargeApi("", http).stations(37.5, 127.0)

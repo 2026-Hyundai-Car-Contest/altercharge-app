@@ -1,6 +1,7 @@
 /**
  * 백엔드 API 8개 호출. 주소는 BuildConfig.BASE_URL (디버그 = 로컬 서버, 출시 = 배포 서버).
- * 안드로이드 기본 HttpURLConnection만 쓴다 (새 라이브러리 없음). 모든 함수는 IO 스레드에서 돌고 [ApiResult]를 돌려준다.
+ * 안드로이드 기본 HttpURLConnection만 쓴다 (새 라이브러리 없음). 연결 · JSON 변환은 IO 스레드에서 하고 [ApiResult]를 돌려준다.
+ * 연결 중 취소해도 HttpURLConnection은 시간 초과(연결 10초 · 읽기 15초)까지 기다릴 수 있다.
  *
  * 화면 쪽 사용 예
  *   when (val r = api.recommendation(lat, lng, chargeRecommended = true)) {
@@ -28,7 +29,8 @@ import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
-import java.time.Instant
+import java.time.LocalDate
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * 시연용 차량 ID. 서버에 미리 넣어 둔 차량(시드)이고 OpenAPI 예시와 같다. 다른 값은 VEHICLE_NOT_FOUND.
@@ -104,8 +106,11 @@ class AlterChargeApi(
     suspend fun postSnapshot(request: VehicleSnapshotRequest): ApiResult<VehicleSnapshotSaved> =
         post("vehicles/snapshots", { ServerJson.snapshotRequest(request) }) { ServerJson.snapshotSaved(it) }
 
-    /** 07 최근 차량 스냅샷 기록. from · to를 비우면 서버 보관 기간 전체 */
-    suspend fun snapshots(vehicleId: String, from: Instant? = null, to: Instant? = null): ApiResult<VehicleSnapshotHistory> =
+    /**
+     * 07 최근 차량 스냅샷 기록. from · to는 한국시간 날짜(YYYY-MM-DD, 양끝 포함).
+     * 비우면 서버 기본값(오늘-55일 ~ 오늘)
+     */
+    suspend fun snapshots(vehicleId: String, from: LocalDate? = null, to: LocalDate? = null): ApiResult<VehicleSnapshotHistory> =
         get("vehicles/snapshots", "vehicleId" to vehicleId, "from" to from, "to" to to) { ServerJson.snapshotHistory(it) }
 
     // ---- 공통 ----
@@ -126,18 +131,28 @@ class AlterChargeApi(
         return call(urlOf(path, emptyList()), method = "POST", body = text, parse = parse)
     }
 
+    /** 연결 · 응답 읽기 · JSON 변환을 모두 IO 스레드에서 한다 (화면 스레드를 막지 않게) */
     private suspend fun <T> call(url: String?, method: String, body: String?, parse: (String) -> T): ApiResult<T> {
         if (url == null) return ApiResult.NotConfigured
-        val response = try {
-            withContext(Dispatchers.IO) { http.request(method, url, body) }
-        } catch (e: IOException) {
-            return ApiResult.NetworkError(e)
-        }
-        if (response.status !in 200..299) return ApiResult.HttpError(response.status, ServerJson.apiErrorOrNull(response.body))
-        return try {
-            ApiResult.Success(parse(response.body))
-        } catch (e: Exception) {
-            ApiResult.ParseError(e)
+        return withContext(Dispatchers.IO) {
+            val response = try {
+                http.request(method, url, body)
+            } catch (e: CancellationException) {
+                throw e // 화면이 닫혀 취소된 것은 오류가 아니다
+            } catch (e: IOException) {
+                return@withContext ApiResult.NetworkError(e)
+            } catch (e: Exception) {
+                // 잘못된 주소 등 연결 전 오류도 앱이 죽지 않게 네트워크 오류로 돌려준다
+                return@withContext ApiResult.NetworkError(IOException(e))
+            }
+            if (response.status !in 200..299) {
+                return@withContext ApiResult.HttpError(response.status, ServerJson.apiErrorOrNull(response.body))
+            }
+            try {
+                ApiResult.Success(parse(response.body))
+            } catch (e: Exception) {
+                ApiResult.ParseError(e)
+            }
         }
     }
 

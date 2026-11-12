@@ -121,6 +121,16 @@ class ServerJsonTest {
     }
 
     @Test
+    fun 모르는_추천_근거는_UNKNOWN() {
+        val r = ServerJson.recommendation(
+            """{"station":{"stationId":"A","name":"n","distanceMeters":1,"availableCount":1,"visitCount":null,
+            "speedCategory":null,"maxOutputKw":null},"reasonCode":"NEW_REASON","fallbackUsed":false,"statusObservedAt":null}""",
+        )
+        assertEquals(RecommendationReason.UNKNOWN, r.reasonCode)
+        assertEquals("A", r.station!!.stationId)
+    }
+
+    @Test
     fun 차량_스냅샷_기록() {
         val h = ServerJson.snapshotHistory(
             """{"vehicleId":"mock-vehicle-001","records":[{"snapshotId":"e2f6","recordedAt":"2026-11-10T16:30:00Z",
@@ -163,6 +173,11 @@ class ServerJsonTest {
     @Test(expected = JSONException::class)
     fun 필수_값이_없으면_예외() {
         ServerJson.snapshotSaved("""{"saved":true}""")
+    }
+
+    @Test(expected = JSONException::class)
+    fun 필수_문자열이_null이면_예외() {
+        ServerJson.snapshotSaved("""{"snapshotId":null,"saved":true,"recordedAt":"2026-11-10T16:30:00Z"}""")
     }
 
     @Test

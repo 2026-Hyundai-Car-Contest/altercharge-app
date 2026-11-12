@@ -180,8 +180,8 @@ data class RecommendedStation(
     val maxOutputKw: Double?,
 )
 
-/** 추천 근거. NO_STATIONS_IN_RADIUS면 station이 null */
-enum class RecommendationReason { VISITS_THEN_DISTANCE, NEAREST_FALLBACK, NO_STATIONS_IN_RADIUS }
+/** 추천 근거. NO_STATIONS_IN_RADIUS면 station이 null. UNKNOWN은 서버가 새로 추가한 값 (화면은 station 유무로 판단한다) */
+enum class RecommendationReason { VISITS_THEN_DISTANCE, NEAREST_FALLBACK, NO_STATIONS_IN_RADIUS, UNKNOWN }
 
 /** GET /stations/recommendation. R1 카드와 L1 장소 줄에 쓰는 추천 충전소 1곳 */
 data class Recommendation(
