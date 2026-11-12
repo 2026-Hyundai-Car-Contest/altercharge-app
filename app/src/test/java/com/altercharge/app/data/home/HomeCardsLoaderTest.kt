@@ -158,6 +158,7 @@ class HomeCardsLoaderTest {
         val cards = loader(now.plusSeconds(60)).load(vehicle, location = null)
         assertTrue(server.urls.none { "stations" in it })
         assertEquals(LastChecked.MinutesAgo(1), cards.cardInfo.placeLastChecked)
+        assertFalse(cards.offline) // 위치가 없어 안 부른 것은 오프라인이 아니다
     }
 
     @Test
