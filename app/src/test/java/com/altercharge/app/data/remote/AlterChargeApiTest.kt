@@ -100,6 +100,18 @@ class AlterChargeApiTest {
     }
 
     @Test
+    fun 누적거리가_NaN이면_보내지_않고_형식_오류() = runBlocking {
+        val http = FakeHttp { _, _, _ -> HttpResponse(201, "{}") }
+        val r = AlterChargeApi(base, http).postSnapshot(
+            com.altercharge.app.data.remote.model.VehicleSnapshotRequest(
+                DEMO_VEHICLE_ID, java.time.Instant.parse("2026-11-12T05:30:00Z"), 62, Double.NaN,
+            ),
+        )
+        assertTrue(r is ApiResult.ParseError)
+        assertTrue(http.calls.isEmpty())
+    }
+
+    @Test
     fun 충전소_ID는_경로에_인코딩() = runBlocking {
         val http = FakeHttp { _, _, _ -> HttpResponse(404, """{"error":"STATION_NOT_FOUND","message":"없음"}""") }
         AlterChargeApi(base, http).stationDetail("A/B")

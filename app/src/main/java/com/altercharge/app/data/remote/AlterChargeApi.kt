@@ -92,7 +92,7 @@ class AlterChargeApi(
 
     /** 05 충전 이벤트 저장. 같은 eventId로 다시 보내도 안전하다 (멱등) */
     suspend fun postChargingEvent(request: ChargingEventRequest): ApiResult<ChargingEventAccepted> =
-        post("charging-events", ServerJson.chargingEventRequest(request)) { ServerJson.chargingEventAccepted(it) }
+        post("charging-events", { ServerJson.chargingEventRequest(request) }) { ServerJson.chargingEventAccepted(it) }
 
     /** 08 최근 충전 완료 이력 */
     suspend fun latestCharge(vehicleId: String): ApiResult<LatestChargeHistory> =
@@ -102,7 +102,7 @@ class AlterChargeApi(
 
     /** 06 차량 스냅샷 저장. 같은 값 재전송은 기존 ID를 돌려준다 */
     suspend fun postSnapshot(request: VehicleSnapshotRequest): ApiResult<VehicleSnapshotSaved> =
-        post("vehicles/snapshots", ServerJson.snapshotRequest(request)) { ServerJson.snapshotSaved(it) }
+        post("vehicles/snapshots", { ServerJson.snapshotRequest(request) }) { ServerJson.snapshotSaved(it) }
 
     /** 07 최근 차량 스냅샷 기록. from · to를 비우면 서버 보관 기간 전체 */
     suspend fun snapshots(vehicleId: String, from: Instant? = null, to: Instant? = null): ApiResult<VehicleSnapshotHistory> =
@@ -113,8 +113,18 @@ class AlterChargeApi(
     private suspend fun <T> get(path: String, vararg query: Pair<String, Any?>, parse: (String) -> T): ApiResult<T> =
         call(urlOf(path, query.toList()), method = "GET", body = null, parse = parse)
 
-    private suspend fun <T> post(path: String, body: String, parse: (String) -> T): ApiResult<T> =
-        call(urlOf(path, emptyList()), method = "POST", body = body, parse = parse)
+    /**
+     * 본문은 여기서 만든다. 차량 값이 NaN · 무한대면 JSON으로 쓸 수 없어 예외가 나는데,
+     * 앱이 죽지 않게 형식 오류로 돌려준다 (서버도 유한한 값만 받는다).
+     */
+    private suspend fun <T> post(path: String, body: () -> String, parse: (String) -> T): ApiResult<T> {
+        val text = try {
+            body()
+        } catch (e: Exception) {
+            return ApiResult.ParseError(e)
+        }
+        return call(urlOf(path, emptyList()), method = "POST", body = text, parse = parse)
+    }
 
     private suspend fun <T> call(url: String?, method: String, body: String?, parse: (String) -> T): ApiResult<T> {
         if (url == null) return ApiResult.NotConfigured
