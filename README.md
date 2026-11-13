@@ -1,131 +1,154 @@
-# AlterCharge (얼터차지)
+# 얼터차지 (AlterCharge)
 
-출퇴근길 차 안에서, 집이나 회사에 도착하기 전에 "오늘 충전해야 하는지"와 "자리가 없으면 어디로 갈지"를 음성으로 정해 주는 **전기차 충전 일정 앱**.
-Pleos Connect(Android Automotive 기반) 차량용 앱이며, 현대차그룹 차량용 앱 개발 공모전 출품작이다.
+차량 데이터로 **다음 충전일을 먼저 알려 주고**, 충전할 곳까지 차 안에서 정하게 해 주는 Pleos Connect 전기차 앱입니다.
+현대자동차그룹 차량용 앱 개발 공모전 출품작입니다.
 
-- 스택: Android (Kotlin) + Pleos Connect SDK
-- 사용 SDK: Vehicle(배터리·주행거리), NaviHelper(내비 목적지). TextToSpeech / SpeechToText(음성), FusedLocation(거점 진입)은 2026-11-03 기준 Pleos에서 **Coming Soon(사용 불가)** 이라 제공되면 적용한다.
-- 이 저장소는 **프론트엔드(차량용 Android 앱)만** 다룬다. 백엔드는 별도 저장소에서 개발하며, 여기서는 API를 호출하는 쪽만 만든다.
-- 기획: Notion "얼터차지 for Pleos Connect 1-pager" 참고
+- 충전소 "찾기" 앱은 많지만, 얼터차지는 **"언제 충전할지"** 를 먼저 알려 줍니다.
+- 배터리 잔량과 최근 주행 기록으로 "오늘 충전 / 내일 충전 / N일내 충전"을 판정합니다.
+- 충전이 필요하면 주변 충전소와 빈 충전기 수를 보여 주고, 고르면 바로 내비 목적지가 됩니다.
 
-## 용어 (처음이면 먼저 읽기)
-
-| 용어 | 뜻 |
+| 항목 | 내용 |
 |---|---|
-| Pleos | 현대차그룹의 차량 소프트웨어 브랜드. 차량 화면(인포테인먼트)에서 돌아가는 앱을 만들 수 있게 SDK를 제공한다. |
-| Pleos Playground | Pleos 개발자 포털. 문서, SDK, 프로젝트 신청이 여기에 있다. |
-| Pleos Connect | 차량 화면 시스템. Android Automotive OS 기반이라 일반 Android 앱 개발 방식으로 만든다. |
-| 에뮬레이터 | 컴퓨터에서 차량 화면을 흉내 내는 가상 기기. 실차 없이 앱을 실행해 본다. |
-| SDK | 차량 데이터(배터리 등)를 읽는 라이브러리. Gradle 의존성으로 추가한다. |
+| 팀명 | 얼터차지 |
+| APK | `apk/얼터차지_AlterCharge_release.apk` (제출 시 추가) |
+| 테스트 환경 | Pleos Connect Emulator v2.1.0 (Automotive, Android API 34), RAM 4GB |
+| 서버 저장소 | [altercharge-server](https://github.com/2026-Hyundai-Car-Contest/altercharge-server) |
 
-## 1. 환경 세팅
+## 핵심 기능
 
-**스크립트 한 번으로 끝난다.** (**Apple Silicon Mac에서 확인**했다. Intel Mac과 Linux는 검증하지 못했고, Windows는 아래 "수동 설치"를 따른다.)
-이미지가 크므로 **와이파이에서, 디스크 여유 26GB 이상**으로 시작한다. 처음에는 이미지를 받고 푸느라 오래 멈춘 것처럼 보일 수 있다. 오류가 나지 않으면 기다린다.
+**1차 (공모전 제출)**
 
-### 1-1. 먼저 준비할 것 (직접 설치)
+- **다음 충전일 알려 주기**: 주행 기록을 자동으로 모아 어제까지 14일의 일 평균과 예비 거리로 판정합니다. 기록이 14일이 안 되면 "기록 수집 중"을 보여 줍니다.
+- **충전할 곳 정하기**: 주변 충전소를 거리순·방문순으로 보여 주고, 연결 타입과 충전 속도로 거를 수 있습니다. 추천 충전소 1곳도 따로 보여 줍니다.
+- **충전 중 상태**: 충전 중, 완료, 오류와 남은 시간, 완료 예정 시각을 차량 상태 카드에서 보여 줍니다.
+- **주간 주행 기록**: 요일별 주행거리, 하루 평균, 지난주 대비, 마지막 충전 후 주행 거리를 보여 줍니다.
+
+**2차 (이후)**: 주행 중 음성 안내와 "응/아니" 응답, 도착 요약 화면, 집·회사 거점 자동 등록
+
+## 전체 구성
+
+![얼터차지 전체 구성](docs/images/architecture.png)
+
+- **차량 앱**: 다음 충전일을 직접 계산하고, 주차 중 홈 화면에 카드 5개로 보여 줍니다.
+- **서버**: 주행 기록과 충전소 정보를 모아 둡니다. 공공 충전기 상태를 5분마다 받아 주변 충전소 검색, 추천, 길 안내 전 상태 확인을 맡습니다.
+- **외부 데이터**: 차량 데이터는 Pleos Vehicle SDK로 차에서 바로 읽고, 충전소 정보는 서버가 한국환경공단 충전소 정보 API에서 받습니다.
+
+## 개발하면서 신경 쓴 점
+
+- **끊겨도 쓸 수 있게**: 통신이 끊겨도 마지막으로 받은 판정과 충전소 정보를 그대로 보여 줍니다. 대신 "10분 전 기준"처럼 언제 받은 정보인지 함께 알리고, 빈 충전기 수처럼 금방 바뀌는 값은 15분이 지나면 "정보 없음"으로 바꿔 틀린 안내를 막습니다.
+- **믿을 수 있는 판정**: 판정이 하루 동안 쉽게 바뀌지 않게 했습니다. 그날 첫 실행, 충전 완료, 오늘 주행이 예비 거리를 넘었을 때만 다시 계산합니다.
+- **판정은 차에서 계산**: 서버가 잠깐 멈춰도 다음 충전일은 계속 나옵니다. 계산을 서버가 아니라 앱에서 하기 때문입니다.
+- **기록은 잃지 않게**: 못 보낸 주행 기록은 차에 모아 두었다가 연결되면 순서대로 보내고, 같은 기록을 다시 보내도 서버에는 한 번만 저장됩니다.
+- **차량 화면에 맞춘 디자인**: Pleos 디자인 값(색, 글자, 여백)을 옮긴 디자인 시스템을 먼저 만들고, 화면 4종(S-17, W-Standard, W-Extended, WF)의 가로와 세로를 시안과 픽셀 단위로 맞췄습니다. 한국어·영어, 라이트·다크 모드를 지원합니다.
+- **테스트**: 판정 계산, 유효 기간, 서버 연동은 단위 테스트 150여 건으로 확인합니다.
+
+## 기술 스택
+
+| 구분 | 사용 |
+|---|---|
+| 차량 앱 | Kotlin, Jetpack Compose, Pleos Vehicle SDK 2.3.2, `minSdk 28` / `targetSdk 34` |
+| 서버 | Spring Boot, PostgreSQL, Docker, AWS EC2 (HTTPS) |
+| 외부 데이터 | 한국환경공단 전기차 충전소 정보 API |
+| 빌드 · 검사 | Gradle 8.9 (JDK 17), Android lint, JUnit, GitHub Actions |
+
+## 실행 방법
+
+**APK로 실행**: Pleos Connect 에뮬레이터에 `apk/` 폴더의 APK를 설치합니다.
+
+```bash
+adb install apk/얼터차지_AlterCharge_release.apk
+adb shell am start -W --display 0 -n com.altercharge.app/.MainActivity
+```
+
+**소스로 실행**: 아래 [개발 환경 세팅](#개발-환경-세팅)을 마친 뒤 `./scripts/run.sh`를 실행합니다.
+출시 빌드는 배포 서버(`https://15-164-244-37.sslip.io/api/v1/`)에, 디버그 빌드는 개발 PC의 로컬 서버(`10.0.2.2:8080`)에 연결됩니다.
+
+## 폴더 구조
+
+```
+app/src/main/java/com/altercharge/app/
+├─ ui/
+│  ├─ designsystem/   # 색 · 글자 · 여백 토큰, 버튼, 상단 바, 화면 4종 레이아웃 틀
+│  ├─ card/           # info(다음 충전일) · driverecord(주간 기록) · vehiclestatus(차량 상태) · station(추천 충전소) · stationitem(충전소 목록)
+│  └─ common/         # 드롭다운, 검색창
+├─ domain/
+│  ├─ judgment/       # 충전 판정 계산과 다시 계산하는 시점
+│  └─ time/           # 날짜 기준 시간대(한국시간)
+└─ data/
+   ├─ remote/         # 서버 API 호출, JSON 변환, 카드 값 변환, 유효 기간
+   ├─ local/          # 오프라인용 마지막 값 저장
+   ├─ upload/         # 주행 기록 전송 주기와 재전송
+   └─ home/           # 홈 화면 카드 값을 한 번에 만들기
+```
+
+## 알려진 한계
+
+- Pleos의 TextToSpeech, SpeechToText, FusedLocation은 아직 Coming Soon이라 음성 안내는 2차에서 만듭니다.
+- 충전 기록은 공모전 서버 정책상 테스트(MOCK) 데이터로 저장되어 방문 횟수에는 반영되지 않습니다.
+- 충전소 이름과 주소는 한국환경공단 원본(한국어)을 그대로 보여 줍니다.
+
+---
+
+## 개발 환경 세팅
+
+**스크립트 한 번으로 끝납니다.** (Apple Silicon Mac에서 확인했습니다. Intel Mac과 Linux는 검증하지 못했고, Windows는 아래 "수동 설치"를 따릅니다.)
+이미지가 크므로 **와이파이에서, 디스크 여유 26GB 이상**으로 시작합니다.
+
+### 먼저 준비할 것
 
 | 필요한 것 | 확인 / 설치 |
 |---|---|
-| [Android Studio](https://developer.android.com/studio) 최신 버전 | 설치 후 **한 번 실행**해서 SDK를 받게 한다. Settings > Android SDK > SDK Tools 에서 **Android SDK Command-line Tools (latest)** 를 체크해 설치한다. |
-| **JDK 17** | `brew install openjdk@17` (Mac). Android Studio에 들어 있는 JDK 25는 Gradle 8.9와 **맞지 않아서** 쓰지 않는다. 스크립트가 JDK 17을 알아서 찾는다. |
+| [Android Studio](https://developer.android.com/studio) 최신 버전 | 설치 후 한 번 실행해서 SDK를 받습니다. Settings > Android SDK > SDK Tools에서 **Android SDK Command-line Tools (latest)** 를 설치합니다. |
+| **JDK 17** | `brew install openjdk@17` (Mac). Android Studio에 들어 있는 JDK 25는 Gradle 8.9와 맞지 않습니다. 스크립트가 JDK 17을 알아서 찾습니다. |
 | Git | `git --version` |
-| 여유 RAM 8GB 이상 | 에뮬레이터가 4GB를 쓴다. |
+| 여유 RAM 8GB 이상 | 에뮬레이터가 4GB를 씁니다. |
 
-### 1-2. 저장소 받고 스크립트 실행
-
-저장소가 **비공개**라서, 받은 GitHub 초대를 수락하고 터미널에서 GitHub 로그인이 되어 있어야 clone된다. (`gh auth login` 또는 SSH 키)
+### 저장소 받고 실행
 
 ```bash
 git clone https://github.com/2026-Hyundai-Car-Contest/altercharge-app.git
 cd altercharge-app
-./scripts/setup.sh
+./scripts/setup.sh   # 처음 한 번: JDK 확인, API 34, Pleos 에뮬레이터 이미지, 가상 기기
+./scripts/run.sh     # 빌드 + 에뮬레이터 켜기 + 설치 + 실행
 ```
 
-`setup.sh`가 하는 일 (이미 된 단계는 건너뛰므로 여러 번 실행해도 된다):
-
-1. git 훅 켜기 (커밋 메시지 형식 검사)
-2. JDK 17과 Android SDK 확인
-3. Android API 34 플랫폼 설치
-4. Pleos Connect 에뮬레이터 이미지 설치 (4.7GB 내려받기 → 체크섬 검증 → 압축 해제)
-5. 가상 기기 `Pleos_Connect_API34` 생성 (RAM 4GB, Cold boot)
-
-**라이선스는 직접 읽고 동의해야 한다.** 설치가 필요한 단계에서 Google Android SDK 라이선스와 42dot Pleos SDK 라이선스 동의 질문이 나오고, `yes`를 직접 입력해야 진행된다. 이미 읽고 동의했다면 `ACCEPT_LICENSES=yes ./scripts/setup.sh`로 질문을 건너뛸 수 있다.
-
-> **AI(Claude 등)에게 시킬 때**: "scripts/setup.sh를 실행해서 환경 세팅해 줘"라고 하면 된다. 단, 라이선스 동의는 AI가 대신하지 못하게 본인이 직접 입력한다.
-
-### 1-3. 앱 실행
-
-```bash
-./scripts/run.sh
-```
-
-빌드하고, 에뮬레이터가 꺼져 있으면 켜고, 앱을 설치해서 실행한다. 차량 화면 오른쪽 메인 영역에 **AlterCharge**가 보이면 성공이다. 계기판 쪽 화면(0km/h, P R N D)은 정상적인 차량 에뮬레이터 화면이다.
-
-**스크립트 한눈에 보기**
+**라이선스는 직접 읽고 동의해야 합니다.** 설치 단계에서 Google Android SDK와 42dot Pleos SDK 라이선스 동의 질문이 나오면 `yes`를 직접 입력합니다. 이미 동의했다면 `ACCEPT_LICENSES=yes ./scripts/setup.sh`로 건너뛸 수 있습니다.
 
 | 명령 | 하는 일 |
 |---|---|
 | `./scripts/setup.sh` | 환경 세팅 (처음 한 번) |
 | `./scripts/run.sh` | 빌드 + 에뮬레이터 켜기 + 설치 + 실행 |
 | `./scripts/check.sh` | 푸시 전 lint와 빌드 확인 (CI와 같은 검사) |
-| `./scripts/release.sh <팀명>` | 제출용 서명 APK를 `apk/팀명_AlterCharge_release.apk`로 만들기 (키스토어 필요) |
+| `./scripts/release.sh 얼터차지` | 제출용 서명 APK를 `apk/얼터차지_AlterCharge_release.apk`로 만들기 (키스토어 필요) |
 
-Android Studio에서 실행하려면 `altercharge-app` 폴더를 Open 하고, 실행 기기로 `Pleos_Connect_API34`를 고른 뒤 ▶ Run 한다. 이때도 **Gradle JDK를 17로 지정**해야 한다. (Settings > Build, Execution, Deployment > Build Tools > Gradle > Gradle JDK)
+Android Studio에서 실행하려면 `altercharge-app` 폴더를 Open 하고, 실행 기기로 `Pleos_Connect_API34`를 고른 뒤 Run 합니다. 이때도 **Gradle JDK를 17로 지정**해야 합니다. (Settings > Build, Execution, Deployment > Build Tools > Gradle > Gradle JDK)
 
-### 1-4. Pleos Playground 가입 (직접)
+디자인 확인용 화면은 디버그 빌드의 카탈로그에서 볼 수 있습니다.
 
-1. [Pleos Playground](https://developers.pleos.ai/playground)에서 가입하고 로그인한다. (오른쪽 위 "로그인")
-2. **프로젝트(`AlterCharge`)는 이미 생성돼 있다.** 새로 만들지 않고, 가입한 이메일을 프로젝트 소유자에게 알려 팀 멤버로 초대받는다. (Playground > Workspace > My Project > 팀 관리)
-3. 아래 SDK는 신청 없이 바로 쓸 수 있다: **Vehicle State, NaviHelper**
-4. 아래 SDK는 2026-11-03 기준 **Coming Soon(신청 불가)** 이다: FusedLocation, TextToSpeech, SpeechToText, Vehicle Control. 음성과 거점 진입 감지는 제공되기 전까지 화면과 버튼 대체 방식으로 만든다.
-5. 클라이언트 ID/시크릿은 서버 연동 SDK(TTS, STT)에서 필요한 값이다. **코드와 저장소에 절대 넣지 않는다.** 필요하면 `secrets.properties`에 두면 `.gitignore`로 제외된다.
-
-### 프로젝트 구성 (이미 만들어져 있음)
-
-- Kotlin + Jetpack Compose, `minSdk 28`(Pleos 요구사항), `compileSdk/targetSdk 34`, Gradle 8.9, AGP 8.7.3
-- Pleos Vehicle SDK `2.3.2`는 `gradle/libs.versions.toml`의 `pleosVehicle`에서 관리하고, Maven 저장소는 `settings.gradle.kts`에 등록돼 있다. 인증은 필요 없다.
-- `AndroidManifest.xml`에는 **쓰는 퍼미션만** 선언한다. Vehicle API 퍼미션은 Pleos App Market과 사전 협의·승인된 범위만 사용할 수 있고, 승인 없는 퍼미션은 앱 심사 탈락 사유다.
-- 라이브러리 버전을 올릴 때는 `compileSdk 34`에서 빌드되는지 확인한다. (예: `core-ktx 1.15`는 compileSdk 35가 필요해서 1.13.1을 쓴다.)
-
-### 폴더 구조
-
+```bash
+adb shell am start -W --display 0 -n com.altercharge.app/.debug.DesignCatalogActivity --es page layout
+# page: tokens, buttons, statusbar, layout, cards, cv  /  --ez dark true 로 다크 모드
 ```
-altercharge-app/
-├─ app/src/main/
-│  ├─ java/com/altercharge/app/   # Kotlin 코드 (지금은 MainActivity.kt 하나)
-│  ├─ res/values/                 # 문자열, 테마
-│  └─ AndroidManifest.xml         # 퍼미션 선언  ← 공용 파일
-├─ app/build.gradle.kts           # 앱 모듈 설정  ← 공용 파일
-├─ gradle/libs.versions.toml      # 라이브러리 버전 ← 공용 파일
-├─ settings.gradle.kts            # 저장소 설정   ← 공용 파일
-├─ scripts/                       # setup, run, check, release
-└─ .github/                       # 이슈·PR 템플릿, 자동화(CI)
-```
-
-화면과 코드의 패키지 구조는 아직 정하지 않았다. 기획과 디자인이 확정되고 첫 화면이 나오면 팀이 합의해서 여기에 적는다. 폴더는 미리 만들지 않고 파일이 생길 때 같이 만든다.
 
 ### 막혔을 때
 
 | 증상 | 확인할 것 |
 |---|---|
 | `JDK 17을 찾지 못했어요` | `brew install openjdk@17` 후 다시 실행 |
-| 빌드 오류에 `25.0.3` 같은 Java 버전이 나온다 | Gradle이 JDK 25로 돌고 있다. JDK 17로 바꾼다. (`run.sh`는 자동으로 17을 쓴다) |
+| 빌드 오류에 `25.0.3` 같은 Java 버전이 나온다 | Gradle이 JDK 25로 돌고 있습니다. JDK 17로 바꿉니다. |
+| `BuildConfig`를 찾지 못한다 | Gradle JDK가 17인지 확인하고 Gradle Sync 후 Rebuild Project |
 | `Command-line Tools가 없어요` | Android Studio > SDK Tools에서 Command-line Tools (latest) 설치 |
-| Android Studio가 "AGP/Gradle 업그레이드"를 권한다 | **무시한다.** 버전을 올리면 JDK 17, compileSdk 34 전제가 깨질 수 있다. 올려야 하면 팀에 먼저 알리고 `./scripts/check.sh`로 확인한다. |
-| 다운로드가 끊긴다 | 같은 명령을 다시 실행하면 이어받는다 |
+| Android Studio가 "AGP/Gradle 업그레이드"를 권한다 | 무시합니다. JDK 17, compileSdk 34 전제가 깨질 수 있습니다. |
+| 다운로드가 끊긴다 | 같은 명령을 다시 실행하면 이어받습니다 |
 | 체크섬이 맞지 않는다 | `~/.cache/altercharge/`의 zip을 지우고 다시 실행 |
-| 디스크 부족 | 약 26GB 필요. 설치가 끝나면 내려받은 zip은 자동으로 지워진다 |
-| 앱이 화면에 안 보인다 | `./scripts/run.sh`를 다시 실행한다. (메인 화면 0번에 띄운다) |
-| 에뮬레이터가 느리다 | 다른 에뮬레이터와 무거운 앱을 끈다. RAM 4GB가 필요하다 |
-| 위로도 해결 안 됨 | 오류 메시지 전체를 팀 채널에 올린다 |
+| 앱이 화면에 안 보인다 | `./scripts/run.sh`를 다시 실행합니다 (메인 화면 0번에 띄웁니다) |
 
 <details>
 <summary>수동 설치 (Windows이거나 스크립트가 안 될 때)</summary>
 
 공식 가이드: [개발 환경 구성](https://document.pleos.ai/docs/connect/guide/getting-started/application-development/setup-connect-sdk-emulator)
 
-**A. Pleos 이미지 목록 등록** — Android Studio **Tools > SDK Manager > SDK Update Sites** 탭에서 `+`
+**A. Pleos 이미지 목록 등록**: Android Studio **Tools > SDK Manager > SDK Update Sites** 탭에서 `+`
 
 - Name: `Pleos Connect System Image`
 - URL (Mac M 시리즈): `https://nexus-playground.pleos.ai/repository/raw-releases/connect-avd/2.x/crp-arm64-sys-img.xml`
@@ -133,12 +156,12 @@ altercharge-app/
 
 **B. 이미지 설치 (약 4.7GB)**
 
-1. SDK Manager > **SDK Platforms** 탭에서 **Android API 34**를 체크한다.
-2. **Show Package Details**를 켜고 **Pleos Connect v2.1.0 APIs** 이미지를 체크한다.
-3. Apply 후 **42dot SDK 라이선스**를 읽고 동의한 경우에만 진행한다.
-4. 설치가 끝나면 Android Studio를 재시작한다.
+1. SDK Manager > **SDK Platforms** 탭에서 **Android API 34**를 체크합니다.
+2. **Show Package Details**를 켜고 **Pleos Connect v2.1.0 APIs** 이미지를 체크합니다.
+3. Apply 후 **42dot SDK 라이선스**를 읽고 동의한 경우에만 진행합니다.
+4. 설치가 끝나면 Android Studio를 재시작합니다.
 
-**C. 가상 기기 만들기** — **Tools > Device Manager > Create device**
+**C. 가상 기기 만들기**: **Tools > Device Manager > Create device**
 
 1. Form Factor: **Automotive** > **Pleos Connect v2.1.0** 선택
 2. System image: **API 34 / Pleos Connect v2.1.0 APIs**
@@ -146,72 +169,33 @@ altercharge-app/
 
 </details>
 
-## 2. 협업 규칙 (기간이 짧아 해커톤처럼 빠르게)
+## 협업 규칙
 
-자세한 내용은 [CONTRIBUTING.md](CONTRIBUTING.md). 요약:
+자세한 내용은 [CONTRIBUTING.md](CONTRIBUTING.md)에 있습니다.
 
-- `main` 하나만 쓴다. 작업 브랜치는 `type/작업내용` 으로 짧게 따서 하루 안에 합친다.
-- 이슈는 선택이다. **이슈가 있으면** 브랜치에 번호를 붙이고(`feat/12-charge-card`) PR 본문에 `Close #12`를 적는다. 없으면 번호 없이 진행한다.
-- 커밋은 `type: 작업 내용` (한국어, scope 없음). 타입: `feat` `fix` `refactor` `style` `chore` `docs` `test`
-- **모든 변경은 PR로 올리고 Squash and Merge로 합친다.** 작은 변경도 같고, `main`에 직접 푸시하지 않는다. PR 하나가 커밋 하나로 남아 기록이 깨끗해진다. 상대 승인은 기다리지 않고 확인만 한다.
-- 공용 파일(Gradle, 매니페스트, 공통 컴포넌트)을 바꿀 때는 상대에게 먼저 알린다. 푸시 전에는 `git pull --rebase` 하고 `./scripts/check.sh`를 돌린다.
-- `main` 직접 푸시는 `.githooks/pre-push` 훅이 막는다. (GitHub 무료 요금제의 비공개 저장소는 브랜치 보호를 쓸 수 없다. 정말 필요한 경우에만 `ALLOW_MAIN_PUSH=1 git push`)
-- 자동으로 되는 것: PR을 열면 **담당자 지정, 리뷰어 요청(프론트 두 명이 서로), 라벨, 브랜치 이름·제목 검사, 빌드와 lint(CI)** 가 돈다. 병합하면 브랜치가 지워지고 `main`의 디버그 APK가 Actions 결과물로 남는다.
-- CI 결과와 APK는 GitHub 저장소의 **Actions 탭**에서 본다. 병합된 `main` 실행 화면 아래 **Artifacts → `app-debug-apk`** 에서 APK를 받는다. (30일 보관)
-- 프론트 2명이므로 화면 단위로 담당을 나눠 같은 파일을 동시에 고치지 않는다.
-- 키스토어, `local.properties`, 토큰, API 키는 커밋하지 않는다.
+- `main` 하나만 쓰고, 작업은 `type/작업내용` 브랜치에서 해서 PR을 **Squash and Merge**로 합칩니다. `main`에 직접 푸시하지 않습니다.
+- 커밋은 `type: 작업 내용` (한국어). 타입: `feat` `fix` `refactor` `style` `chore` `docs` `test`
+- 공용 파일(Gradle, 매니페스트, 공통 컴포넌트)을 바꿀 때는 팀에 먼저 알립니다. 푸시 전에는 `./scripts/check.sh`를 돌립니다.
+- PR을 열면 담당자 지정, 리뷰어 요청, 라벨, 브랜치 이름·제목 검사, 빌드와 lint(CI)가 자동으로 돕니다. 병합하면 `main`의 디버그 APK가 Actions 결과물로 남습니다.
+- 키스토어, `local.properties`, 토큰, API 키는 커밋하지 않습니다.
 
-```bash
-git switch main && git pull --rebase
-git switch -c feat/charge-card        # 작업 시작
-git commit -m "feat: 다음 충전일 카드 구현"
-git pull --rebase && git push -u origin feat/charge-card
-# GitHub에서 PR을 열고 Squash and Merge
-```
+## 공모전 제출 (접수 마감 2026-11-15)
 
-## 3. 공모전 제출 (접수 마감 2026-11-15)
-
-[지원·제출 방법](https://appdevchallenge.auto-hmg.io/guide/submission) 기준으로 정리했다. 세부 내용은 공모전 사이트가 우선이다.
+[지원·제출 방법](https://appdevchallenge.auto-hmg.io/guide/submission) 기준이며, 세부 내용은 공모전 사이트가 우선입니다.
 
 | 항목 | 내용 |
 |---|---|
-| 필수 | 접수양식(기획서)과 참가자 전원의 개인정보 동의서를 `appdevchallenge@hyundai-partners.com`으로 이메일 제출 |
+| 필수 | 접수양식(기획서)과 참가자 전원의 개인정보 동의서를 이메일로 제출 |
 | 가산점 | 시연 영상, GitHub 저장소(소스 + APK) |
-| APK 위치 | 저장소의 `apk/` 폴더, 파일명 `팀명_앱이름_release.apk`, 실행 가능한 release 버전 |
-| README | 앱 소개, 실행 방법, 테스트 환경, APK 위치를 적는다 |
-| 비공개 저장소 | 공지된 심사용 계정을 Collaborator로 초대한다 |
-| 수정 제출 | 마감 전에 처음 보낸 주소로 `[수정제출] ...` 제목으로 다시 보낸다 (마지막 제출본이 최종본) |
+| APK | `apk/` 폴더, 파일명 `팀명_앱이름_release.apk`, 실행 가능한 release 버전 |
+| 수정 제출 | 마감 전에 같은 주소로 다시 보내면 마지막 제출본이 최종본 |
 
-### release APK 서명 키
+**release APK 서명 키**: 키스토어(`*.jks`, `*.keystore`)와 `keystore.properties`는 저장소에 올리지 않습니다(`.gitignore`로 제외). APK는 한 명이 같은 키스토어로 만듭니다. 키스토어가 있는 사람이 저장소 루트에 `keystore.properties`(`storeFile`, `storePassword`, `keyAlias`, `keyPassword`)를 두고 `./scripts/release.sh 얼터차지`를 실행하면, 서명 검증까지 해서 `apk/` 폴더에 정해진 이름으로 만듭니다.
 
-- 키스토어(`*.jks`, `*.keystore`)와 `keystore.properties`는 **저장소에 올리지 않는다.** (`.gitignore`로 제외됨)
-- 보관 담당과 공유 방법: (미정 — 정해지면 여기에 적는다. 비밀번호는 문서에 적지 않는다.)
-- APK는 한 명이 같은 키스토어로 만든다. 사람마다 다른 키로 서명하면 업데이트와 비교가 어긋난다.
-- 만드는 방법: 키스토어가 있는 사람이 저장소 루트에 `keystore.properties`(`storeFile`, `storePassword`, `keyAlias`, `keyPassword`)를 두고 `./scripts/release.sh <팀명>`을 실행한다. 서명 검증까지 해서 `apk/` 폴더에 정해진 이름으로 만든다. 만든 APK는 직접 `git add` 해서 올린다.
-
-### 심사용 README 항목 (공모전 요구: 앱 소개, 실행 방법, 테스트 환경, APK 위치)
-
-| 항목 | 내용 |
-|---|---|
-| 앱 소개 | 이 문서 상단 |
-| 실행 방법 | `./scripts/setup.sh` 후 `./scripts/run.sh` (1-2, 1-3) |
-| 테스트 환경 | Pleos Connect Emulator v2.1.0 (Automotive, Android API 34), RAM 4GB |
-| APK 위치 | `apk/팀명_앱이름_release.apk` (제출 시 추가) |
-
-## 4. 참고 문서
+## 참고 문서
 
 - [Pleos 개발 문서 시작하기](https://document.pleos.ai/docs/pleos-only/getting-started)
 - [Pleos Connect SDK 사용 가이드](https://document.pleos.ai/docs/pleos-only/connect-sdk-pleos/)
 - [SDK API 참조](https://document.pleos.ai/api-reference/connect-sdk-pleos)
-- [Vehicle SDK 튜토리얼](https://document.pleos.ai/docs/pleos-only/tutorial/vehicle-sdk)
-- [차량 앱 개발 가이드(주행 규제, 오디오 포커스 등 정책)](https://document.pleos.ai/docs/pleos-only/vehicle-app-developer-guide/intro)
-- [공모전 사이트](https://appdevchallenge.auto-hmg.io/) — 접수 마감 2026.11.15, 1차 결과 11.23, 2차 PT 12.03~12.04
-
-## 5. 아직 정해지지 않은 것
-
-- 배터리 잔량(SOC)과 플러그·충전 상태를 읽는 정확한 API 이름 (Vehicle SDK의 `EvBattery` 도메인으로 보이며 API 참조에서 확인 필요)
-- 주행 상태(주행 중/정차)를 판단하는 API (`CarUxRestrictions`는 문서에서 확인되지 않음. `DrivingMode`, NaviHelper 이벤트 후보)
-- release 키스토어 보관 담당과 공유 방법
-- TTS, STT, FusedLocation 제공 시점(현재 Coming Soon)
-- 프론트와 백엔드의 API 규격(다음 충전일, 자리 현황, 대안 충전소 응답 형식)과 **다음 충전일 계산을 앱에서 할지 서버에서 할지**. 서버를 호출하는 코드를 넣을 때는 매니페스트에 `INTERNET` 퍼미션을 추가한다.
-- Intel Mac, Linux, Windows에서의 환경 세팅(검증 전)
+- [차량 앱 개발 가이드 (주행 규제, 오디오 포커스 등 정책)](https://document.pleos.ai/docs/pleos-only/vehicle-app-developer-guide/intro)
+- [공모전 사이트](https://appdevchallenge.auto-hmg.io/)
