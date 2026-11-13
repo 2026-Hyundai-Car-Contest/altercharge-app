@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -43,6 +44,7 @@ fun SearchBar(
             .clip(RoundedCornerShape(AlterRadius.Large))
             .background(AlterTheme.colors.background)
             .padding(vertical = 14.dp, horizontal = 20.dp)
+            .heightIn(max = 61.dp)
     ){
         Image(
             painter = painterResource(R.drawable.ic_search),
