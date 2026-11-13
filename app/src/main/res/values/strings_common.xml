@@ -22,4 +22,9 @@
     <string name="common_value_unavailable">정보 없음</string>
     <!-- MVP 고정 사용자 이름 (REQ_JD_003, Figma 시안 예시 이름과 같게). C 카드 헤드라인에 넣는다 -->
     <string name="common_driver_name">성진</string>
+
+<!--  ac/dc/ultra_fast-->
+  <string name="charge_status_ac">완속</string>
+  <string name="charge_status_dc">급속</string>
+  <string name="charge_status_ultra_fast">초급속</string>
 </resources>
