@@ -1,5 +1,6 @@
 package com.altercharge.app.ui.designsystem.layout
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -45,6 +46,7 @@ import com.altercharge.app.ui.designsystem.theme.AlterTheme
  * @param leftColumnScrollable 가로 L2 펼침(상황 15)에서 왼쪽 열만 스크롤한다.
  *   이때 l1 · l2는 높이 제약이 무한대라 안에서 fillMaxHeight · weight를 쓰면 안 된다. WF는 무시한다.
  */
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun AlterChargeLayout(
     statusBar: @Composable () -> Unit,
