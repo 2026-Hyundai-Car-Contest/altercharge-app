@@ -1,5 +1,6 @@
 package com.altercharge.app.ui.designsystem.layout
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -56,6 +57,7 @@ import com.altercharge.app.ui.designsystem.theme.AlterTheme
  * 이 틀은 화면 배경을 칠하지 않는다. 화면 쪽에서 AlterChargeTheme 안에
  * Box(Modifier.fillMaxSize().background(AlterTheme.colors.screenBackground))로 감싼다.
  */
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun AlterChargeLayout(
     statusBar: @Composable () -> Unit,
