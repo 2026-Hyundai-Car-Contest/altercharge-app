@@ -13,23 +13,20 @@ import com.altercharge.app.ui.designsystem.theme.AlterRadius
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
 import com.altercharge.app.ui.designsystem.theme.ShadowLayer
 
-// ---------------------------------------------------------------------------------------------
-// 카드 고유 값. Figma card_drive_record 변수 (366:38474) 중 디자인 시스템에 없는 것만 둔다.
-// ---------------------------------------------------------------------------------------------
+// Figma card_drive_record 변수 (366:38474) 중 디자인 시스템에 없는 것만 둔다.
 
-/** 기간 이동 · 펼침 버튼 크기 (period_nav/size) */
+/** period_nav/size */
 internal val CircleButtonSize = 48.dp
 
-/** 버튼 터치 영역. 보이는 크기는 48, 누르는 영역은 76 (AAOS 터치 76dp) */
+/** AAOS 터치 76dp */
 private val CircleButtonTouchSize = 76.dp
 
-/** 원 바깥 터치 여백 (76 − 48) ÷ 2 = 14 */
 internal val CircleButtonTouchInset = (CircleButtonTouchSize - CircleButtonSize) / 2
 
-/** 기간 이동 버튼 두 원 사이 간격 (시안 8). 터치 영역은 이 간격 가운데에서 나눈다 */
+/** 터치 영역은 이 간격 가운데에서 나눈다 */
 internal val PeriodNavGap = AlterMargin.XSmall
 
-/** 버튼 그림자 (drop-shadow 0 0 1 · 0 3 6). 디자인 시스템 Level1과 값이 달라 카드에 둔다 */
+/** 디자인 시스템 Level1과 값이 달라 카드에 둔다 */
 internal val CircleButtonShadow = listOf(
     ShadowLayer(offsetY = 0.dp, blur = 1.dp, color = Color(0x0F12141F)),
     ShadowLayer(offsetY = 3.dp, blur = 6.dp, color = Color(0x1A12141F)),
@@ -37,41 +34,35 @@ internal val CircleButtonShadow = listOf(
 
 internal val ButtonIconSize = 24.dp
 
-/** 막대 너비 (bar/width) */
+/** bar/width */
 internal val BarWidth = 32.dp
 
 /** 0km여도 값 라벨이 막대 안에 들어가도록 주는 최소 높이 */
 internal val BarMinHeight = 40.dp
 
-/** 막대 안 값 라벨 위 여백 */
 internal val BarValueTopPadding = 8.dp
 
-/** 막대 높이 계산에서 차트 높이에서 빼는 값: (차트 − 32) × 0.85 × (그날 ÷ 최대) */
+/** 막대 높이 = (차트 − 32) × 0.85 × (그날 ÷ 최대) */
 internal val BarHeightInset = 32.dp
 internal const val BAR_HEIGHT_RATIO = 0.85f
 
-/** 지난 요일 막대 그라데이션: 위 3% → 아래 70% */
 internal const val BAR_ALPHA_TOP = 0.03f
 internal const val BAR_ALPHA_BOTTOM = 0.7f
 
-/** 빗금 트랙: 10 간격, 1.5 두께, 오른쪽 위로 기우는 45도 */
 internal val HatchSpacing = 10.dp
 internal val HatchStroke = 1.5.dp
 
-/** 평균선 점선 (blue_400, 1.5 두께, 약 5.9 간격) */
 internal val AverageLineStroke = 1.5.dp
 internal val AverageLineDash = 5.87.dp
 
-/** 평균 칩 세로 여백 */
 internal val AverageChipVerticalPadding = 2.dp
 
-/** 차트 위쪽 모서리 (chart_week rounded-top 24) */
+/** chart_week rounded-top 24 */
 internal val ChartWeekTopRadius = AlterRadius.XXLarge
 
 /**
- * 펼쳤을 때 그래프 높이 변화. Figma expanded=true variant의 chart_week − expanded=false의 chart_week.
- * 가로(366:37434) 353→330, W-Ext 가로(366:37467) 521→498, 세로(366:37500) 281→258은 −23.
- * WF 가로(366:37533)는 160 그대로, WF 세로(366:37566)는 281→314로 +33.
+ * Figma expanded=true − expanded=false의 chart_week 높이.
+ * 가로(366:37434) · W-Ext 가로(366:37467) · 세로(366:37500) −23, WF 가로(366:37533) 0, WF 세로(366:37566) +33.
  */
 internal val CardDriveRecordMode.expandedChartDelta: Dp
     get() = when (this) {
@@ -80,27 +71,20 @@ internal val CardDriveRecordMode.expandedChartDelta: Dp
         CardDriveRecordMode.WF_PORTRAIT -> 33.dp
     }
 
-/** 타일 위 구분선 두께 */
 internal val TileDividerThickness = 1.dp
 
-/** 패널 테두리 두께 */
 internal val ChartOutlineWidth = 1.dp
 
 /**
- * 카드 전용 색. Figma card_drive_record 변수(366:38510 라이트, 375:9932 다크) 그대로다.
- * 라이트 값 일부는 AlterColors와 같지만 다크에서 짝이 다른 토큰이라(예: track = 라이트 background / 다크 surfaceHigh)
- * 토큰으로 바꾸지 않고 카드 변수로 둔다. 라이트 · 다크 둘 다 같은 peak 막대(basic_900)는 textPrimary를 쓴다.
+ * Figma card_drive_record 변수(366:38510 라이트, 375:9932 다크).
+ * 라이트 값 일부는 AlterColors와 같지만 다크에서 짝이 다른 토큰이라 카드 변수로 둔다.
  */
 internal data class DriveRecordColors(
-    /** period/range */
     val periodRange: Color,
-    /** bar/track */
     val track: Color,
-    /** bar/hatch */
     val hatch: Color,
-    /** basic_700: 지난 요일 막대 */
+    /** basic_700 */
     val barPast: Color,
-    /** bar/value_today */
     val barValueToday: Color,
 )
 
@@ -121,7 +105,7 @@ private val DarkDriveRecordColors = DriveRecordColors(
 )
 
 /**
- * 모드별 그래프(chart_week) 높이. 접힘 카드 높이(383×648 등)에서 거꾸로 계산한 값이다.
+ * 접힘 카드 높이(383×648 등)에서 거꾸로 계산한 값.
  * 카드 높이 = 8 + 패널(20 + 1 + 헤더 69 + 16 + 그래프 + 1 + 20) + 20 + 요약 132 + 8
  */
 internal val CardDriveRecordMode.chartWeekHeight: Dp
@@ -129,12 +113,12 @@ internal val CardDriveRecordMode.chartWeekHeight: Dp
         CardDriveRecordMode.LANDSCAPE -> 353.dp
         CardDriveRecordMode.LANDSCAPE_TALL -> 521.dp
         CardDriveRecordMode.PORTRAIT -> 281.dp
-        // TODO 디자이너 확인: 스펙 메모는 387×328, 인스턴스는 387×455. 인스턴스 기준으로 맞췄다
+        // 스펙 메모(387×328)와 인스턴스(387×455)가 달라 인스턴스 기준
         CardDriveRecordMode.WF_LANDSCAPE -> 160.dp
         CardDriveRecordMode.WF_PORTRAIT -> 281.dp
     }
 
-/** 오른쪽 화살표 (ic_chevron_right 188:8). 방향은 회전으로 바꾼다 */
+/** ic_chevron_right 188:8. 방향은 회전으로 바꾼다 */
 internal val ChevronRight: ImageVector by lazy {
     ImageVector.Builder(
         name = "ChevronRight",
@@ -165,7 +149,7 @@ internal val WeekdayLabels = listOf(
     R.string.card_drive_record_weekday_sun,
 )
 
-/** 막대 하루치 상태 (chart_bar_day state) */
+/** chart_bar_day state */
 internal enum class BarState { Past, Peak, Today, Future }
 
 @Composable

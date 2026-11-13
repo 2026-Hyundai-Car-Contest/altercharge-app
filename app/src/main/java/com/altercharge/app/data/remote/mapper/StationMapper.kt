@@ -1,4 +1,4 @@
-/** 충전소 · 마지막 충전 응답 → L1 · C 카드 값. R1 · R2 변환은 석기님 쪽 */
+/** 충전소 · 마지막 충전 응답 → L1 · C 카드 값. R1 · R2 변환은 충전소 화면 쪽에서 한다 */
 package com.altercharge.app.data.remote.mapper
 
 import com.altercharge.app.data.remote.model.LatestChargeHistory

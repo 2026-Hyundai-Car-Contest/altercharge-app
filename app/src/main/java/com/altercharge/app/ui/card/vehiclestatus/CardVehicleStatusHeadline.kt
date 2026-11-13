@@ -1,6 +1,4 @@
-/**
- * 카드 헤드라인: 고정 크기(Headline) · 줄 수를 넘으면 글자를 줄이는 것(AutoShrinkHeadline)과 여러 mode가 같이 쓰는 줄 수 · 글자 단계 · 줄바꿈 규칙.
- */
+/** C 카드 헤드라인 */
 package com.altercharge.app.ui.card.vehiclestatus
 
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -35,11 +33,7 @@ internal fun Headline(
     )
 }
 
-/**
- * 줄 수를 넘으면 글자를 한 단계씩 줄이는 헤드라인 (개발자 Q&A Q1).
- * [styles]를 큰 것부터 차례로 재서 [maxLines] 안에 들어오는 첫 크기를 쓴다.
- * 가장 작은 크기에서도 넘치면 [maxLines]까지 보여주고 말줄임한다.
- */
+/** 줄 수를 넘으면 [styles] 순서대로 글자를 줄인다 (Q&A Q1). 가장 작아도 넘치면 말줄임 */
 @Composable
 internal fun AutoShrinkHeadline(
     text: String,
@@ -49,7 +43,7 @@ internal fun AutoShrinkHeadline(
     lineBreak: LineBreak = PortraitHeadlineLineBreak,
 ) {
     val measurer = rememberTextMeasurer()
-    // 글자 크기 설정(fontScale)이 바뀌면 다시 재야 한다
+    // fontScale이 바뀌면 다시 재야 한다
     val density = LocalDensity.current
     BoxWithConstraints(modifier) {
         val maxWidth = constraints.maxWidth
@@ -76,24 +70,19 @@ internal fun AutoShrinkHeadline(
     }
 }
 
-/** 자동 축소 헤드라인 줄 수. Figma portrait · portrait_tall · portrait_compact 헤드라인 2줄 말줄임 */
+/** Figma portrait · portrait_tall · portrait_compact 헤드라인 2줄 */
 private const val AUTO_SHRINK_HEADLINE_MAX_LINES = 2
 
-/** 헤드라인 최대 줄 수. 넘치면 말줄임 */
 internal const val LANDSCAPE_HEADLINE_MAX_LINES = 2
 
-/**
- * 세로 헤드라인 자동 축소 단계 (portrait · portrait_tall).
- * card_vehicle_status/headline/font_size_max 60(headline/large) → 56(headline/medium) → 48(headline/small)
- * → font_size_min 40(title/large)
- */
+/** card_vehicle_status/headline/font_size_max 60 → font_size_min 40 */
 @Composable
 internal fun portraitHeadlineStyles(): List<TextStyle> {
     val typography = AlterTheme.typography
     return listOf(typography.headlineLarge, typography.headlineMedium, typography.headlineSmall, typography.titleLarge)
 }
 
-/** 세로 헤드라인: 단어(한국어는 어절) 단위 줄바꿈 */
+/** 어절 단위 줄바꿈 */
 internal val PortraitHeadlineLineBreak = LineBreak(
     strategy = LineBreak.Strategy.HighQuality,
     strictness = LineBreak.Strictness.Normal,

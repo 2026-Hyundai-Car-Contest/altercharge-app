@@ -14,10 +14,6 @@ import com.altercharge.app.ui.designsystem.theme.AlterChargeTheme
 import com.altercharge.app.ui.designsystem.theme.AlterPadding
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
 
-// ---------------------------------------------------------------------------------------------
-// 미리보기: 접힘/펼침 × 라이트/다크 × 가로/세로, 이번 주(오늘 있음) · 지난 주(오늘 없음)
-// ---------------------------------------------------------------------------------------------
-
 @Composable
 private fun PreviewCard(
     state: CardDriveRecordUiState,

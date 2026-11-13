@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    C 차량 상태 카드 (card_vehicle_status) 문구. 담당: 서희님
+    C 차량 상태 카드 (card_vehicle_status) 문구
     Figma: 15상황 보드 455:58776 (01~12), KO 보드 439:21152
     portrait_* 는 세로 카드에서만 쓰는 짧은 헤드라인이다. 세로 시안에서 문구가 다른 상황만 따로 둔다.
 -->

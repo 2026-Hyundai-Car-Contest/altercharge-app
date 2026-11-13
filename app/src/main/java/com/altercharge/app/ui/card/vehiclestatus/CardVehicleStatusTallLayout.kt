@@ -1,6 +1,4 @@
-/**
- * W-Extended 가로 · 세로(LANDSCAPE_TALL · PORTRAIT_TALL) 배치. 두 mode는 같은 TallLayout을 쓰고 차이는 TallSpec 값으로 준다.
- */
+/** C 카드 W-Extended 가로 · 세로 배치. 두 mode 차이는 TallSpec 값으로 준다 */
 package com.altercharge.app.ui.card.vehiclestatus
 
 import androidx.compose.foundation.layout.Arrangement
@@ -19,7 +17,6 @@ import com.altercharge.app.ui.designsystem.theme.AlterMargin
 import com.altercharge.app.ui.designsystem.theme.AlterPadding
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
 
-/** W-Extended 가로 · 세로. 헤드라인 / 스테이지 + 배터리 패널 / 정보 타일 순서로 쌓는다. */
 @Composable
 internal fun TallLayout(
     state: CardVehicleStatusUiState,
@@ -116,9 +113,8 @@ internal fun TallLayout(
 /** W-Extended 모드별 값. Figma card_vehicle_status mode=landscape_tall (366:37686 · 366:37704) / portrait_tall (366:37763 · 366:37782) */
 internal class TallSpec(
     val panelOverlap: Dp,
-    /** 헤드라인을 2줄 안에 맞춰 자동 축소할지 (portrait_tall만, 개발자 Q&A Q1) */
+    /** portrait_tall만 (Q&A Q1) */
     val autoShrinkHeadline: Boolean,
-    /** 충전기 쪽 스테이지 배경을 카드 면(흰색)으로 둘지 */
     val chargingStageOnSurface: Boolean,
     val stageCharging: StageImageSpec,
     val stageUnplugged: StageImageSpec,

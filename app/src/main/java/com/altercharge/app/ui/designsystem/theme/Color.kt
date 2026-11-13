@@ -4,19 +4,17 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 
 /**
- * 앱 색. Figma 변수 값을 라이트/다크 그대로 옮겼다.
- * - 파란색 팔레트: altercharge / Colors (103:46834, 변수 01 Colors)
- * - 나머지: 15상황 보드의 라이트(455:58776) · 다크(457:78743)에서 카드가 실제로 쓰는 변수
+ * Figma 변수 값을 라이트/다크 그대로 옮겼다.
+ * - 파란색 팔레트: altercharge / Colors (103:46834)
+ * - 나머지: 15상황 보드 라이트(455:58776) · 다크(457:78743)에서 카드가 쓰는 변수
  *
- * 카드 전용 색(예: L1 배경 #020417)은 여기 두지 않고 각 카드에서 정한다.
- * 필요한 값이 없으면 직접 만들지 말고 서희님에게 알린다.
+ * 카드 전용 색은 각 카드에서 정한다. 필요한 값이 없으면 직접 만들지 말고 디자인 시스템 담당에게 알린다.
  */
 @Immutable
 data class AlterColors(
-    /** 다크 모드 여부. 컴포넌트가 모드별 전용 색을 고를 때 쓴다. */
     val isDark: Boolean,
 
-    // 파란색 팔레트 (basic/blue/blue_50~900). 500이 기준색
+    // basic/blue/blue_50~900. 500이 기준색
     val blue50: Color,
     val blue100: Color,
     val blue200: Color,
@@ -28,58 +26,43 @@ data class AlterColors(
     val blue800: Color,
     val blue900: Color,
 
-    // 글자 · 아이콘
-    /** 제목, 이름, 값 */
     val textPrimary: Color,
-    /** 보조 라벨 */
     val textSecondary: Color,
-    /** 설명, 단위, 메타 정보 */
     val textTertiary: Color,
-    /** 비활성, 아직 안 온 값 */
     val textDisabled: Color,
     /** 중립 칩 글자, 목록 아이콘 */
     val contentNeutral: Color,
-    /** pleos basic/gray/basic_300. C 카드 칩 점(대기 · 오프라인) · 값 없는 SOC "--", 고스트 버튼 테두리 */
+    /** pleos basic/gray/basic_300 */
     val gray300: Color,
 
-    // 면
-    /** 앱 화면 전체 배경. 15상황 보드 화면 프레임 (라이트 basic_100, 다크 surface_low) */
+    /** 라이트 basic_100, 다크 surface_low */
     val screenBackground: Color,
-    /** 패널 배경 (주간 주행 기록, 충전소 목록) */
+    /** 패널 배경 */
     val background: Color,
-    /** 흰 카드 (차량 상태, 충전소 카드) */
     val surface: Color,
     /** 칩 바탕, 빈 게이지 칸, 차트 테두리 */
     val surfaceHigh: Color,
     /** 구분선, 강조 면 */
     val surfaceAccent: Color,
-    /** 입력 필드 바탕 */
     val fieldBackground: Color,
-    /**
-     * 화면 위 카드 면 (05 Components common/container/background → surface_basic).
-     * C 차량 상태, 충전소 카드 등. 다크에서 화면 배경보다 한 톤 밝다 (개발자 Q&A Q2)
-     */
+    /** common/container/background → surface_basic. 다크에서 화면 배경보다 한 톤 밝다 (Q&A Q2) */
     val containerBackground: Color,
-    /**
-     * 화면 위 옅은 카드 면 (common/container/background_subtle → basic_50).
-     * L2 주간 주행 기록, 충전소 목록 패널
-     */
+    /** common/container/background_subtle → basic_50 */
     val containerBackgroundSubtle: Color,
 
-    // 버튼 (button/contrast, button/common/disabled)
+    // button/contrast, button/common/disabled
     val buttonContrastContainer: Color,
     val buttonContrastLabel: Color,
     val buttonDisabledContainer: Color,
     val buttonDisabledLabel: Color,
 
-    // 상태 색
-    /** 연결됨, 정상 (informative_active) */
+    /** informative_active */
     val positive: Color,
-    /** 연결 안 됨, 오류 (informative_negative) */
+    /** informative_negative */
     val negative: Color,
-    /** 배터리 위험 (regulation_red) */
+    /** regulation_red */
     val danger: Color,
-    /** 배터리 부족 (regulation_orange) */
+    /** regulation_orange */
     val warning: Color,
 )
 

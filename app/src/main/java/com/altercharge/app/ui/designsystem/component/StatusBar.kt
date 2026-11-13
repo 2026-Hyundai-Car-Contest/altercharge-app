@@ -37,51 +37,36 @@ import com.altercharge.app.ui.designsystem.theme.DarkAlterColors
 import com.altercharge.app.ui.designsystem.theme.LightAlterColors
 
 /**
- * 차량 상태. 상단 바 칩의 원 안 기호와 문구를 정한다.
- * Figma status_bar (444:40718) state: parked(P) · charging(⚡) · arrived(✓). 주행 중은 시안에 없다.
- * 화면 쪽에서 고른다: 충전기가 연결돼 충전 중이면 CHARGING, 그 밖의 주차 상태는 PARKED.
- * ARRIVED는 안내한 충전소에 도착했을 때 쓰는 상태로, MVP(주차 화면)에서는 쓰지 않는다.
+ * Figma status_bar (444:40718) state. 주행 중은 시안에 없다.
+ * ARRIVED는 안내한 충전소 도착용이라 MVP(주차 화면)에서는 쓰지 않는다.
  */
 enum class DriveState { PARKED, CHARGING, ARRIVED }
 
-/**
- * 숫자 값의 상태. 디자이너 확정: 불러오는 중이면 "확인 중", 제공되지 않거나 확인할 수 없으면 "정보 없음".
- * 응답이 없거나 시간이 지나면 Unavailable로 바꾼다 (Figma status_bar 설명 601:57722).
- */
+/** 응답이 없거나 시간이 지나면 Unavailable로 바꾼다 (Figma status_bar 설명 601:57722) */
 sealed interface StatusValue {
     data class Ready(val value: Int) : StatusValue
     data object Loading : StatusValue
     data object Unavailable : StatusValue
 }
 
-/**
- * 앱 상단 바에 넘기는 값. Figma status_bar (444:40718)의 data variant는 [battery]가 정한다:
- * Ready면 "32%"(와 [range]가 Ready일 때 "98km"), Loading이면 "확인 중", Unavailable이면 "정보 없음".
- * 배터리 값이 없으면 km는 숨긴다.
- */
+/** Figma status_bar의 data variant는 [battery]가 정한다. 배터리 값이 없으면 km도 숨긴다 */
 @Immutable
 data class StatusBarUiState(
     val driveState: DriveState,
-    /** 배터리 % */
     val battery: StatusValue,
-    /** 갈 수 있는 거리 km. Ready가 아니면 숨긴다. */
     val range: StatusValue,
-    /** 실내 온도 °C. 모르면 null (온도 항목을 숨긴다) */
+    /** null이면 숨긴다 */
     val temperatureC: Int?,
 )
 
-/**
- * 상단 바 크기 (Figma variant size).
- * - REGULAR: 가로형 화면(S-17 · W-Standard · W-Extended) · 전체 항목.
- * - COMPACT: WF 세로 등 좁은 화면. 앱 이름 · 상태 칩 · 배터리 % · 시간만 (km · 온도 · 연결 아이콘 생략).
- */
+/** Figma variant size. COMPACT는 km · 온도 · 연결 아이콘을 뺀다 */
 enum class StatusBarSize { REGULAR, COMPACT }
 
-/** 폼팩터에 맞는 상단 바 크기. Figma 화면 기준 compact는 WF 세로(452:54321)뿐이다. */
+/** Figma 화면 기준 compact는 WF 세로(452:54321)뿐이다 */
 fun statusBarSizeFor(layout: AppLayoutInfo): StatusBarSize =
     if (layout.formFactor == FormFactor.WF && !layout.isLandscape) StatusBarSize.COMPACT else StatusBarSize.REGULAR
 
-// 디자인 값에 없는 상단 바 고유 치수 (Figma status_bar 444:40718)
+// 디자인 토큰에 없는 고유 치수 (Figma status_bar 444:40718)
 private val StatusBarHeight = 56.dp
 private val GearCircleSize = 28.dp
 private val GearChipPaddingStart = 6.dp
@@ -94,20 +79,16 @@ private val ConnectivityGap = 12.dp
 private val BoltIconSize = 20.dp
 private val CheckIconSize = 16.dp
 
-/** 기획 확정: 연결 아이콘과 시간은 실제 값 대신 더미로 표시한다 (시안 값). 실제 시각을 연결하게 되면 이 상수를 지운다. */
+/** 기획 확정: 연결 아이콘과 시간은 시안 값 더미로 표시한다 */
 private const val DummyTime = "14:05"
 
-/**
- * 상태 원 색 (Figma 05 Components status_bar/gear/{parked, charging, arrived, icon, arrived_icon}). 상단 바에서만 쓰는 값이라 여기 둔다.
- * parked는 blue_500(L #3B6FE0 / D #3562C4)을 참조한다.
- */
+/** Figma 05 Components status_bar/gear/{…}. 상단 바에서만 써서 여기 둔다 */
 private data class GearPalette(
     val parked: Color,
     val charging: Color,
     val arrived: Color,
     /** P 글자 · 번개 */
     val icon: Color,
-    /** 도착 체크 */
     val arrivedIcon: Color,
 )
 
@@ -127,14 +108,7 @@ private val GearPaletteDark = GearPalette(
     arrivedIcon = Color(0xFF131417),
 )
 
-/**
- * 앱 상단 바. 왼쪽 앱 이름, 오른쪽 차량 상태 칩 · 배터리 · 온도 · 연결 아이콘 · 시간.
- * 폭이 좁으면 앱 이름이 말줄임되고 오른쪽 그룹은 그대로 둔다(줄바꿈 없음).
- * 연결 아이콘(블루투스 · 와이파이 · LTE)과 시간은 기획 확정에 따라 더미로 보여준다.
- *
- * @param size 기본값은 [AlterChargeLayout][com.altercharge.app.ui.designsystem.layout.AlterChargeLayout]이
- *   고른 폼팩터로 정한다 ([statusBarSizeFor]).
- */
+/** 폭이 좁으면 앱 이름만 말줄임되고 오른쪽 그룹은 그대로 둔다 */
 @Composable
 fun StatusBar(
     state: StatusBarUiState,
@@ -161,7 +135,6 @@ fun StatusBar(
             modifier = Modifier.weight(1f, fill = false),
         )
         Row(
-            // regular 24 (margin_large) · compact 16 (margin_normal)
             horizontalArrangement = Arrangement.spacedBy(if (regular) AlterMargin.Large else AlterMargin.Normal),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -228,7 +201,6 @@ fun StatusBar(
     }
 }
 
-/** 차량 상태 칩. 상태 원(P · ⚡ · ✓) + 상태 문구 */
 @Composable
 private fun GearChip(driveState: DriveState) {
     val colors = AlterTheme.colors
@@ -290,7 +262,7 @@ private fun GearChip(driveState: DriveState) {
 
 @Composable
 private fun VerticalDivider() {
-    // Figma divider는 basic_200 (L #E0E1E6 / D #44464E) = surface_accent와 같은 값
+    // Figma divider basic_200 = surface_accent와 같은 값
     Box(
         Modifier
             .width(DividerWidth)

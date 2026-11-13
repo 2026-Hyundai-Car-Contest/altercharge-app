@@ -11,18 +11,15 @@ import androidx.compose.runtime.staticCompositionLocalOf
 
 private val LocalAlterColors = staticCompositionLocalOf { LightAlterColors }
 
-/** 글자 스타일은 라이트/다크 구분이 없어 한 번만 만든다. */
+/** 라이트/다크 구분이 없어 한 번만 만든다 */
 private val DefaultAlterTypography = AlterTypography()
 
 private val LocalAlterTypography = staticCompositionLocalOf { DefaultAlterTypography }
 
-/**
- * 라이트/다크 선택. 기획 확정: 지금은 [SYSTEM](차량 시스템 설정을 따름).
- * 1차 이후 설정 화면에서 다크 · 라이트 · 시스템을 고르면 이 값만 넘기면 된다.
- */
+/** 기획 확정: 지금은 [SYSTEM]. 1차 이후 설정 화면이 생기면 이 값만 넘기면 된다 */
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
-/** [ThemeMode]로 테마를 고른다. 앱 진입점에서는 이 함수를 쓴다. */
+/** 앱 진입점에서는 이 함수를 쓴다 */
 @Composable
 fun AlterChargeTheme(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
@@ -37,12 +34,8 @@ fun AlterChargeTheme(
 }
 
 /**
- * 앱 전체 테마. 화면과 카드는 모두 이 테마 안에서 그린다.
- *
- * 카드에서는 AlterTheme.colors / AlterTheme.typography와 AlterRadius · AlterMargin · AlterPadding,
- * AlterShadows를 쓴다. 색이나 크기를 숫자로 직접 쓰지 않는다.
- *
  * 미리보기처럼 라이트/다크를 직접 정할 때 쓴다.
+ * 카드에서는 AlterTheme · AlterRadius · AlterMargin · AlterPadding · AlterShadows를 쓰고 숫자를 직접 쓰지 않는다.
  */
 @Composable
 fun AlterChargeTheme(
@@ -50,7 +43,7 @@ fun AlterChargeTheme(
     content: @Composable () -> Unit,
 ) {
     val colors = if (darkTheme) DarkAlterColors else LightAlterColors
-    // Material 컴포넌트를 쓸 때 어긋나지 않도록 기본 색만 맞춰 둔다.
+    // Material 컴포넌트를 쓸 때 어긋나지 않도록 기본 색만 맞춰 둔다
     val materialColors = if (darkTheme) {
         darkColorScheme(
             primary = colors.blue500,
@@ -78,7 +71,6 @@ fun AlterChargeTheme(
     }
 }
 
-/** 카드와 화면에서 디자인 값을 꺼내는 곳 */
 object AlterTheme {
     val colors: AlterColors
         @Composable @ReadOnlyComposable

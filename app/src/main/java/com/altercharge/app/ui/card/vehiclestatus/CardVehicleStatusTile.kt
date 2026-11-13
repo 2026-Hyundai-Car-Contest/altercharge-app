@@ -1,6 +1,4 @@
-/**
- * 정보 타일(tile_stat) · 타일 위 구분선 · WF 요약 한 줄(info_summary).
- */
+/** C 카드 정보 타일과 WF 요약 줄 */
 package com.altercharge.app.ui.card.vehiclestatus
 
 import androidx.compose.foundation.layout.Arrangement
@@ -22,8 +20,8 @@ import com.altercharge.app.ui.designsystem.theme.AlterPadding
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
 
 /**
- * 정보 타일 (tile_stat): 위 구분선 / 라벨 / 값 + 단위.
- * @param drawDivider false면 구분선을 부모가 대신 긋는다 (타일 하나일 때 폭 전체).
+ * tile_stat.
+ * @param drawDivider false면 부모가 대신 긋는다 (타일 하나일 때 폭 전체)
  */
 @Composable
 internal fun RowScope.InfoTile(
@@ -68,7 +66,6 @@ internal fun RowScope.InfoTile(
     }
 }
 
-/** 타일 위 구분선. 위쪽 끝에 폭 전체로 긋는다. */
 internal fun Modifier.tileDivider(color: Color): Modifier = drawBehind {
     drawLine(
         color = color,
@@ -78,17 +75,16 @@ internal fun Modifier.tileDivider(color: Color): Modifier = drawBehind {
     )
 }
 
-/** WF 요약 한 줄 (info_summary): 타일 내용을 " · "로 이어 쓴다. */
+/** info_summary */
 @Composable
 internal fun InfoSummary(text: String) {
     Text(
         text = text,
         modifier = Modifier.fillMaxWidth(),
-        // 한국어는 기본이 글자 단위 줄바꿈이라 어절 단위로 바꾼다 (항목 안은 줄바꿈 없는 공백)
+        // 한국어는 기본이 글자 단위 줄바꿈이라 어절 단위로 바꾼다
         style = AlterTheme.typography.labelMedium.copy(lineBreak = PortraitHeadlineLineBreak),
         color = AlterTheme.colors.textSecondary,
     )
 }
 
-/** 타일 위 구분선 */
 private val TileDividerWidth = 1.dp

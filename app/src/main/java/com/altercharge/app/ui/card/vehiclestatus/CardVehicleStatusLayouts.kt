@@ -1,7 +1,4 @@
-/**
- * S-17 가로(LANDSCAPE) · 세로(PORTRAIT) 배치와 그 mode에서만 쓰는 치수.
- * W-Extended는 CardVehicleStatusTallLayout.kt, WF는 CardVehicleStatusWfLayouts.kt, W-Standard 세로는 CardVehicleStatusCompactLayout.kt.
- */
+/** C 카드 S-17 가로 · 세로 배치 */
 package com.altercharge.app.ui.card.vehiclestatus
 
 import androidx.compose.foundation.layout.Arrangement
@@ -93,7 +90,7 @@ internal fun LandscapeLayout(
                                 )
                             }
                         }
-                        // 타일이 하나뿐이면(09 배터리 위험 · 미연결) 값은 왼쪽 반에 두고 구분선은 패널 폭 전체에 긋는다 (시안).
+                        // 타일이 하나뿐이면(09) 값은 왼쪽 반에 두고 구분선은 패널 폭 전체에 긋는다 (시안)
                         val singleTile = content.tiles.size == 1
                         Row(
                             modifier = Modifier
@@ -136,7 +133,7 @@ internal fun PortraitLayout(
             horizontalArrangement = Arrangement.spacedBy(AlterMargin.Large),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // 2줄을 넘으면 60 → 56 → 48 → 40으로 줄인다 (개발자 Q&A Q1)
+            // Q&A Q1
             AutoShrinkHeadline(
                 text = content.portraitHeadline,
                 styles = portraitHeadlineStyles(),
@@ -162,8 +159,7 @@ internal fun PortraitLayout(
                 .weight(1f),
             chip = state.chip,
             image = {
-                // Figma 세로 stage는 variant가 둘이다(상황 보드 455:58776 세로 01~12).
-                // 둘 다 패널이 겹친 부분까지 포함한 스테이지 기준이고, 차 자리는 세로 가운데 · 오른쪽 여백 24.
+                // Figma 세로 stage는 variant가 둘이다 (455:58776 세로 01~12)
                 StageVehicle(
                     spec = if (content.isCharging) PortraitStageCharging else PortraitStageUnplugged,
                     vehicleImage = vehicleImage,
@@ -180,7 +176,6 @@ internal fun PortraitLayout(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.Bottom,
                     ) {
-                        // 세로 시안(455:58776 세로 01~12)은 SOC 숫자 빛번짐이 있다
                         BatteryValue(
                             state = state,
                             content = content,
@@ -223,7 +218,7 @@ private val PortraitStageUnplugged = StageImageSpec(
     imageEndPadding = 24.dp,
 )
 
-/** 가로 타일 단위 글자 18/27 (디자인 값에 없는 크기). 자간 · 줄 높이 처리는 디자인 값 글자와 같다 */
+/** 18/27은 디자인 값에 없는 크기 */
 private val LandscapeTileUnitStyle = TextStyle(
     fontFamily = AstaSans,
     fontWeight = AlterFontWeight.Normal,
@@ -233,5 +228,5 @@ private val LandscapeTileUnitStyle = TextStyle(
     lineHeightStyle = AlterLineHeightStyle,
 )
 
-/** 가로 타일 값: numeric/medium 40에 줄 높이만 1.2배(48). Figma tile_range · tile_* 값 */
+/** numeric/medium에 줄 높이만 1.2배 (Figma tile_range · tile_*) */
 private fun landscapeTileValueStyle(base: TextStyle): TextStyle = base.copy(lineHeight = 48.sp)

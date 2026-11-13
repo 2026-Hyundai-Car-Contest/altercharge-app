@@ -5,41 +5,33 @@ import com.altercharge.app.ui.designsystem.layout.AppLayoutInfo
 import com.altercharge.app.ui.designsystem.layout.FormFactor
 import java.time.LocalDate
 
-/**
- * L2 주간 주행 기록 카드에 넘기는 값. Figma card_drive_record (366:38474).
- * 막대 차트 · 평균선 · 타일 4개(하루 평균, 주간 합계, 마지막 충전, 충전 후 주행)를 그린다.
- */
+/** L2 주간 주행 기록. Figma card_drive_record (366:38474) */
 @Immutable
 data class CardDriveRecordUiState(
-    /** 보고 있는 주의 월요일 */
+    /** 월요일 */
     val weekStart: LocalDate,
-    /** 월~일 7칸 주행 km. 아직 안 온 날은 null */
+    /** 월~일 7칸. 아직 안 온 날은 null */
     val dailyKm: List<Int?>,
-    /** 오늘 칸 위치 (0 = 월). 지난 주를 보고 있으면 null */
+    /** 0 = 월. 지난 주를 보고 있으면 null */
     val todayIndex: Int?,
     val averageKm: Int,
     val totalKm: Int,
-    /** 마지막 충전 후 지난 날 수 */
     val daysSinceLastCharge: Int?,
-    /** 충전 후 주행 km */
     val kmSinceLastCharge: Int?,
-    /** 지난 주보다 더 달린 km. 덜 달렸으면 음수 */
+    /** 덜 달렸으면 음수 */
     val diffFromLastWeekKm: Int?,
     val hasPreviousWeek: Boolean,
     val hasNextWeek: Boolean,
-    /** 펼침 상태 (상황 15). 화면에 들어올 때는 접힘으로 시작한다(시안 규칙) */
+    /** 상황 15. 화면에 들어올 때는 접힘으로 시작한다(시안 규칙) */
     val expanded: Boolean,
     /**
-     * 이번 주 기록이 하나도 없는 빈 상태 (Figma state = empty, 첫날). 막대를 흐리게 가리고 안내를 보여 준다.
-     * 이전 · 다음 주 버튼은 눌리지 않고, 펼침 버튼과 상세 통계는 숨긴다. 값은 [dailyKm] 모두 null · [todayIndex] 지정으로 둔다.
+     * Figma state = empty (이번 주 기록 0건). 이전 · 다음 주 버튼은 눌리지 않고 펼침 버튼 · 상세 통계는 숨긴다.
+     * 값은 [dailyKm] 모두 null · [todayIndex] 지정으로 둔다.
      */
     val empty: Boolean = false,
 )
 
-/**
- * 카드 모드. Figma card_drive_record의 mode 변형.
- * 모드마다 접힘 상태 카드 높이가 정해져 있고, 그래프(chart_week) 높이는 펼쳐도 그대로다.
- */
+/** Figma card_drive_record mode. 크기는 접힘 상태 카드 */
 enum class CardDriveRecordMode {
     /** S-17 가로 383×648 */
     LANDSCAPE,
@@ -53,12 +45,11 @@ enum class CardDriveRecordMode {
     /** WF 가로 387×455 */
     WF_LANDSCAPE,
 
-    /** WF 세로 584×576 (화면 인스턴스 452:54439, Q&A Q4로 580 → 584) */
+    /** WF 세로 584×576 (452:54439, Q&A Q4로 580 → 584) */
     WF_PORTRAIT,
 }
 
 /**
- * 레이아웃 정보로 mode를 고른다.
  * TODO 디자이너 확인: W-Standard 가로(높이 810)는 시안이 없어 S-17 가로(LANDSCAPE)로 대신한다.
  */
 fun cardDriveRecordModeFor(info: AppLayoutInfo): CardDriveRecordMode = when (info.formFactor) {
