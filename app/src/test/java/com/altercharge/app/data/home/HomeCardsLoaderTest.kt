@@ -5,6 +5,7 @@ import com.altercharge.app.data.local.OfflineSnapshotStore
 import com.altercharge.app.data.remote.AlterChargeApi
 import com.altercharge.app.data.remote.HttpClient
 import com.altercharge.app.data.remote.HttpResponse
+import com.altercharge.app.data.upload.SnapshotUploader
 import com.altercharge.app.domain.time.KoreaZone
 import com.altercharge.app.ui.card.common.ChargeVerdict
 import com.altercharge.app.ui.card.info.LastChecked
@@ -42,10 +43,15 @@ class HomeCardsLoaderTest {
             "availableCount":1,"totalValidCount":1,"chargerTypes":["DC_COMBO"],"maxOutputKw":50.0,"visitCount":null,
             "statusObservedAt":null}],"page":0,"size":5,"hasNext":false,"fetchedAt":"2026-11-12T05:00:00Z"}"""
         val urls = mutableListOf<String>()
+        val calls = mutableListOf<String>()
 
         override fun request(method: String, url: String, body: String?): HttpResponse {
             urls += url
+            calls += "$method ${url.substringAfter("/api/v1/").substringBefore("?")}"
             if (!online) throw IOException("offline")
+            if (method == "POST") {
+                return HttpResponse(201, """{"snapshotId":"s","saved":true,"recordedAt":"2026-11-12T05:30:00Z"}""")
+            }
             val text = when {
                 "vehicles/snapshots" in url -> snapshots
                 "charging-events/latest" in url -> latest
@@ -185,5 +191,30 @@ class HomeCardsLoaderTest {
         assertNull(lastWeek.todayIndex)
         assertTrue(lastWeek.hasNextWeek)
         assertTrue(lastWeek.expanded)
+    }
+
+    @Test
+    fun 업로더를_넘기면_기록을_받기_전에_차량_값을_보낸다() = runBlocking {
+        val uploader = SnapshotUploader(AlterChargeApi("https://example.test/api/v1/", server), MemoryStore())
+        HomeCardsLoader(AlterChargeApi("https://example.test/api/v1/", server), store, Clock.fixed(now, ZoneOffset.UTC), uploader = uploader)
+            .load(vehicle, here)
+        assertEquals(listOf("POST vehicles/snapshots", "GET vehicles/snapshots"), server.calls.take(2))
+        assertEquals(0, uploader.pendingCount())
+    }
+
+    @Test
+    fun 업로더가_없으면_서버에_보내지_않는다() = runBlocking {
+        loader().load(vehicle, here)
+        assertTrue(server.calls.none { it.startsWith("POST") })
+    }
+
+    @Test
+    fun 오프라인이면_보낼_값을_남겨_두고_저장한_값으로_그린다() = runBlocking {
+        val uploader = SnapshotUploader(AlterChargeApi("https://example.test/api/v1/", server), MemoryStore())
+        server.online = false
+        val cards = HomeCardsLoader(AlterChargeApi("https://example.test/api/v1/", server), store, Clock.fixed(now, ZoneOffset.UTC), uploader = uploader)
+            .load(vehicle, here)
+        assertTrue(cards.offline)
+        assertEquals(1, uploader.pendingCount())
     }
 }

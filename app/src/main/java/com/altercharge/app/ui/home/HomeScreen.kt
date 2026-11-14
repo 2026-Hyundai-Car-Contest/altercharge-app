@@ -1,6 +1,8 @@
 package com.altercharge.app.ui.home
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -24,7 +26,6 @@ import com.altercharge.app.ui.designsystem.layout.AlterChargeLayout
 import androidx.compose.runtime.getValue
 import com.altercharge.app.data.home.LatLng
 import com.altercharge.app.data.home.VehicleReading
-import com.altercharge.app.debug.VehicleStatusCatalog
 import com.altercharge.app.ui.card.driverecord.CardDriveRecord
 import com.altercharge.app.ui.card.station.CardStation
 import com.altercharge.app.ui.card.station.CardStationUiState
@@ -39,17 +40,18 @@ import com.altercharge.app.ui.card.vehiclestatus.CardVehicleStatusUiState
 import com.altercharge.app.ui.card.vehiclestatus.ChargingState
 import com.altercharge.app.ui.designsystem.layout.LocalAppLayout
 import com.altercharge.app.ui.designsystem.theme.AlterChargeTheme
+import com.altercharge.app.ui.designsystem.theme.AlterTheme
 
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel
 ) {
-    Column(
+    // 화면 전체를 레이아웃 틀에 맡긴다: 바깥 여백 · 배경은 AlterChargeLayout과 앱 배경 토큰이 정한다 (디버그 카탈로그 layout과 같은 구성)
+    AlterChargeTheme {
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(32.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .background(AlterTheme.colors.screenBackground),
     ) {
 
         val uiState by viewModel.uiState.collectAsState()
@@ -101,7 +103,6 @@ fun HomeScreen(
             chargeRecommended = false
         )
 
-        AlterChargeTheme() {
             AlterChargeLayout(
                 statusBar = {
                     StatusBar(
@@ -125,9 +126,9 @@ fun HomeScreen(
                     cards?.let {
                         CardDriveRecord(
                             state = it.driveRecord,
-                            onPreviousWeek = {},
-                            onNextWeek = {},
-                            onToggleExpanded = {}
+                            onPreviousWeek = viewModel::showPreviousWeek,
+                            onNextWeek = viewModel::showNextWeek,
+                            onToggleExpanded = viewModel::toggleDriveRecordExpanded
                         )
                     }
                 },
