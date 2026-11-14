@@ -54,6 +54,7 @@ import com.altercharge.app.ui.designsystem.theme.AlterFontWeight
 import com.altercharge.app.ui.designsystem.theme.AlterMargin
 import com.altercharge.app.ui.designsystem.theme.AlterRadius
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
+import com.altercharge.app.ui.station.StationListMessage
 import com.altercharge.app.ui.station.StationListUiState
 
 data class ConnectorTypeFilter(
@@ -122,16 +123,16 @@ private val previewStations = listOf(
 )
 
 /**
- * R2 주변 충전소 목록 (REQ_SL_001). 받은 목록은 [state]에서 온다.
+ * R2 주변 충전소 목록 (REQ_SL_001 · REQ_SL_002). 받은 목록과 검색은 [state]의 값을 따른다.
  */
 @Composable
 fun RecommendedStationList(
     modifier: Modifier = Modifier,
     state: StationListUiState,
+    onQueryChange: (String) -> Unit = {},
     onMicClick: () -> Unit = {},
     onStationClick: (CardItemUiState) -> Unit = {},
 ) {
-    var searchQuery by remember { mutableStateOf("") }
     var selectedSortType by remember { mutableStateOf(StationSortType.DISTANCE) }
 
     // 연결 타입 필터 상태
@@ -146,20 +147,12 @@ fun RecommendedStationList(
     var pendingMinPower by remember { mutableIntStateOf(3) }
     var pendingMaxPower by remember { mutableIntStateOf(350) }
 
-    // 검색어 및 정렬 필터링
-    val filteredStations = remember(state.items, searchQuery, selectedSortType) {
+    // 정렬은 아직 화면에서 한다 (REQ_SL_004 정렬에서 서버 목록 정렬로 옮긴다)
+    val filteredStations = remember(state.items, selectedSortType) {
         val stations = state.items
-        val list = if (searchQuery.isBlank()) {
-            stations
-        } else {
-            stations.filter {
-                it.stationName.contains(searchQuery, ignoreCase = true) ||
-                    it.chargeStationAddress.contains(searchQuery, ignoreCase = true)
-            }
-        }
         when (selectedSortType) {
-            StationSortType.DISTANCE -> list.sortedBy { it.distance }
-            StationSortType.VISIT -> list
+            StationSortType.DISTANCE -> stations.sortedBy { it.distance }
+            StationSortType.VISIT -> stations
         }
     }
 
@@ -180,10 +173,11 @@ fun RecommendedStationList(
             textAlign = TextAlign.Left,
         )
 
-        // 1. 검색바
+        // 1. 검색바 (REQ_SL_002)
         SearchBar(
             modifier = Modifier.fillMaxWidth(),
-            onValueChange = { searchQuery = it },
+            value = state.query,
+            onValueChange = onQueryChange,
             onMicClick = onMicClick,
         )
 
@@ -391,7 +385,7 @@ fun RecommendedStationList(
             }
         }
 
-        // 안내 줄: 불러오는 중 · 빈 목록 · 오프라인 (REQ_CM_006)
+        // 안내 줄: 불러오는 중 · 빈 목록 · 오프라인 · 검색 안 됨 (REQ_CM_006 · REQ_SL_002)
         listNotice(state)?.let { notice ->
             Text(
                 text = notice,
@@ -420,6 +414,7 @@ fun RecommendedStationList(
 
 @Composable
 private fun listNotice(state: StationListUiState): String? = when {
+    state.message == StationListMessage.SEARCH_UNAVAILABLE -> stringResource(R.string.station_list_offline_search_blocked)
     state.isLoading && state.items.isEmpty() -> stringResource(R.string.station_list_loading)
     state.items.isEmpty() -> stringResource(R.string.station_list_empty)
     state.offline && state.lastChecked != null ->
