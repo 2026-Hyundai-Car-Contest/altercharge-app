@@ -46,7 +46,6 @@ fun StationItem(
     /** 목록에서 고른 충전소 (REQ_SL_006). Figma state=selected: blue_50 바탕 + blue_500 2px 테두리 */
     selected: Boolean = false,
 ) {
-    // 전체 컨테이너
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -67,7 +66,6 @@ fun StationItem(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            // 충전소명
             Text(
                 text = state.stationName,
                 fontWeight = AlterFontWeight.Strong,
@@ -182,7 +180,6 @@ fun StationItem(
     }
 }
 
-// extension
 
 @Composable
 private fun ChargingType.image(): Int {

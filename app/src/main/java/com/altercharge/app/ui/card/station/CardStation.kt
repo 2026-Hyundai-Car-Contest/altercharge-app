@@ -73,7 +73,6 @@ fun CardStation(
                 )
             }
 
-            // 충전소 이름
             Text(
                 text = state.stationName,
                 color = AlterTheme.colors.textPrimary,
@@ -268,7 +267,6 @@ fun CardStationChip(
     )
 }
 
-// extension
 @Composable
 private fun ChipTone.backgroundColor(): Color {
     return when(this) {

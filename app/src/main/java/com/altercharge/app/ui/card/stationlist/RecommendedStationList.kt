@@ -141,7 +141,7 @@ fun RecommendedStationList(
             return@Column
         }
 
-        // 1. 검색바 (REQ_SL_002 · REQ_SL_003)
+        // 검색바 (REQ_SL_002 · REQ_SL_003)
         SearchBar(
             modifier = Modifier.fillMaxWidth(),
             value = state.query,
@@ -150,7 +150,7 @@ fun RecommendedStationList(
             offline = state.offline,
         )
 
-        // 2. 필터 영역 (정렬, 연결 타입, 속도)
+        // 필터 영역 (정렬, 연결 타입, 속도)
         StationListFilterRow(
             state = state,
             onSortChange = onSortChange,
@@ -167,7 +167,7 @@ fun RecommendedStationList(
             )
         }
 
-        // 3. 충전소 목록
+        // 충전소 목록
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()

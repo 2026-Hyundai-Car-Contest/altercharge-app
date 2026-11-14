@@ -74,7 +74,6 @@ fun ChargePowerSlider(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // 슬라이더 트랙 및 핸들
             val circleInnerColor = AlterTheme.colors.containerBackground
 
             Canvas(
@@ -144,7 +143,6 @@ fun ChargePowerSlider(
                 val minX = startX + minIndex * stepWidth
                 val maxX = startX + maxIndex * stepWidth
 
-                // 전체 트랙
                 drawLine(
                     color = inactive,
                     start = androidx.compose.ui.geometry.Offset(startX, centerY),
@@ -153,7 +151,6 @@ fun ChargePowerSlider(
                     cap = StrokeCap.Round
                 )
 
-                // 선택된 범위
                 drawLine(
                     color = blue,
                     start = androidx.compose.ui.geometry.Offset(minX, centerY),
@@ -162,7 +159,6 @@ fun ChargePowerSlider(
                     cap = StrokeCap.Round
                 )
 
-                // 단계별 점
                 for (index in 0..6) {
                     val x = startX + index * stepWidth
 
@@ -179,7 +175,6 @@ fun ChargePowerSlider(
                     }
                 }
 
-                // 최소 / 최대 핸들
                 listOf(minX, maxX).forEach { x ->
                     drawCircle(
                         color = blue,
@@ -197,7 +192,6 @@ fun ChargePowerSlider(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // 출력값
             Row(
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -217,7 +211,6 @@ fun ChargePowerSlider(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 충전 속도 구간
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)

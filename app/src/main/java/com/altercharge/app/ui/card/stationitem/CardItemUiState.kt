@@ -10,17 +10,14 @@ import com.altercharge.app.ui.card.station.ChargingType
 data class CardItemUiState(
     // 충전소 ID (서버 statId). 선택 · 방문 기록에 쓴다
     val stationId: String = "",
-    // 충전소명
     val stationName: String,
     // 충전 대기 중인 충전기 수 (stat=2)
     val availableChargerCount: Int,
     // 삭제 · 무효를 뺀 충전기 수
     val totalChargerCount: Int,
-    // 충전타입(완속/급속/초급속)
     var chargingType: ChargingType,
-    // 충전소까지 거리 (km, 직선거리)
+    // km, 직선거리
     val distance: Double,
-    // 충전소 도로명 주소
     val chargeStationAddress: String,
     // 충전소가 가진 연결 타입 (REQ_SL_001 항목)
     val connectorTypes: List<ConnectorType> = emptyList(),

@@ -64,7 +64,6 @@ fun SelectableDropdownItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(AlterMargin.Small)
         ) {
-            // 체크박스
             Box(
                 modifier = Modifier
                     .size(32.dp)
@@ -97,7 +96,6 @@ fun SelectableDropdownItem(
                 }
             }
 
-            // 텍스트
             Column (
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp)

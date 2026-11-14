@@ -14,7 +14,6 @@ enum class ChargerStatus {
     UNKNOWN,            // 가용 대수 유효 기간(15분)이 지나 확인할 수 없음 (REQ_CM_009)
 }
 
-// 텍스트와 아이콘으로 분리하고 다시 충전유형과 전압으로 분리
 sealed class ChargeInfoTag {
     abstract val text: String
     abstract val type: ChargeInfoType
