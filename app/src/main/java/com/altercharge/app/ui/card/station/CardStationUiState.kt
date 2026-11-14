@@ -1,5 +1,6 @@
 package com.altercharge.app.ui.card.station
 
+import com.altercharge.app.ui.card.info.LastChecked
 import com.altercharge.app.data.remote.model.ConnectorType
 
 /**
@@ -23,6 +24,8 @@ data class CardStationUiState(
     val stationAddress: String? = null,
     // 충전기 연결 타입 요약 (REQ_ST_007)
     val connectorTypes: List<ConnectorType> = emptyList(),
+    /** 오프라인으로 저장값을 보여 줄 때 이름 아래 "N분 전 기준" (Figma show_last_checked · REQ_CM_006). 연결돼 있으면 null */
+    val lastChecked: LastChecked? = null,
 ) {}
 
 data class ChipState(

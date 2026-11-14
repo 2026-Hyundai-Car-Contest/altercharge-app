@@ -35,4 +35,10 @@ fun stationValidity(receivedAt: Instant?, now: Instant): StationValidity = Stati
 /** 서버에 못 붙어 저장값을 보여 주는 동안 다시 요청하는 간격 (REQ_CM_006). 홈 ViewModel이 쓴다 */
 object RefreshRule {
     val AUTO_RETRY_INTERVAL: Duration = Duration.ofSeconds(30)
+
+    /**
+     * 연결돼 있을 때 다시 받는 간격. 차량 앱은 오래 켜 두므로 가용 대수 유효 기간(15분) 안에 새로 받는다 (REQ_CM_009).
+     * 다시 그리면서 15분 지난 값은 "정보 없음"으로 바뀐다.
+     */
+    val ONLINE_REFRESH_INTERVAL: Duration = Duration.ofMinutes(5)
 }

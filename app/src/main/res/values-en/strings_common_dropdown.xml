@@ -2,4 +2,5 @@
 <resources>
   <string name="strings_common_dropdown_wrapper_reset_button">Reset</string>
   <string name="strings_common_dropdown_wrapper_apply_button">Apply</string>
+  <string name="strings_common_dropdown_item_selected">Selected</string>
 </resources>

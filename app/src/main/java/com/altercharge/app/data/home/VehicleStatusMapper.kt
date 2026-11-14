@@ -6,7 +6,7 @@ import com.altercharge.app.domain.judgment.RECOMMEND_SOC_PERCENT
 import com.altercharge.app.domain.time.KoreaZone
 import com.altercharge.app.ui.card.vehiclestatus.CardVehicleStatusUiState
 import java.time.format.DateTimeFormatter
-import java.util.Locale
+import java.time.format.FormatStyle
 
 /**
  * C 카드 값. 차량에서 읽는 값(SOC · 주행가능거리 · 충전 상태)과 서버에서 오는 값
@@ -26,11 +26,15 @@ fun VehicleTelemetry.toCardVehicleStatusUiState(
     lastChargedAt = serverValues?.lastChargedAt,
     nearestStationKm = serverValues?.nearestStationKm,
     fault = fault,
-    lastUpdatedAt = observedAt?.let { it.atZone(KoreaZone).format(ClockFormat) },
+    // 영어 형식은 AM/PM 앞에 좁은 공백(U+202F)이 들어가 글꼴에 따라 깨져 보여서 보통 공백으로 바꾼다
+    lastUpdatedAt = observedAt?.let { it.atZone(KoreaZone).format(clockFormat()).replace('\u202F', ' ') },
     // 판정을 못 받았을 때는 배터리 구간으로만 가른다 (REQ_ST_005 예외와 같은 기준)
     chargeRecommended = serverValues?.chargeRecommended
         ?: (socPercent?.let { it <= RECOMMEND_SOC_PERCENT } ?: false),
 )
 
-/** 시안 표기 "오후 1:45" */
-private val ClockFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("a h:mm", Locale.KOREAN)
+/**
+ * 기기 언어의 짧은 시각 형식. 한국어는 시안 표기 "오후 1:45", 영어는 "1:45 PM"이 된다.
+ * 만들 때의 기본 언어를 잡으므로 언어를 바꿔도 따라가게 부를 때마다 만든다.
+ */
+private fun clockFormat(): DateTimeFormatter = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)

@@ -56,7 +56,10 @@ fun interface VehicleTelemetrySource {
 class MockVehicleTelemetrySource(
     private val telemetry: VehicleTelemetry = DEFAULT,
 ) : VehicleTelemetrySource {
-    override fun read(): VehicleTelemetry = telemetry
+    // 완충 시각은 읽을 때마다 화면 언어로 만든다: 미리 만들어 두면 언어를 바꿔도 옛 형식으로 남는다
+    override fun read(): VehicleTelemetry =
+        if (telemetry === DEFAULT) telemetry.copy(fullAt = LocalTime.of(14, 30).format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)))
+        else telemetry
 
     // 목업은 늘 충전 중이라 앱을 켤 때마다 방문 +1 · 공용 시연 차량에 START 이벤트가 쌓인다
     override val isSimulated: Boolean get() = true

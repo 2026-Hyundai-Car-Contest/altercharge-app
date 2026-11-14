@@ -217,4 +217,35 @@ class HomeCardsLoaderTest {
         assertTrue(cards.offline)
         assertEquals(1, uploader.pendingCount())
     }
+
+    // ---- 오프라인 추천 유지 (REQ_CM_006) ----
+
+    @Test
+    fun 오프라인이면_마지막_추천을_받은_시각과_함께_보여_준다() = runBlocking {
+        loader().load(vehicle, here)
+        server.online = false
+        val later = now.plusSeconds(10 * 60)
+        val cards = loader(later).load(vehicle, here)
+        assertEquals("예시 공영주차장", cards.recommended?.name)
+        assertEquals(now, cards.recommended?.savedAt)
+        assertTrue(cards.offline)
+    }
+
+    @Test
+    fun 칠일이_지난_추천은_오프라인에서도_보여_주지_않는다() = runBlocking {
+        loader().load(vehicle, here)
+        server.online = false
+        val cards = loader(now.plusSeconds(8L * 24 * 3600)).load(vehicle, here)
+        assertNull(cards.recommended)
+    }
+
+    @Test
+    fun 추천만_못_받으면_저장값을_덮지_않는다() = runBlocking {
+        loader().load(vehicle, here)
+        server.recommendation = "{깨진 응답"
+        val cards = loader(now.plusSeconds(60)).load(vehicle, here)
+        assertEquals("예시 공영주차장", store.load().placeName)
+        assertEquals(now, store.load().stationReceivedAt)
+        assertEquals("예시 공영주차장", cards.recommended?.name) // 못 받은 추천은 저장값으로
+    }
 }

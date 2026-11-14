@@ -4,6 +4,12 @@
  */
 package com.altercharge.app.data.local
 
+import com.altercharge.app.data.remote.model.ConnectorType
+import com.altercharge.app.data.remote.model.RecommendationReason
+import com.altercharge.app.data.remote.model.SpeedCategory
+import org.json.JSONArray
+import org.json.JSONObject
+import com.altercharge.app.data.home.RecommendedStationInfo
 import android.content.Context
 import com.altercharge.app.domain.judgment.Judgment
 import com.altercharge.app.domain.judgment.JudgmentResult
@@ -17,6 +23,8 @@ data class OfflineSnapshot(
     val placeName: String?,
     val nearestStationKm: Double?,
     val stationReceivedAt: Instant?,
+    /** 마지막으로 받은 추천 충전소. 오프라인에서도 R1에 유지한다 (REQ_CM_006 "추천 충전소는 유지") */
+    val recommended: RecommendedStationInfo? = null,
 )
 
 class SharedPreferencesStore(context: Context) : KeyValueStore {
@@ -41,13 +49,17 @@ class OfflineSnapshotStore(private val store: KeyValueStore) {
         store.putStrings(mapOf(KEY_JUDGMENT to encodeJudgment(result), KEY_JUDGMENT_STAMP to encodeStamp(stamp)))
     }
 
-    /** receivedAt은 응답을 받은 기기 시각이다 (서버 statusObservedAt 아님) */
-    fun saveStation(placeName: String, nearestStationKm: Double?, receivedAt: Instant) {
+    /**
+     * 충전소 값과 추천 충전소를 한 번에 저장한다. 나눠 쓰면 중간에 앱이 죽었을 때 새 시각과 옛 추천이 섞인다.
+     * receivedAt은 응답을 받은 기기 시각이다 (서버 statusObservedAt 아님). recommended가 null이면 추천을 지운다.
+     */
+    fun saveStation(placeName: String, nearestStationKm: Double?, receivedAt: Instant, recommended: RecommendedStationInfo? = null) {
         store.putStrings(
             mapOf(
                 KEY_PLACE_NAME to placeName,
                 KEY_NEAREST_KM to nearestStationKm?.toString(),
                 KEY_STATION_RECEIVED_AT to receivedAt.toString(),
+                KEY_RECOMMENDED to recommended?.let(::encodeRecommended),
             ),
         )
     }
@@ -58,6 +70,7 @@ class OfflineSnapshotStore(private val store: KeyValueStore) {
         placeName = store.getString(KEY_PLACE_NAME),
         nearestStationKm = store.getString(KEY_NEAREST_KM)?.toDoubleOrNull(),
         stationReceivedAt = store.getString(KEY_STATION_RECEIVED_AT)?.let { runCatching { Instant.parse(it) }.getOrNull() },
+        recommended = store.getString(KEY_RECOMMENDED)?.let(::decodeRecommended),
     )
 
     private companion object {
@@ -66,6 +79,7 @@ class OfflineSnapshotStore(private val store: KeyValueStore) {
         const val KEY_PLACE_NAME = "place_name"
         const val KEY_NEAREST_KM = "nearest_station_km"
         const val KEY_STATION_RECEIVED_AT = "station_received_at"
+        const val KEY_RECOMMENDED = "recommended_station"
     }
 }
 
@@ -112,5 +126,51 @@ internal fun decodeStamp(text: String): JudgmentStamp? = runCatching {
         computedAt = Instant.parse(at),
         reserveKm = reserve.takeIf { it.isNotEmpty() }?.toInt(),
         todayKmAtCompute = todayKm.toInt(),
+    )
+}.getOrNull()
+
+// 추천 충전소는 필드가 많아 JSON으로 저장한다. 충전기별 상세(chargers)는 오프라인 표시에 쓰지 않아 뺀다.
+private fun encodeRecommended(info: RecommendedStationInfo): String = JSONObject().apply {
+    put("stationId", info.stationId)
+    put("name", info.name)
+    put("distanceMeters", info.distanceMeters)
+    put("availableCount", info.availableCount)
+    info.visitCount?.let { put("visitCount", it) }
+    info.speedCategory?.let { put("speedCategory", it.name) }
+    info.maxOutputKw?.let { put("maxOutputKw", it) }
+    put("fallbackUsed", info.fallbackUsed)
+    put("reasonCode", info.reasonCode.name)
+    info.address?.let { put("address", it) }
+    info.totalValidCount?.let { put("totalValidCount", it) }
+    put("connectorTypes", JSONArray(info.connectorTypes.map { it.name }))
+    info.lat?.let { put("lat", it) }
+    info.lng?.let { put("lng", it) }
+    info.statusObservedAt?.let { put("statusObservedAt", it.toString()) }
+}.toString()
+
+private fun decodeRecommended(text: String): RecommendedStationInfo? = runCatching {
+    val o = JSONObject(text)
+    fun optInt(key: String) = if (o.has(key)) o.getInt(key) else null
+    fun optDouble(key: String) = if (o.has(key)) o.getDouble(key) else null
+    fun optString(key: String) = if (o.has(key)) o.getString(key) else null
+    val connectors = o.optJSONArray("connectorTypes")
+    RecommendedStationInfo(
+        stationId = o.getString("stationId"),
+        name = o.getString("name"),
+        distanceMeters = o.getInt("distanceMeters"),
+        availableCount = o.getInt("availableCount"),
+        visitCount = optInt("visitCount"),
+        speedCategory = optString("speedCategory")?.let { runCatching { SpeedCategory.valueOf(it) }.getOrNull() },
+        maxOutputKw = optDouble("maxOutputKw"),
+        fallbackUsed = o.getBoolean("fallbackUsed"),
+        reasonCode = runCatching { RecommendationReason.valueOf(o.getString("reasonCode")) }.getOrDefault(RecommendationReason.UNKNOWN),
+        address = optString("address"),
+        totalValidCount = optInt("totalValidCount"),
+        connectorTypes = (0 until (connectors?.length() ?: 0)).mapNotNull { i ->
+            runCatching { ConnectorType.valueOf(connectors!!.getString(i)) }.getOrNull()
+        },
+        lat = optDouble("lat"),
+        lng = optDouble("lng"),
+        statusObservedAt = optString("statusObservedAt")?.let { runCatching { Instant.parse(it) }.getOrNull() },
     )
 }.getOrNull()

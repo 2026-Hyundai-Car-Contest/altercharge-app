@@ -86,7 +86,11 @@ class HomeViewModel(
     fun loadHome() {
         loadJob?.cancel()
         loadJob = viewModelScope.launch {
-            while (loadOnce()) delay(RefreshRule.AUTO_RETRY_INTERVAL.toMillis())
+            // 오프라인이면 30초, 연결돼 있으면 5분마다 다시 받는다 (REQ_CM_006 · REQ_CM_009)
+            while (true) {
+                val retry = loadOnce()
+                delay(if (retry) RefreshRule.AUTO_RETRY_INTERVAL.toMillis() else RefreshRule.ONLINE_REFRESH_INTERVAL.toMillis())
+            }
         }
     }
 

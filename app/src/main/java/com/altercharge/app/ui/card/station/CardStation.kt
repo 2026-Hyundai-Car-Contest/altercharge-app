@@ -1,5 +1,6 @@
 package com.altercharge.app.ui.card.station
 
+import com.altercharge.app.ui.card.info.lastCheckedText
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -44,6 +45,8 @@ fun CardStation(
     /** "여기로 안내" (REQ_BR_004). 요청 중이면 [navigating]으로 버튼을 막는다 */
     onNavigate: () -> Unit = {},
     navigating: Boolean = false,
+    /** 좌표가 없어 경로를 찾을 수 없으면 false로 넘겨 안내를 막는다 (REQ_BR_004 예외) */
+    canNavigate: Boolean = true,
 ) {
     val shape = RoundedCornerShape(AlterRadius.XXLarge)
 
@@ -82,6 +85,15 @@ fun CardStation(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
+
+            // Figma title_block · last_checked: text_dark_tertiary 20 regular
+            state.lastChecked?.let { lastChecked ->
+                Text(
+                    text = lastCheckedText(lastChecked),
+                    style = AlterTheme.typography.labelSmall,
+                    color = AlterTheme.colors.textTertiary,
+                )
+            }
 
             // 충전소 주소 (REQ_ST_007 상세 정보). 상세를 못 받았으면 줄을 숨긴다
             state.stationAddress?.takeIf { it.isNotBlank() }?.let { address ->
@@ -148,7 +160,7 @@ fun CardStation(
                     text = stringResource(R.string.card_station_navigate),
                     onClick = onNavigate,
                     // 점검 중이면 안내를 막는다 (Figma availability=fault · REQ_EX_004)
-                    enabled = !navigating && state.chargerStatus != ChargerStatus.UNDER_INSPECTION,
+                    enabled = !navigating && canNavigate && state.chargerStatus != ChargerStatus.UNDER_INSPECTION,
                 )
             }
         }

@@ -77,10 +77,11 @@ class StationListViewModel(
         (searchResults.orEmpty() + allStations).firstOrNull { it.stationId == stationId }
 
     /** 화면에 다시 들어왔거나 사용자가 다시 시도했을 때 */
-    fun refresh() {
+    /** @param keepMessage 자동 새로고침이면 true. 보던 안내 문구(검색 불가 등)를 5분마다 지우지 않는다 */
+    fun refresh(keepMessage: Boolean = false) {
         refreshJob?.cancel()
         refreshJob = viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, message = null) }
+            _uiState.update { it.copy(isLoading = true, message = if (keepMessage) it.message else null) }
             // 처음에만 저장한 목록을 먼저 보여 준다: 연결이 느리거나 끊겨도 빈 화면을 보지 않게.
             // 이미 목록이 있으면 다시 요청할 때마다 '오프라인'으로 깜빡이지 않게 그대로 둔다
             if (allStations.isEmpty()) {
@@ -233,12 +234,17 @@ class StationListViewModel(
         }
     }
 
-    /** 연결이 끊긴 동안 30초마다 다시 요청한다 (REQ_CM_006) */
+    /** 오프라인이면 30초, 연결돼 있으면 5분마다 다시 받는다 (REQ_CM_006 · REQ_CM_009) */
     private fun retryWhileOffline() {
         viewModelScope.launch {
+            var sinceRefresh = 0L
             while (isActive) {
                 delay(RefreshRule.AUTO_RETRY_INTERVAL.toMillis())
-                if (_uiState.value.offline) refresh()
+                sinceRefresh += RefreshRule.AUTO_RETRY_INTERVAL.toMillis()
+                if (_uiState.value.offline || sinceRefresh >= RefreshRule.ONLINE_REFRESH_INTERVAL.toMillis()) {
+                    sinceRefresh = 0L
+                    refresh(keepMessage = true)
+                }
             }
         }
     }

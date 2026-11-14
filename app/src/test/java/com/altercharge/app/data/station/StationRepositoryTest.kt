@@ -9,6 +9,9 @@ import com.altercharge.app.data.remote.HttpResponse
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.IOException
 import java.time.Clock
@@ -96,5 +99,30 @@ class StationRepositoryTest {
         server.online = true
         repository.nearby(37.5, 127.0)
         assertEquals(2, server.urls.size)
+    }
+
+    @Test
+    fun 저장한_목록은_7일까지_쓴다() = runBlocking {
+        repository.nearby(37.5, 127.0)
+        clock.now = clock.now.plus(Duration.ofDays(7))
+        assertNotNull(repository.cached())
+
+        server.online = false
+        val offline = repository.nearby(37.6, 127.0)
+        assertTrue(offline.fromCache)
+        assertEquals(1, offline.stations.size)
+    }
+
+    @Test
+    fun 칠일이_지난_목록은_쓰지_않는다() = runBlocking {
+        repository.nearby(37.5, 127.0)
+        clock.now = clock.now.plus(Duration.ofDays(7)).plusSeconds(1)
+        assertNull(repository.cached())
+
+        server.online = false
+        val offline = repository.nearby(37.6, 127.0)
+        assertTrue(offline.offline)
+        assertTrue(offline.stations.isEmpty())
+        assertNull(offline.receivedAt)
     }
 }

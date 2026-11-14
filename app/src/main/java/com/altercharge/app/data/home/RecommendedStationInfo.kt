@@ -34,6 +34,8 @@ data class RecommendedStationInfo(
     val lng: Double? = null,
     /** 가용 대수를 관측한 시각. 15분이 지나면 R1에 "정보 없음" (REQ_CM_009) */
     val statusObservedAt: Instant? = null,
+    /** 오프라인이라 저장해 둔 추천을 보여 줄 때 받은 시각. 이름 아래 "N분 전 기준" (REQ_CM_006 · Figma show_last_checked) */
+    val savedAt: Instant? = null,
 ) {
     /** 충전기별 연결 타입 합집합. 상세의 충전기 목록이 비면 추천 응답에 없으므로 빈 목록 */
     val allConnectorTypes: List<ConnectorType>
