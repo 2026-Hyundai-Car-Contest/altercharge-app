@@ -39,18 +39,6 @@ import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 
-/** 차량 SDK 값. 거리는 km */
-data class VehicleReading(val socPercent: Int, val rangeKm: Int, val odometerKm: Double)
-
-data class LatLng(val lat: Double, val lng: Double)
-
-/** C 카드 중 서버 · 판정에서 오는 값. 모르면 null ("--") */
-data class VehicleStatusServerValues(
-    val chargeRecommended: Boolean,
-    val nearestStationKm: Double?,
-    val lastChargedAt: String?,
-)
-
 data class HomeCards(
     val cardInfo: CardInfoUiState,
     val driveRecord: CardDriveRecordUiState,
