@@ -153,30 +153,35 @@ class HomeCardsLoader(
      */
     private suspend fun stationFor(location: LatLng?, chargeRecommended: Boolean, now: Instant): StationValues {
         val requested = location != null
+        val saved = store.load()
+        val savedValid = saved.stationReceivedAt?.let { stationValidity(it, now).info == Validity.VALID } == true
+        // 오프라인에서 보여 줄 저장 추천: 7일 안이면 받은 시각과 함께 (REQ_CM_006 · REQ_CM_009)
+        val savedRecommended = if (savedValid) saved.recommended?.copy(savedAt = saved.stationReceivedAt) else null
         if (location != null) {
             val recommendation = api.recommendation(location.lat, location.lng, chargeRecommended)
             val nearby = api.stations(location.lat, location.lng, size = NEAREST_PAGE_SIZE)
             val recommended = (recommendation as? ApiResult.Success)?.value
             val nearest = (nearby as? ApiResult.Success)?.value
             if (recommended != null || nearest != null) {
-                val placeName = recommended?.placeName().orEmpty()
-                val nearestKm = nearest?.nearestStationKm()
-                store.saveStation(placeName, nearestKm, receivedAt = now)
+                val info = recommended?.let { it.toRecommendedStationInfo(detail = stationDetailOf(it.station?.stationId)) }
+                // 하나만 받았으면 못 받은 쪽은 저장값으로 채우고, 저장값을 덮지 않는다 (받은 시각이 섞이지 않게)
+                val placeName = recommended?.placeName() ?: (if (savedValid) saved.placeName.orEmpty() else "")
+                val nearestKm = nearest?.nearestStationKm() ?: (if (savedValid) saved.nearestStationKm else null)
+                if (recommended != null && nearest != null) {
+                    store.saveStation(placeName, nearestKm, receivedAt = now, recommended = info)
+                }
                 return StationValues(
                     placeName = placeName,
                     nearestStationKm = nearestKm,
                     lastChecked = null,
                     offline = recommended == null || nearest == null,
-                    recommended = recommended?.let { info ->
-                        info.toRecommendedStationInfo(detail = stationDetailOf(info.station?.stationId))
-                    },
+                    recommended = if (recommended != null) info else savedRecommended,
                 )
             }
         }
 
-        val saved = store.load()
         val receivedAt = saved.stationReceivedAt
-        if (stationValidity(receivedAt, now).info != Validity.VALID || receivedAt == null) {
+        if (!savedValid || receivedAt == null) {
             return StationValues(placeName = "", nearestStationKm = null, lastChecked = null, offline = requested)
         }
         return StationValues(
@@ -184,6 +189,7 @@ class HomeCardsLoader(
             nearestStationKm = saved.nearestStationKm,
             lastChecked = lastCheckedOf(receivedAt, now),
             offline = requested,
+            recommended = savedRecommended,
         )
     }
 

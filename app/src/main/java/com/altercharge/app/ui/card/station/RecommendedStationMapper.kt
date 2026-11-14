@@ -1,6 +1,7 @@
 /** 추천 충전소 정보 → R1 카드 (REQ_ST_007) */
 package com.altercharge.app.ui.card.station
 
+import com.altercharge.app.ui.card.info.lastCheckedOf
 import com.altercharge.app.R
 import com.altercharge.app.data.home.RecommendedStationInfo
 import com.altercharge.app.data.remote.freshness.AVAILABILITY_VALIDITY
@@ -36,6 +37,7 @@ fun RecommendedStationInfo.toCardStationUiState(
     myChargingCount = myChargingCount,
     stationAddress = address,
     connectorTypes = allConnectorTypes,
+    lastChecked = savedAt?.let { lastCheckedOf(it, now) },
 )
 
 /** 충전 속도(완속 · 급속 · 초급속)와 최대 출력. 출력을 모르면 속도 태그도 붙이지 않는다 */

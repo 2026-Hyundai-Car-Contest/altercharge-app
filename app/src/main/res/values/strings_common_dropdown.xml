@@ -2,4 +2,5 @@
 <resources>
   <string name="strings_common_dropdown_wrapper_reset_button">초기화</string>
   <string name="strings_common_dropdown_wrapper_apply_button">적용</string>
+  <string name="strings_common_dropdown_item_selected">선택됨</string>
 </resources>

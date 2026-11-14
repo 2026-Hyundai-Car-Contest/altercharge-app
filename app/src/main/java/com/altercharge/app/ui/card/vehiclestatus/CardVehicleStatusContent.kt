@@ -98,11 +98,20 @@ internal fun buildContent(state: CardVehicleStatusUiState, mode: CardVehicleStat
             unit = stringResource(R.string.card_vehicle_status_unit_24h),
         )
         VehicleSituation.CHARGE_ERROR -> null
-        VehicleSituation.NO_DATA -> Tile(
-            label = stringResource(R.string.card_vehicle_status_tile_retry),
-            value = state.retryInSeconds?.toString() ?: unknown,
-            unit = stringResource(R.string.card_vehicle_status_unit_seconds_later),
-        )
+        // 초를 모르면 "– 초 후" 대신 "다시 시도"만 남긴다. 값 줄은 비워 두어 타일 높이는 그대로다
+        VehicleSituation.NO_DATA -> {
+            val retryLabel = stringResource(R.string.card_vehicle_status_tile_retry)
+            val seconds = state.retryInSeconds
+            if (seconds != null) {
+                Tile(
+                    label = retryLabel,
+                    value = seconds.toString(),
+                    unit = stringResource(R.string.card_vehicle_status_unit_seconds_later),
+                )
+            } else {
+                Tile(label = retryLabel, value = "", unit = null, summary = retryLabel)
+            }
+        }
     }
     val tiles = if (situation == VehicleSituation.CHARGE_ERROR) {
         // REQ_EX_002

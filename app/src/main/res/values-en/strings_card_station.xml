@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="card_station_availability_possible">%1$s free</string>
+  <string name="card_station_availability_possible">%1$s</string>
   <string name="card_station_availability_impossibility">Out of service</string>
 
   <string name="card_station_charging_type_slow">Slow</string>
@@ -12,7 +12,7 @@
     <item quantity="other">%1$d visits</item>
   </plurals>
 
-  <string name="card_station_chip_recommended">Recommended</string>
+  <string name="card_station_chip_recommended">Pick</string>
   <string name="card_station_chip_fallback">Nearest station</string>
   <string name="card_station_empty_title">Couldn’t load nearby stations</string>
   <string name="card_station_empty_description">We’ll show nearby stations once connected</string>

@@ -2,6 +2,7 @@
 package com.altercharge.app.ui.card.vehiclestatus
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -9,8 +10,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.altercharge.app.R
 import com.altercharge.app.ui.designsystem.layout.AppLayoutInfo
 import com.altercharge.app.ui.designsystem.layout.FormFactor
 import com.altercharge.app.ui.designsystem.theme.AlterMargin
@@ -74,12 +78,15 @@ enum class VehicleImageKind {
  *
  * @param mode 레이아웃 틀 안에서는 cardVehicleStatusModeFor(LocalAppLayout.current)로 고른다.
  * @param vehicleImage 바꿔 그리려면 넘긴 Modifier(자리 크기 포함)를 쓴다.
+ * @param onRetry 12 차량 정보 없음(REQ_EX_003)에서 카드를 누르면 불린다.
+ *   세로 · WF 시안에는 다시 시도 타일이 없어 타일 대신 카드 전체를 누르는 영역으로 둔다.
  */
 @Composable
 fun CardVehicleStatus(
     state: CardVehicleStatusUiState,
     modifier: Modifier = Modifier,
     mode: CardVehicleStatusMode = CardVehicleStatusMode.LANDSCAPE,
+    onRetry: () -> Unit = {},
     vehicleImage: @Composable (kind: VehicleImageKind, modifier: Modifier) -> Unit = { kind, imageModifier ->
         VehicleImage(kind, imageModifier)
     },
@@ -90,12 +97,22 @@ fun CardVehicleStatus(
     // 다크 모드는 그림자 대신 면 색으로 높이를 나타낸다. S-17 가로만 한 겹이 더 있다
     val shadow = if (mode == CardVehicleStatusMode.LANDSCAPE) CardShadow else AlterShadows.Level1
     val shadowModifier = if (colors.isDark) Modifier else Modifier.alterShadow(shadow, CardRadius)
+    val retryModifier = if (state.situation == VehicleSituation.NO_DATA) {
+        Modifier.clickable(
+            onClickLabel = stringResource(R.string.card_vehicle_status_tile_retry),
+            role = Role.Button,
+            onClick = onRetry,
+        )
+    } else {
+        Modifier
+    }
 
     Box(
         modifier = modifier
             .semantics(mergeDescendants = true) {}
             .then(shadowModifier)
             .clip(shape)
+            .then(retryModifier)
             // card_vehicle_status/container/background → common/container/background (Q&A Q2)
             .background(colors.containerBackground, shape)
             .padding(AlterMargin.XSmall),

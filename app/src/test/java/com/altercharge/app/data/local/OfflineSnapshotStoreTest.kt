@@ -1,5 +1,9 @@
 package com.altercharge.app.data.local
 
+import com.altercharge.app.data.home.RecommendedStationInfo
+import com.altercharge.app.data.remote.model.ConnectorType
+import com.altercharge.app.data.remote.model.RecommendationReason
+import com.altercharge.app.data.remote.model.SpeedCategory
 import com.altercharge.app.domain.judgment.Judgment
 import com.altercharge.app.domain.judgment.JudgmentResult
 import com.altercharge.app.domain.judgment.recomputeReason
@@ -81,5 +85,25 @@ class OfflineSnapshotStoreTest {
         assertNull(store.load().stationReceivedAt)
         assertNull(store.load().judgmentStamp)
         assertNull(decodeJudgment("unknown|1"))
+    }
+
+    @Test
+    fun 추천_충전소를_모든_값_그대로_다시_읽는다() {
+        // 충전기 목록(chargers)은 저장하지 않는다: 연결 타입은 connectorTypes로 남긴다
+        val info = RecommendedStationInfo(
+            stationId = "ST1", name = "예시 충전소", distanceMeters = 1200, availableCount = 3, visitCount = 2,
+            speedCategory = SpeedCategory.FAST, maxOutputKw = 100.0, fallbackUsed = true,
+            reasonCode = RecommendationReason.NEAREST_FALLBACK, address = "예시 주소", totalValidCount = 4,
+            connectorTypes = listOf(ConnectorType.DC_COMBO, ConnectorType.AC_SLOW),
+            lat = 37.5, lng = 127.0, statusObservedAt = Instant.parse("2026-11-12T05:00:00Z"),
+        )
+        store.saveStation("예시", 1.2, at, recommended = info)
+        assertEquals(info, store.load().recommended)
+    }
+
+    @Test
+    fun 깨진_추천_값은_null() {
+        memory.map["recommended_station"] = "{not json"
+        assertNull(store.load().recommended)
     }
 }

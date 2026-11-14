@@ -4,10 +4,14 @@
  */
 package com.altercharge.app.data.station
 
+import com.altercharge.app.data.local.CachedStations
 import com.altercharge.app.data.local.StationCacheStore
 import com.altercharge.app.data.local.VisitCountStore
 import com.altercharge.app.data.remote.AlterChargeApi
 import com.altercharge.app.data.remote.ApiResult
+import com.altercharge.app.data.remote.freshness.STATION_INFO_VALIDITY
+import com.altercharge.app.data.remote.freshness.Validity
+import com.altercharge.app.data.remote.freshness.validityOf
 import com.altercharge.app.data.remote.model.StationSummary
 import com.altercharge.app.domain.time.KoreaZone
 import java.time.Clock
@@ -46,9 +50,14 @@ class StationRepository(
     private var lastFresh: Triple<Double, Double, NearbyResult>? = null
     private val nearbyLock = Mutex()
 
-    /** 받아 둔 목록. 없으면 null */
-    fun cached(): NearbyResult? = cache.load()?.let {
+    /** 받아 둔 목록. 없거나 7일이 지났으면 null */
+    fun cached(): NearbyResult? = validCache()?.let {
         NearbyResult(it.stations, it.receivedAt, offline = true, fromCache = true)
+    }
+
+    /** 충전소 기본 정보는 받은 지 7일까지만 쓴다 (REQ_CM_009). 지난 목록은 없는 것으로 본다 */
+    private fun validCache(): CachedStations? = cache.load()?.takeIf {
+        validityOf(it.receivedAt, clock.instant(), STATION_INFO_VALIDITY) == Validity.VALID
     }
 
     /** 기기에 센 방문 횟수 (REQ_ST_008) */
@@ -107,7 +116,7 @@ class StationRepository(
             // 검색은 저장값으로 대신할 수 없다 (REQ_SL_002 예외)
             return NearbyResult(emptyList(), null, offline = true, fromCache = false, failure = failure)
         }
-        val saved = cache.load()
+        val saved = validCache()
         return if (saved != null) {
             NearbyResult(saved.stations, saved.receivedAt, offline = true, fromCache = true, failure = failure)
         } else {

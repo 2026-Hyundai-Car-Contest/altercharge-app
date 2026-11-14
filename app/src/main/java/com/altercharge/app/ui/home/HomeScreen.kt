@@ -1,5 +1,8 @@
 package com.altercharge.app.ui.home
 
+import com.altercharge.app.data.home.toRouteDestination
+import com.altercharge.app.ui.card.vehiclestatus.cardVehicleStatusModeFor
+import com.altercharge.app.ui.card.driverecord.cardDriveRecordModeFor
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -138,14 +141,22 @@ fun HomeScreen(
                             state = it.driveRecord,
                             onPreviousWeek = viewModel::showPreviousWeek,
                             onNextWeek = viewModel::showNextWeek,
-                            onToggleExpanded = viewModel::toggleDriveRecordExpanded
+                            onToggleExpanded = viewModel::toggleDriveRecordExpanded,
+                            // 화면 크기별 시안 모양 (WF는 요약 없이 그래프만 등)
+                            mode = cardDriveRecordModeFor(LocalAppLayout.current),
                         )
                     }
                 },
                 c = {
                     // 차량 값을 읽는 즉시 그린다 (REQ_VS_001 ~ REQ_VS_006)
                     uiState.vehicleStatus?.let { status ->
-                        CardVehicleStatus(state = status)
+                        CardVehicleStatus(
+                            // 이름은 화면 언어로 그때그때 읽는다: ViewModel이 들고 있으면 언어를 바꿔도 옛 언어로 남는다
+                            state = status.copy(driverName = stringResource(R.string.common_driver_name)),
+                            mode = cardVehicleStatusModeFor(LocalAppLayout.current),
+                            // 차량 정보를 못 받았을 때 다시 시도 (REQ_EX_003)
+                            onRetry = viewModel::loadHome,
+                        )
                     }
                 },
                 r1 = {
@@ -159,6 +170,8 @@ fun HomeScreen(
                             ),
                             onNavigate = viewModel::navigateToRecommended,
                             navigating = uiState.navigating,
+                            // 좌표가 없으면 경로를 찾을 수 없어 안내를 막는다 (REQ_BR_004 예외)
+                            canNavigate = recommended.toRouteDestination() != null,
                         )
                     } else {
                         // 추천을 못 받았을 때 (REQ_CM_006). 첫 요청 중에는 "못 불러왔다"고 미리 말하지 않게 빈 카드만 둔다

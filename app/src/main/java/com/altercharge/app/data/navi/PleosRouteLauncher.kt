@@ -24,7 +24,7 @@ class PleosRouteLauncher(context: Context) : RouteLauncher {
 
     override suspend fun launch(destination: RouteDestination): Boolean {
         if (!ensureConnected()) return false
-        return runCatching {
+        val sent = runCatching {
             naviHelper.requestRoute(
                 RouteInfo(
                     latitude = destination.lat,
@@ -41,6 +41,9 @@ class PleosRouteLauncher(context: Context) : RouteLauncher {
                 ),
             )
         }.isSuccess
+        // 내비 서비스가 끊겨 요청이 실패했으면 다음 탭에서 다시 연결한다
+        if (!sent) connected = false
+        return sent
     }
 
     private suspend fun ensureConnected(): Boolean = connectLock.withLock {
