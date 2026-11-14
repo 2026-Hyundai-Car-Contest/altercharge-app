@@ -19,12 +19,6 @@ data class OfflineSnapshot(
     val stationReceivedAt: Instant?,
 )
 
-/** 테스트에서 메모리로 바꿔 끼우려고 SharedPreferences를 감싼다 */
-interface KeyValueStore {
-    fun getString(key: String): String?
-    fun putStrings(values: Map<String, String?>)
-}
-
 class SharedPreferencesStore(context: Context) : KeyValueStore {
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 

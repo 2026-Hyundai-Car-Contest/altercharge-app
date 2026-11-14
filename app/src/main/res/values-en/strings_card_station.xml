@@ -5,6 +5,10 @@
 
   <string name="card_station_charging_type_slow">Slow</string>
   <string name="card_station_charging_type_fast">Fast</string>
+  <string name="card_station_charging_type_ultra_fast">Ultra-fast</string>
 
   <string name="card_station_visit_count">%1$d visits</string>
+
+  <string name="card_station_chip_recommended">Recommended</string>
+  <string name="card_station_chip_fallback">Nearest station</string>
 </resources>

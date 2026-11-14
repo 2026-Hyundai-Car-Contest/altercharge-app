@@ -22,9 +22,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.altercharge.app.data.remote.model.ConnectorType
+import com.altercharge.app.ui.card.stationitem.connectorLabelText
 import com.altercharge.app.ui.designsystem.component.IviButton
 import com.altercharge.app.ui.designsystem.component.IviButtonHierarchy
 import com.altercharge.app.ui.designsystem.component.IviButtonSize
@@ -64,7 +67,7 @@ fun CardStation(
 
                 ChargerAvailability(
                     availableChargerCount = state.availableChargerCount,
-                    occupiedChargerCount = state.occupiedChargerCount,
+                    totalChargerCount = state.totalChargerCount,
                     chargerStatus = state.chargerStatus
                 )
             }
@@ -77,6 +80,17 @@ fun CardStation(
                 fontSize = 32.sp
             )
 
+            // 충전소 주소 (REQ_ST_007 상세 정보). 상세를 못 받았으면 줄을 숨긴다
+            state.stationAddress?.takeIf { it.isNotBlank() }?.let { address ->
+                Text(
+                    text = address,
+                    color = AlterTheme.colors.textTertiary,
+                    fontSize = 16.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -84,6 +98,17 @@ fun CardStation(
                 state.chargerInfo.forEach { chargeInfoTag ->
                     ChargingSpec(
                         chargeInfoTag = chargeInfoTag
+                    )
+                }
+
+                // 충전기 연결 타입 (REQ_ST_007). 여러 규격은 "DC콤보 · AC완속"으로 잇는다
+                connectorLabelText(state.connectorTypes)?.let { label ->
+                    Text(
+                        text = label,
+                        color = AlterTheme.colors.textTertiary,
+                        fontSize = 20.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -158,6 +183,7 @@ Row(
             when (chargeInfoTag.text) {
                 "완속" -> stringResource(R.string.card_station_charging_type_slow)
                 "급속" -> stringResource(R.string.card_station_charging_type_fast)
+                "초급속" -> stringResource(R.string.card_station_charging_type_ultra_fast)
                 else -> chargeInfoTag.text
             }
         }
@@ -177,12 +203,12 @@ Row(
 @Composable
 fun ChargerAvailability(
     availableChargerCount: Int,
-    occupiedChargerCount: Int,
+    totalChargerCount: Int,
     chargerStatus: ChargerStatus,
     modifier: Modifier = Modifier
 ) {
     val chargerAvailableText =
-        if(chargerStatus == ChargerStatus.AVAILABLE) stringResource(R.string.card_station_availability_possible, "${occupiedChargerCount}/${availableChargerCount}")
+        if(chargerStatus == ChargerStatus.AVAILABLE) stringResource(R.string.card_station_availability_possible, "${availableChargerCount}/${totalChargerCount}")
         else stringResource(R.string.card_station_availability_impossibility)
 
     Row(
@@ -267,8 +293,8 @@ private fun ChargerStatus.statusBackgroundColor(): Color {
 // Preview 띄우기용 샘플 데이터
 val samplePreviewUiState = CardStationUiState(
     chipState = ChipState(chipTone = ChipTone.NEUTRAL, text = "추천"),
-    availableChargerCount = 4,
-    occupiedChargerCount = 3,
+    availableChargerCount = 3,
+    totalChargerCount = 4,
     chargerStatus = ChargerStatus.UNDER_INSPECTION,
     stationName = "연희 사러가 마트",
     chargerInfo = listOf(
@@ -276,6 +302,8 @@ val samplePreviewUiState = CardStationUiState(
         ChargeInfoTag.Text("100Kw", type = ChargeInfoType.POWER)
     ),
     distance = 1.8,
-    myChargingCount = 3
+    myChargingCount = 3,
+    stationAddress = "서울 서대문구 연희맛로 25",
+    connectorTypes = listOf(ConnectorType.DC_COMBO, ConnectorType.AC_SLOW)
 )
 

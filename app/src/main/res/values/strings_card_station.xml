@@ -6,7 +6,12 @@
 <!--  충전유형(완속,급속)-->
   <string name="card_station_charging_type_slow">완속</string>
   <string name="card_station_charging_type_fast">급속</string>
+  <string name="card_station_charging_type_ultra_fast">초급속</string>
 
 <!-- 충전소 방문 횟수 -->
   <string name="card_station_visit_count">방문 %1$d회</string>
+
+<!-- 추천 칩 (REQ_ST_007). 대체 추천은 가용 충전기가 없어 안내 직전 확인이 필요하다 -->
+  <string name="card_station_chip_recommended">추천</string>
+  <string name="card_station_chip_fallback">대체 추천</string>
 </resources>

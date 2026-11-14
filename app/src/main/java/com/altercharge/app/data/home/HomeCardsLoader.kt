@@ -23,6 +23,7 @@ import com.altercharge.app.data.remote.mapper.toJudgmentInput
 import com.altercharge.app.data.remote.mapper.todayKm
 import com.altercharge.app.data.remote.mapper.weekStartOf
 import com.altercharge.app.data.remote.model.LatestChargeHistory
+import com.altercharge.app.data.remote.model.StationDetail
 import com.altercharge.app.data.remote.model.VehicleSnapshotHistory
 import com.altercharge.app.domain.judgment.JudgmentInput
 import com.altercharge.app.domain.judgment.JudgmentResult
@@ -39,22 +40,12 @@ import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 
-/** 차량 SDK 값. 거리는 km */
-data class VehicleReading(val socPercent: Int, val rangeKm: Int, val odometerKm: Double)
-
-data class LatLng(val lat: Double, val lng: Double)
-
-/** C 카드 중 서버 · 판정에서 오는 값. 모르면 null ("--") */
-data class VehicleStatusServerValues(
-    val chargeRecommended: Boolean,
-    val nearestStationKm: Double?,
-    val lastChargedAt: String?,
-)
-
 data class HomeCards(
     val cardInfo: CardInfoUiState,
     val driveRecord: CardDriveRecordUiState,
     val vehicleStatus: VehicleStatusServerValues,
+    /** 추천 충전소 1곳 (REQ_ST_007). 위치를 모르거나 3km 안에 없으면 null */
+    val recommended: RecommendedStationInfo?,
     /** 이번 서버 요청 중 실패가 있었는지 (위치가 없어 안 부른 것은 제외) */
     val offline: Boolean,
 )
@@ -99,6 +90,7 @@ class HomeCardsLoader(
                 nearestStationKm = station.nearestStationKm,
                 lastChargedAt = charge?.lastChargedAtText(today),
             ),
+            recommended = station.recommended,
             offline = historyResult is ApiResult.Failure || chargeResult is ApiResult.Failure || station.offline,
         )
     }
@@ -140,19 +132,33 @@ class HomeCardsLoader(
         val nearestStationKm: Double?,
         val lastChecked: LastChecked?,
         val offline: Boolean,
+        val recommended: RecommendedStationInfo? = null,
     )
 
-    /** 둘 다 받으면 저장, 하나라도 못 받으면 저장값. 7일 지나면 비운다 (REQ_CM_009) */
+    /**
+     * 추천(03)과 가까운 거리(01)를 받고, 추천 충전소의 상세(02)로 주소 · 충전기를 채운다.
+     * 둘 다 받으면 저장, 하나라도 못 받으면 저장값. 7일이 지나면 비운다 (REQ_CM_009).
+     */
     private suspend fun stationFor(location: LatLng?, chargeRecommended: Boolean, now: Instant): StationValues {
         val requested = location != null
         if (location != null) {
             val recommendation = api.recommendation(location.lat, location.lng, chargeRecommended)
             val nearby = api.stations(location.lat, location.lng, size = NEAREST_PAGE_SIZE)
-            if (recommendation is ApiResult.Success && nearby is ApiResult.Success) {
-                val placeName = recommendation.value.placeName()
-                val nearestKm = nearby.value.nearestStationKm()
+            val recommended = (recommendation as? ApiResult.Success)?.value
+            val nearest = (nearby as? ApiResult.Success)?.value
+            if (recommended != null || nearest != null) {
+                val placeName = recommended?.placeName().orEmpty()
+                val nearestKm = nearest?.nearestStationKm()
                 store.saveStation(placeName, nearestKm, receivedAt = now)
-                return StationValues(placeName, nearestKm, lastChecked = null, offline = false)
+                return StationValues(
+                    placeName = placeName,
+                    nearestStationKm = nearestKm,
+                    lastChecked = null,
+                    offline = recommended == null || nearest == null,
+                    recommended = recommended?.let { info ->
+                        info.toRecommendedStationInfo(detail = stationDetailOf(info.station?.stationId))
+                    },
+                )
             }
         }
 
@@ -167,6 +173,12 @@ class HomeCardsLoader(
             lastChecked = lastCheckedOf(receivedAt, now),
             offline = requested,
         )
+    }
+
+    /** 상세를 못 받아도 추천은 보여 준다: 주소 · 충전기 줄만 비게 된다 */
+    private suspend fun stationDetailOf(stationId: String?): StationDetail? {
+        if (stationId == null) return null
+        return (api.stationDetail(stationId) as? ApiResult.Success)?.value
     }
 
     private companion object {
