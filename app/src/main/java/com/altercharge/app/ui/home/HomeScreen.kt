@@ -49,7 +49,7 @@ fun HomeScreen(
             val uiState by viewModel.uiState.collectAsState()
             val cards = uiState.cards
 
-            LaunchedEffect (Unit) {
+            LaunchedEffect(Unit) {
                 viewModel.loadHome(
                     vehicle = VehicleReading(
                         socPercent = 80,
