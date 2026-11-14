@@ -32,6 +32,7 @@ import com.altercharge.app.ui.designsystem.theme.AlterTheme
 @Composable
 fun SearchBar(
     modifier: Modifier = Modifier,
+    value: String = "",
     onValueChange: (String) -> Unit,
     onMicClick: () -> Unit,
 
@@ -53,9 +54,11 @@ fun SearchBar(
         )
 
         TextField(
-            value = "",
+            value = value,
             placeholder = { Text(stringResource(R.string.search_bar_placeholder)) },
             onValueChange = onValueChange,
+            singleLine = true,
+            modifier = Modifier.weight(1f),
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = Color.Transparent,
                 unfocusedContainerColor = Color.Transparent,

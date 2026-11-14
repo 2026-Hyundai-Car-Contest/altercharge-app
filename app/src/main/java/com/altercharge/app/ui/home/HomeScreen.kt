@@ -135,6 +135,7 @@ fun HomeScreen(
                     RecommendedStationList(
                         modifier = Modifier.fillMaxSize(),
                         state = stationState,
+                        onQueryChange = stationViewModel::onQueryChange,
                         onStationClick = {},
                     )
                 }
