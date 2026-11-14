@@ -34,11 +34,13 @@ fun buildStationList(
     val appliedSort = if (sort == StationSort.VISIT && visitSortEnabled) StationSort.VISIT else StationSort.DISTANCE
     val availabilityUnknown = stationValidity(receivedAt, now).showAvailabilityUnknown
     val filtered = filterStations(source, filter)
+    val preferredConnectors = filter.connectors.flatMap { it.types }.toSet()
     val items = sortStations(filtered, appliedSort, localCounts).map { station ->
         station.toCardItemUiState(
             visitCount = visitCountOf(station, localCounts),
             showVisitCount = appliedSort == StationSort.VISIT,
             availabilityUnknown = availabilityUnknown,
+            preferredConnectors = preferredConnectors,
         )
     }
     return StationListUiState(

@@ -6,6 +6,7 @@ import com.altercharge.app.data.station.StationFilter
 import com.altercharge.app.data.station.StationSort
 import com.altercharge.app.ui.card.info.LastChecked
 import com.altercharge.app.ui.card.stationitem.CardItemUiState
+import java.time.Instant
 
 @Immutable
 data class StationListUiState(
@@ -21,6 +22,8 @@ data class StationListUiState(
     val offline: Boolean = false,
     /** 저장한 목록을 받은 시각. 오프라인일 때만 "N분 전 기준"으로 보여 준다 */
     val lastChecked: LastChecked? = null,
+    /** 오프라인으로 보여 주는 목록을 받은 시각. 헤더에 "14:30 기준"으로 쓴다 */
+    val lastCheckedAt: Instant? = null,
     val message: StationListMessage? = null,
     val voice: VoiceSearchState = VoiceSearchState.Idle,
 ) {

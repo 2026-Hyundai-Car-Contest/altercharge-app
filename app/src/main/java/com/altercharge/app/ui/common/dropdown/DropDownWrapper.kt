@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -54,9 +55,11 @@ fun DropDownWrapper(
                 fontWeight = AlterFontWeight.Strong,
                 color = AlterTheme.colors.textPrimary
             )
+            // Figma filter_dropdown 헤더: 보조 문구는 남은 폭을 채우고 오른쪽 끝에 붙는다
             Text(
                 text = subTitle,
-                modifier = Modifier.padding(AlterMargin.Small),
+                textAlign = TextAlign.End,
+                modifier = Modifier.weight(1f).padding(AlterMargin.Small),
                 fontSize = 16.sp,
                 color = AlterTheme.colors.textTertiary.copy(0.64f)
             )

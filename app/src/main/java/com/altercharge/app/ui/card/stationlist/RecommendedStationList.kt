@@ -1,17 +1,6 @@
 package com.altercharge.app.ui.card.stationlist
 
 import androidx.compose.foundation.Image
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.CompositingStrategy
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -22,14 +11,25 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -40,6 +40,8 @@ import com.altercharge.app.R
 import com.altercharge.app.data.remote.model.ConnectorType
 import com.altercharge.app.data.station.StationFilter
 import com.altercharge.app.data.station.StationSort
+import com.altercharge.app.domain.time.KoreaZone
+import com.altercharge.app.ui.card.info.LastChecked
 import com.altercharge.app.ui.card.info.lastCheckedText
 import com.altercharge.app.ui.card.station.ChargingType
 import com.altercharge.app.ui.card.stationitem.CardItemUiState
@@ -52,6 +54,9 @@ import com.altercharge.app.ui.designsystem.theme.AlterTheme
 import com.altercharge.app.ui.station.StationListMessage
 import com.altercharge.app.ui.station.StationListUiState
 import com.altercharge.app.ui.station.VoiceSearchState
+import java.time.Instant
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 /** 미리보기용 값. 실제 화면은 ViewModel이 만든 state를 넘긴다 */
 private val previewStations = listOf(
@@ -137,7 +142,7 @@ fun RecommendedStationList(
             val lastChecked = state.lastChecked
             if (state.offline && lastChecked != null) {
                 Text(
-                    text = lastCheckedText(lastChecked),
+                    text = listLastCheckedText(lastChecked, state.lastCheckedAt),
                     style = AlterTheme.typography.labelXSmall,
                     color = AlterTheme.colors.textTertiary,
                     modifier = Modifier.alignByBaseline(),
@@ -148,7 +153,7 @@ fun RecommendedStationList(
         // 받아 둔 충전소가 아예 없으면 헤더만 남기고 검색 · 필터 · 목록을 숨긴다 (Figma selection = empty, 807:59523).
         // 검색 · 필터 결과가 없을 때는 조건을 바꿀 수 있게 그대로 둔다
         if (state.showEmptyIllustration) {
-            StationListEmpty(offline = state.offline, modifier = Modifier.weight(1f))
+            StationListEmpty(modifier = Modifier.weight(1f))
             return@Column
         }
 
@@ -219,7 +224,7 @@ fun RecommendedStationList(
 }
 
 @Composable
-private fun StationListEmpty(offline: Boolean, modifier: Modifier = Modifier) {
+private fun StationListEmpty(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
@@ -230,21 +235,13 @@ private fun StationListEmpty(offline: Boolean, modifier: Modifier = Modifier) {
             contentDescription = null,
             modifier = Modifier.size(width = 260.dp, height = 188.dp),
         )
-        // 오프라인이라 받아 둔 충전소가 없으면 연결되면 보여 준다고 알린다 (REQ_CM_006 예외, R1 빈 카드와 같은 문구)
+        // Figma CM_006 보드: 오프라인이어도 제목만 둔다. 연결 안내는 R1 빈 카드가 맡는다
         Text(
-            text = stringResource(if (offline) R.string.card_station_empty_title else R.string.station_list_empty_title),
+            text = stringResource(R.string.station_list_empty_title),
             style = AlterTheme.typography.bodyXSmall,
             color = AlterTheme.colors.textSecondary,
             textAlign = TextAlign.Center,
         )
-        if (offline) {
-            Text(
-                text = stringResource(R.string.card_station_empty_description),
-                style = AlterTheme.typography.labelXSmall,
-                color = AlterTheme.colors.textTertiary,
-                textAlign = TextAlign.Center,
-            )
-        }
     }
 }
 
@@ -278,6 +275,23 @@ private fun DrawScope.drawStationListScrollbar(state: LazyListState, track: Colo
 
 private val SCROLLBAR_WIDTH = 5.dp
 private val SCROLLBAR_MIN_THUMB = 32.dp
+
+/**
+ * R2 헤더의 마지막 확인 시각 (Figma CM_006 보드 ②): 1분 미만 "방금 기준", 하루 안 "14:30 기준", 그 전 "11.11 14:30 기준".
+ * 카드(L1 · R1)는 "N분 전 기준"으로 짧게 쓰고, 목록 헤더는 시각으로 쓴다.
+ */
+@Composable
+private fun listLastCheckedText(lastChecked: LastChecked, at: Instant?): String {
+    if (lastChecked == LastChecked.JustNow || at == null) return lastCheckedText(lastChecked)
+    val local = at.atZone(KoreaZone)
+    val time = local.format(DateTimeFormatter.ofPattern("HH:mm"))
+    // 경과 시간이 아니라 날짜로 나눈다: 어제 23:00 값을 오늘 09:00에 "23:00 기준"으로 쓰면 오늘 시각으로 읽힌다
+    return if (local.toLocalDate() != LocalDate.now(KoreaZone)) {
+        stringResource(R.string.station_list_last_checked_date_time, local.monthValue, local.dayOfMonth, time)
+    } else {
+        stringResource(R.string.station_list_last_checked_time, time)
+    }
+}
 
 /** 목록 아래 흐림 높이 */
 private val LIST_FADE_HEIGHT = 40.dp

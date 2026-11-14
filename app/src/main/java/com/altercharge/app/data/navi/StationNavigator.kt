@@ -36,7 +36,7 @@ sealed interface NavigationOutcome {
     /** 상세를 못 받아 좌표가 없다 */
     data object NoDestination : NavigationOutcome
 
-    /** 연결이 끊겨 확인할 수 없다 (REQ_CM_006) */
+    /** 연결이 끊겨 서버 확인 없이 받아 둔 위치로 안내했다. 자리 정보는 마지막 확인 기준이라고 알린다 (REQ_CM_006) */
     data object Offline : NavigationOutcome
 
     /** 내비가 응답하지 않거나 서버 오류 */
@@ -55,7 +55,9 @@ class StationNavigator(
                 launcher.launch(destination) -> NavigationOutcome.Started
                 else -> NavigationOutcome.Failed
             }
-            is ApiResult.NetworkError -> NavigationOutcome.Offline
+            // 오프라인에서도 길 안내는 요청할 수 있다 (REQ_CM_006 · Figma v2 V2-1). 점검 여부를 확인할 수 없으니 막지 않는다
+            is ApiResult.NetworkError ->
+                if (launcher.launch(destination)) NavigationOutcome.Offline else NavigationOutcome.Failed
             // 서버 주소 미설정 · 서버 오류 · 응답 형식 오류
             else -> NavigationOutcome.Failed
         }

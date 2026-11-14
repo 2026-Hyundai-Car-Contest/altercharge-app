@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -33,11 +31,11 @@ import com.altercharge.app.data.station.StationSort
 import com.altercharge.app.ui.common.ChargePowerSlider
 import com.altercharge.app.ui.common.dropdown.DropDownWrapper
 import com.altercharge.app.ui.common.dropdown.FilterChip
+import com.altercharge.app.ui.common.dropdown.FilterDropdownPopup
 import com.altercharge.app.ui.common.dropdown.SelectableDropdownItem
 import com.altercharge.app.ui.common.dropdown.SortDropDown
 import com.altercharge.app.ui.common.dropdown.StationSortType
 import com.altercharge.app.ui.designsystem.theme.AlterMargin
-import com.altercharge.app.ui.designsystem.theme.AlterRadius
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
 import com.altercharge.app.ui.station.StationListUiState
 
@@ -113,18 +111,13 @@ internal fun StationListFilterRow(
         horizontalArrangement = Arrangement.spacedBy(AlterMargin.XSmall),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Figma button_filter: 배경 없는 22 아이콘, 원형 히트 영역 40
-        Box(
-            contentAlignment = Alignment.Center,
+        // Figma button_filter: 히트 영역 40 안의 15x9 글리프. 벡터가 40 viewport라 40으로 그린다
+        Image(
+            painter = painterResource(R.drawable.ic_button_filter),
+            contentDescription = null,
+            colorFilter = ColorFilter.tint(AlterTheme.colors.contentNeutral),
             modifier = Modifier.size(40.dp),
-        ) {
-            Image(
-                painter = painterResource(R.drawable.ic_button_filter),
-                contentDescription = null,
-                colorFilter = ColorFilter.tint(AlterTheme.colors.contentNeutral),
-                modifier = Modifier.size(22.dp),
-            )
-        }
+        )
 
         Row(
             modifier = Modifier
@@ -161,12 +154,9 @@ internal fun StationListFilterRow(
                     },
                 )
 
-                DropdownMenu(
+                FilterDropdownPopup(
                     expanded = isConnectorMenuExpanded,
                     onDismissRequest = { isConnectorMenuExpanded = false },
-                    shape = RoundedCornerShape(AlterRadius.Large),
-                    containerColor = AlterTheme.colors.containerBackgroundSubtle,
-                    tonalElevation = 0.dp,
                 ) {
                     DropDownWrapper(
                         title = stringResource(R.string.station_list_filter_connector_title),
@@ -229,19 +219,16 @@ internal fun StationListFilterRow(
                     },
                 )
 
-                DropdownMenu(
+                FilterDropdownPopup(
                     expanded = isPowerMenuExpanded,
                     onDismissRequest = { isPowerMenuExpanded = false },
-                    shape = RoundedCornerShape(AlterRadius.Large),
-                    containerColor = AlterTheme.colors.containerBackgroundSubtle,
-                    tonalElevation = 0.dp,
                 ) {
                     DropDownWrapper(
                         title = stringResource(R.string.station_list_filter_power_title),
                         subTitle = if (pendingMaxPower >= POWER_STEPS.last()) {
-                            stringResource(R.string.station_list_filter_power_range_over, pendingMinPower, pendingMaxPower)
+                            stringResource(R.string.station_list_filter_power_meta_over, pendingMinPower, pendingMaxPower)
                         } else {
-                            stringResource(R.string.station_list_filter_power_range, pendingMinPower, pendingMaxPower)
+                            stringResource(R.string.station_list_filter_power_meta, pendingMinPower, pendingMaxPower)
                         },
                         onReset = {
                             pendingMinPower = POWER_STEPS.first()

@@ -6,7 +6,8 @@ import com.altercharge.app.data.navi.NavigationOutcome
 import com.altercharge.app.ui.card.vehiclestatus.CardVehicleStatusUiState
 
 data class HomeUiState(
-    val isLoading: Boolean = false,
+    /** 처음 그릴 때는 아직 불러오기 전이라 true로 시작한다. 켜자마자 R1 빈 상태("추천할 충전소가 없어요")가 비치지 않게 한다 */
+    val isLoading: Boolean = true,
     val cards: HomeCards? = null,
     /** C 차량 상태 카드. 차량 값을 읽는 즉시 채우고, 서버 값이 오면 다시 만든다 (REQ_VS_001 ~ REQ_VS_006) */
     val vehicleStatus: CardVehicleStatusUiState? = null,

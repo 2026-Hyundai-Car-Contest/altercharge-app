@@ -14,4 +14,5 @@
   <string name="card_item_connector_dc_combo_slow">DC콤보(저속)</string>
   <string name="card_item_connector_dc_combo_2">DC콤보2</string>
   <string name="card_item_connector_nacs" translatable="false">NACS</string>
+  <string name="card_item_connector_more">%1$s 외 %2$d</string>
 </resources>
