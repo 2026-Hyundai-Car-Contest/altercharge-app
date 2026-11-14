@@ -24,12 +24,10 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -187,6 +185,8 @@ fun RecommendedStationList(
         val listState = rememberLazyListState()
         val scrollbarTrack = AlterTheme.colors.containerBackgroundSubtle
         val scrollbarThumb = AlterTheme.colors.gray300
+        // 패널 맨 아래 색: 바탕 위에 bg_glow의 blue_100 55%
+        val fadeColor = AlterTheme.colors.blue100.copy(alpha = 0.55f).compositeOver(AlterTheme.colors.containerBackgroundSubtle)
         LazyColumn(
             state = listState,
             modifier = Modifier
@@ -197,15 +197,22 @@ fun RecommendedStationList(
                     drawContent()
                     drawStationListScrollbar(listState, track = scrollbarTrack, thumb = scrollbarThumb)
                 }
-                // Figma: 아래에 더 있으면 마지막 항목이 흐려진다. 끝까지 내리면 흐림을 없앤다
-                .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+                // Figma fade_bottom: 아래에 더 있으면 패널 바닥색(배경 + blue_100 55%)을 덮어 마지막 항목이 흐려진다.
+                // 끝까지 내리면 없앤다. 오프스크린 레이어로 내용을 지우는 방식은 다시 연결된 뒤 목록이 통째로
+                // 안 그려지는 일이 있어 쓰지 않는다
                 .drawWithContent {
                     drawContent()
                     if (listState.canScrollForward) {
-                        val fadeStart = ((size.height - LIST_FADE_HEIGHT.toPx()) / size.height).coerceIn(0f, 1f)
+                        val fadeHeight = LIST_FADE_HEIGHT.toPx().coerceAtMost(size.height)
                         drawRect(
-                            brush = Brush.verticalGradient(fadeStart to Color.Black, 1f to Color.Transparent),
-                            blendMode = BlendMode.DstIn,
+                            brush = Brush.verticalGradient(
+                                0f to fadeColor.copy(alpha = 0f),
+                                1f to fadeColor,
+                                startY = size.height - fadeHeight,
+                                endY = size.height,
+                            ),
+                            topLeft = Offset(0f, size.height - fadeHeight),
+                            size = Size(size.width, fadeHeight),
                         )
                     }
                 },
