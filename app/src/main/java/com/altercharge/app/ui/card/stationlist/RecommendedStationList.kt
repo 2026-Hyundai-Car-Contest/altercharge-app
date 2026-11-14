@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -176,7 +177,15 @@ fun RecommendedStationList(
         modifier = modifier
             .fillMaxSize()
             .clip(RoundedCornerShape(AlterRadius.XXLarge))
-            .background(AlterTheme.colors.blue50)
+            // Figma bg_glow: 회색 바탕 위에 아래로 갈수록 진해지는 blue_100(55%). 바탕이 blue_50이면 선택 칩 배경이 묻힌다
+            .background(AlterTheme.colors.containerBackgroundSubtle)
+            .background(
+                Brush.verticalGradient(
+                    0f to AlterTheme.colors.blue100.copy(alpha = 0f),
+                    0.55f to AlterTheme.colors.blue100.copy(alpha = 0.35f * 0.55f),
+                    1f to AlterTheme.colors.blue100.copy(alpha = 0.55f),
+                ),
+            )
             .padding(AlterMargin.Normal),
     ) {
         // 타이틀
