@@ -11,7 +11,7 @@
 |---|---|
 | ![홈 화면 다크](docs/images/home_dark.png) | ![홈 화면 라이트](docs/images/home_light.png) |
 
-시연 영상(2분 17초, 한국어 자막): [docs/demo/AlterCharge_demo.mp4](docs/demo/AlterCharge_demo.mp4)
+시연 영상(2분 16초, 한국어 자막): [docs/demo/AlterCharge_demo.mp4](docs/demo/AlterCharge_demo.mp4)
 
 | 항목 | 내용 |
 |---|---|
