@@ -1,6 +1,11 @@
 package com.altercharge.app.ui.card.stationlist
 
 import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Color
@@ -175,11 +180,18 @@ fun RecommendedStationList(
 
         // 충전소 목록
         val listState = rememberLazyListState()
+        val scrollbarTrack = AlterTheme.colors.containerBackgroundSubtle
+        val scrollbarThumb = AlterTheme.colors.gray300
         LazyColumn(
             state = listState,
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
+                // Figma scrollbar: 패널 오른쪽 끝에 붙는 폭 5 막대 (바탕 basic_50 · 손잡이 basic_300). 넘칠 때만 그린다
+                .drawWithContent {
+                    drawContent()
+                    drawStationListScrollbar(listState, track = scrollbarTrack, thumb = scrollbarThumb)
+                }
                 // Figma: 아래에 더 있으면 마지막 항목이 흐려진다. 끝까지 내리면 흐림을 없앤다
                 .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
                 .drawWithContent {
@@ -235,6 +247,37 @@ private fun StationListEmpty(offline: Boolean, modifier: Modifier = Modifier) {
         }
     }
 }
+
+/**
+ * 목록 스크롤바. 목록 칸(패널 안쪽 여백 16 안)에서 오른쪽으로 비켜 패널 끝에 붙인다.
+ * 항목 높이가 거의 같아 보이는 항목 평균으로 전체 길이를 어림한다.
+ */
+private fun DrawScope.drawStationListScrollbar(state: LazyListState, track: Color, thumb: Color) {
+    if (!state.canScrollForward && !state.canScrollBackward) return
+    val info = state.layoutInfo
+    val visible = info.visibleItemsInfo
+    if (visible.isEmpty() || info.totalItemsCount == 0) return
+    val spacing = info.mainAxisItemSpacing.toFloat()
+    val itemStep = visible.sumOf { it.size }.toFloat() / visible.size + spacing
+    val contentHeight = itemStep * info.totalItemsCount - spacing
+    val viewport = size.height
+    val scrolled = state.firstVisibleItemIndex * itemStep + state.firstVisibleItemScrollOffset
+    val width = SCROLLBAR_WIDTH.toPx()
+    val x = size.width + AlterMargin.Normal.toPx() - width
+    val radius = CornerRadius(width / 2, width / 2)
+    drawRoundRect(color = track, topLeft = Offset(x, 0f), size = Size(width, viewport), cornerRadius = radius)
+    val thumbHeight = (viewport / contentHeight * viewport).coerceIn(SCROLLBAR_MIN_THUMB.toPx(), viewport)
+    val progress = (scrolled / (contentHeight - viewport)).coerceIn(0f, 1f)
+    drawRoundRect(
+        color = thumb,
+        topLeft = Offset(x, progress * (viewport - thumbHeight)),
+        size = Size(width, thumbHeight),
+        cornerRadius = radius,
+    )
+}
+
+private val SCROLLBAR_WIDTH = 5.dp
+private val SCROLLBAR_MIN_THUMB = 32.dp
 
 /** 목록 아래 흐림 높이 */
 private val LIST_FADE_HEIGHT = 40.dp
