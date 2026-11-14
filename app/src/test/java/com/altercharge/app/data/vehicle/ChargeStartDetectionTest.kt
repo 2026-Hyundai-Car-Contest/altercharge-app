@@ -34,4 +34,10 @@ class ChargeStartDetectionTest {
         assertFalse(isChargeStart(null, ChargingState.UNPLUGGED))
         assertFalse(isChargeStart(ChargingState.SCHEDULED, ChargingState.PAUSED))
     }
+
+    @Test
+    fun 목업_차량_값은_기록을_남기지_않는_값으로_표시된다() {
+        assertTrue(MockVehicleTelemetrySource().isSimulated)
+        assertFalse(VehicleTelemetrySource { MockVehicleTelemetrySource.DEFAULT }.isSimulated)
+    }
 }

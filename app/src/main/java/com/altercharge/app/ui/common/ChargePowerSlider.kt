@@ -1,5 +1,6 @@
 package com.altercharge.app.ui.common
 
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -237,10 +238,14 @@ fun ChargePowerSlider(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
+                        // 초급속 구간은 폭이 좁아(비율 0.6) 줄바꿈되면 한 글자씩 세로로 쪼개진다: 한 줄로 두고 양옆으로 넘치게 한다
                         Text(
                             text = label,
                             fontSize = 16.sp,
-                            color = AlterTheme.colors.textTertiary.copy(0.64f)
+                            color = AlterTheme.colors.textTertiary.copy(0.64f),
+                            softWrap = false,
+                            maxLines = 1,
+                            modifier = Modifier.wrapContentWidth(unbounded = true)
                         )
                     }
                 }

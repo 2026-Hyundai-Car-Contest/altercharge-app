@@ -1,5 +1,6 @@
 package com.altercharge.app.ui.card.station
 
+import androidx.compose.ui.res.pluralStringResource
 import com.altercharge.app.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -133,15 +134,16 @@ fun CardStation(
                         color = AlterTheme.colors.textPrimary
                     )
                     Text(
-                        text = stringResource(R.string.card_station_visit_count, state.myChargingCount),
+                        text = pluralStringResource(R.plurals.card_station_visit_count, state.myChargingCount, state.myChargingCount),
+                        style = AlterTheme.typography.labelXSmall,
                         color = AlterTheme.colors.textTertiary
                     )
                 }
 
                 IviButton(
                     hierarchy = IviButtonHierarchy.Contrast,
-                    size = IviButtonSize.Small,
-                    text = "여기로 안내",
+                    size = IviButtonSize.Compact,
+                    text = stringResource(R.string.card_station_navigate),
                     onClick = {}
                 )
             }
@@ -172,10 +174,11 @@ Row(
         .padding(vertical = AlterPadding.XXSmall, horizontal = AlterPadding.Small)
 ) {
     if (chargeInfoTag is ChargeInfoTag.Icon) {
-        // TODO: 이미지 추가 완료 시 대체이미지 제거
+        // Figma tag_speed: ic_charger 18 (속도별 아이콘)
         Image(
             painter = painterResource(id = chargeInfoTag.resId),
-            contentDescription = null
+            contentDescription = null,
+            modifier = Modifier.size(18.dp)
         )
     }
     val displayText = when (chargeInfoTag.type) {
@@ -208,7 +211,7 @@ fun ChargerAvailability(
     modifier: Modifier = Modifier
 ) {
     val chargerAvailableText =
-        if(chargerStatus == ChargerStatus.AVAILABLE) stringResource(R.string.card_station_availability_possible, "${availableChargerCount}/${totalChargerCount}")
+        if(chargerStatus == ChargerStatus.AVAILABLE) stringResource(R.string.card_station_availability_possible, "$availableChargerCount / $totalChargerCount")
         else stringResource(R.string.card_station_availability_impossibility)
 
     Row(
@@ -298,7 +301,7 @@ val samplePreviewUiState = CardStationUiState(
     chargerStatus = ChargerStatus.UNDER_INSPECTION,
     stationName = "연희 사러가 마트",
     chargerInfo = listOf(
-        ChargeInfoTag.Icon(resId = R.drawable.ic_status_lte,"급속", type = ChargeInfoType.CHARGING_TYPE),
+        ChargeInfoTag.Icon(resId = R.drawable.ic_charger_fast, "급속", type = ChargeInfoType.CHARGING_TYPE),
         ChargeInfoTag.Text("100Kw", type = ChargeInfoType.POWER)
     ),
     distance = 1.8,

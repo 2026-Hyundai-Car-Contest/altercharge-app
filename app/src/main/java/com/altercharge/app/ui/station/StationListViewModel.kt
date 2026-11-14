@@ -64,6 +64,9 @@ class StationListViewModel(
     private var receivedAt: Instant? = null
     private var searchJob: Job? = null
 
+    /** 재시도 · 화면 복귀가 겹쳐도 목록 요청은 하나만 둔다: 늦게 끝난 옛 요청이 새 값을 덮지 않게 */
+    private var refreshJob: Job? = null
+
     init {
         refresh()
         retryWhileOffline()
@@ -71,10 +74,14 @@ class StationListViewModel(
 
     /** 화면에 다시 들어왔거나 사용자가 다시 시도했을 때 */
     fun refresh() {
-        viewModelScope.launch {
+        refreshJob?.cancel()
+        refreshJob = viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, message = null) }
-            // 저장한 목록이 있으면 먼저 보여 준다: 연결이 느리거나 끊겨도 빈 화면을 보지 않게
-            repository.cached()?.let { applyStations(it.stations, it.receivedAt, offline = true, loading = true) }
+            // 처음에만 저장한 목록을 먼저 보여 준다: 연결이 느리거나 끊겨도 빈 화면을 보지 않게.
+            // 이미 목록이 있으면 다시 요청할 때마다 '오프라인'으로 깜빡이지 않게 그대로 둔다
+            if (allStations.isEmpty()) {
+                repository.cached()?.let { applyStations(it.stations, it.receivedAt, offline = true, loading = true) }
+            }
 
             val result = repository.nearby(lat, lng, keyword = null)
             if (result.failure == null || result.stations.isNotEmpty()) {
@@ -83,7 +90,7 @@ class StationListViewModel(
                 _uiState.update { it.copy(isLoading = false, offline = true) }
             }
             // 검색어가 남아 있으면 검색 결과도 다시 받는다
-            searchWord?.let { word -> search(word) }
+            searchWord?.let { word -> startSearch(word) }
         }
     }
 
@@ -95,6 +102,8 @@ class StationListViewModel(
         if (word.isEmpty()) {
             searchWord = null
             searchResults = null
+            // 검색 요청 중에 지웠으면 그 요청은 취소됐으니 로딩 표시도 내린다
+            _uiState.update { it.copy(isLoading = false) }
             rebuild()
             return
         }
@@ -102,6 +111,12 @@ class StationListViewModel(
             delay(SEARCH_DEBOUNCE_MS)
             search(word)
         }
+    }
+
+    /** 검색 요청도 하나만 둔다: 음성 · 타이핑 · 재요청이 겹치면 마지막 검색어 결과만 남긴다 */
+    private fun startSearch(word: String) {
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch { search(word) }
     }
 
     /** 음성 인식 결과. 텍스트 검색과 같은 결과를 낸다 (REQ_SL_003) */
@@ -112,9 +127,10 @@ class StationListViewModel(
         if (word.isEmpty()) {
             searchWord = null
             searchResults = null
+            _uiState.update { it.copy(isLoading = false) }
             rebuild()
         } else {
-            viewModelScope.launch { search(word) }
+            startSearch(word)
         }
     }
 
@@ -159,9 +175,12 @@ class StationListViewModel(
         _uiState.update { it.copy(isLoading = true) }
         val result = repository.nearby(lat, lng, keyword = word)
         if (result.failure != null && result.stations.isEmpty()) {
+            // 이전 검색어 결과가 새 검색어 아래 남지 않게 비운다
+            searchResults = emptyList()
             _uiState.update {
                 it.copy(isLoading = false, message = StationListMessage.SEARCH_UNAVAILABLE)
             }
+            rebuild()
             return
         }
         searchResults = result.stations

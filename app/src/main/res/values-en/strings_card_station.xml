@@ -7,8 +7,16 @@
   <string name="card_station_charging_type_fast">Fast</string>
   <string name="card_station_charging_type_ultra_fast">Ultra-fast</string>
 
-  <string name="card_station_visit_count">%1$d visits</string>
+  <plurals name="card_station_visit_count">
+    <item quantity="one">%1$d visit</item>
+    <item quantity="other">%1$d visits</item>
+  </plurals>
 
   <string name="card_station_chip_recommended">Recommended</string>
   <string name="card_station_chip_fallback">Nearest station</string>
+  <string name="card_station_empty_title">Couldn’t load nearby stations</string>
+  <string name="card_station_empty_description">We’ll show nearby stations once connected</string>
+  <string name="card_station_refresh">Refresh</string>
+  <string name="card_station_navigate">Navigate</string>
+  <string name="card_station_empty_online_title">No station to recommend</string>
 </resources>

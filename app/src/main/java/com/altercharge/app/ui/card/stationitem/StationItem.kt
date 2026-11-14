@@ -1,5 +1,6 @@
 package com.altercharge.app.ui.card.stationitem
 
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -126,7 +127,7 @@ fun StationItem(
         ) {
             Text(
                 text = if (state.showVisitCount) {
-                    stringResource(R.string.card_item_visit_count, state.visitCount)
+                    pluralStringResource(R.plurals.card_item_visit_count, state.visitCount, state.visitCount)
                 } else {
                     "${state.distance}km"
                 },
@@ -143,24 +144,29 @@ fun StationItem(
                     .width(1.5.dp)
             )
 
+            // Figma location_row: 거리 | 연결 타입 | 주소. 연결 타입은 배경 없는 글자(text_dark_secondary 16)
             connectorLabelText(state.connectorTypes)?.let { label ->
                 Text(
                     text = label,
                     fontSize = 16.sp,
+                    lineHeight = 24.sp,
                     color = AlterTheme.colors.textSecondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
+                )
+                Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(AlterRadius.Small))
-                        .background(AlterTheme.colors.surfaceHigh)
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                        .background(AlterTheme.colors.surfaceAccent)
+                        .height(14.dp)
+                        .width(1.5.dp)
                 )
             }
 
             Text(
                 text = state.chargeStationAddress,
                 fontSize = 16.sp,
-                color = AlterTheme.colors.textTertiary.copy(alpha = 0.64f),
+                lineHeight = 24.sp,
+                color = AlterTheme.colors.textTertiary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)

@@ -45,6 +45,8 @@ data class AlterColors(
     /** 구분선, 강조 면 */
     val surfaceAccent: Color,
     val fieldBackground: Color,
+    /** system/surface/surface_basic. 검색바 테두리 (라이트는 배경과 같아 안 보인다) */
+    val surfaceBasic: Color,
     /** common/container/background → surface_basic. 다크에서 화면 배경보다 한 톤 밝다 (Q&A Q2) */
     val containerBackground: Color,
     /** common/container/background_subtle → basic_50 */
@@ -92,6 +94,7 @@ val LightAlterColors = AlterColors(
     surfaceHigh = Color(0xFFEDEEF2),
     surfaceAccent = Color(0xFFE0E1E6),
     fieldBackground = Color(0xFFFFFFFF),
+    surfaceBasic = Color(0xFFFFFFFF),
     containerBackground = Color(0xFFFFFFFF),
     containerBackgroundSubtle = Color(0xFFF7F8FA),
 
@@ -132,6 +135,7 @@ val DarkAlterColors = AlterColors(
     surfaceHigh = Color(0xFF313236),
     surfaceAccent = Color(0xFF44464E),
     fieldBackground = Color(0xFF131417),
+    surfaceBasic = Color(0xFF1D1E21),
     containerBackground = Color(0xFF1D1E21),
     containerBackgroundSubtle = Color(0xFF1D1E21),
 

@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <string name="card_item_avaliable_unit_text"></string>
-  <string name="card_item_visit_count">%1$d visits</string>
+  <plurals name="card_item_visit_count">
+    <item quantity="one">%1$d visit</item>
+    <item quantity="other">%1$d visits</item>
+  </plurals>
   <string name="card_item_connector_ac_slow">AC slow</string>
   <string name="card_item_connector_ac_three_phase">AC 3-phase</string>
   <string name="card_item_connector_dc_chademo">DC CHAdeMO</string>
