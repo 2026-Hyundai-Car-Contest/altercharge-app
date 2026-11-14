@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.altercharge.app.R
@@ -121,14 +122,17 @@ private fun SortDropDownItem(
             .clickable { onClick() }
             .padding(horizontal = 8.dp)
     ) {
+        // 색을 정하지 않으면 Material 기본(검정)이라 다크 모드에서 글자 · 체크가 배경에 묻힌다
         Text(
-            text = text
+            text = text,
+            color = AlterTheme.colors.textPrimary,
         )
 
         if (isSelected) {
             Image(
                 painter = painterResource(R.drawable.ic_status_check),
                 contentDescription = null,
+                colorFilter = ColorFilter.tint(AlterTheme.colors.textPrimary),
                 modifier = Modifier.size(20.dp)
             )
         } else {
