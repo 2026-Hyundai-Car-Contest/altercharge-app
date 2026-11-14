@@ -89,7 +89,10 @@ fun CardStation(
             }
         }
 
-        Column() {
+        Column(
+            modifier = modifier
+                .padding(top = 91.dp)
+        ) {
             Divider()
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -209,13 +212,6 @@ Row(
 
     )
 }
-
-        // TODO: - 이미지 에셋 추가 시 ic_info 추가하고 이미지와 Tag 간격 확인
-        Box(
-            modifier = modifier
-                .size(10.dp)
-                .background(AlterTheme.colors.textSecondary)
-        )
     }
 }
 

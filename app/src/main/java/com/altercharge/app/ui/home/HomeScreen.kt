@@ -33,6 +33,7 @@ import com.altercharge.app.ui.card.station.ChargeInfoType
 import com.altercharge.app.ui.card.station.ChargerStatus
 import com.altercharge.app.ui.card.station.ChipState
 import com.altercharge.app.ui.card.station.ChipTone
+import com.altercharge.app.ui.card.stationlist.RecommendedStationList
 import com.altercharge.app.ui.card.vehiclestatus.CardVehicleStatus
 import com.altercharge.app.ui.card.vehiclestatus.CardVehicleStatusUiState
 import com.altercharge.app.ui.card.vehiclestatus.ChargingState
@@ -137,7 +138,9 @@ fun HomeScreen(
                 },
                 r1 = { CardStation(state = dummyStation) },
                 r2 = {
-                    // TODO: 각 컴포넌트 조립(SearchBar, CardStationItem, SortDropDown)
+                    RecommendedStationList(
+                        modifier = Modifier.fillMaxSize()
+                    )
                 }
             )
         }
