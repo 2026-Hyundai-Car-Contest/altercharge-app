@@ -29,4 +29,8 @@
   <string name="station_list_connector_dc_chademo_desc">DC fast · ~50–500V · Older Soul EV · IONIQ</string>
   <string name="station_list_connector_dc_combo_desc">DC fast · ~200–1000V · Korean standard (Hyundai · Kia · Genesis)</string>
   <string name="station_list_connector_nacs_desc">AC/DC · DC up to ~1000V · Tesla, some new EVs</string>
+  <string name="station_list_last_checked_time">As of %1$s</string>
+  <string name="station_list_last_checked_date_time">As of %1$d/%2$d %3$s</string>
+  <string name="station_list_filter_power_meta">%1$d kW – %2$d kW</string>
+  <string name="station_list_filter_power_meta_over">%1$d kW – %2$d kW and above</string>
 </resources>

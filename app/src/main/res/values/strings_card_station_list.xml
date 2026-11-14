@@ -30,4 +30,8 @@
   <string name="station_list_connector_dc_chademo_desc">DC 급속 · 약 50~500V · 구형 쏘울EV · 아이오닉 · 리프</string>
   <string name="station_list_connector_dc_combo_desc">DC 급속 · 약 200~1000V · 현대 · 기아 · 제네시스 등 국내 표준</string>
   <string name="station_list_connector_nacs_desc">DC 급속 · 테슬라 표준 · 신규 충전소</string>
+  <string name="station_list_last_checked_time">%1$s 기준</string>
+  <string name="station_list_last_checked_date_time">%1$d.%2$d %3$s 기준</string>
+  <string name="station_list_filter_power_meta">%1$dkW ~ %2$dkW</string>
+  <string name="station_list_filter_power_meta_over">%1$dkW ~ %2$dkW 이상</string>
 </resources>

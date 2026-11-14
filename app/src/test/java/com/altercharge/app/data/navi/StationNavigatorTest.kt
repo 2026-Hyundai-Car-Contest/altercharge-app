@@ -52,10 +52,17 @@ class StationNavigatorTest {
     }
 
     @Test
-    fun 오프라인이면_확인할_수_없다고_알린다() = runBlocking {
+    fun 오프라인이어도_받아_둔_위치로_안내한다() = runBlocking {
         server.online = false
         assertEquals(NavigationOutcome.Offline, navigator.navigate(destination))
-        assertTrue(launcher.launched.isEmpty())
+        assertEquals(listOf(destination), launcher.launched)
+    }
+
+    @Test
+    fun 오프라인에서_내비가_받지_못하면_실패() = runBlocking {
+        server.online = false
+        launcher.accept = false
+        assertEquals(NavigationOutcome.Failed, navigator.navigate(destination))
     }
 
     @Test

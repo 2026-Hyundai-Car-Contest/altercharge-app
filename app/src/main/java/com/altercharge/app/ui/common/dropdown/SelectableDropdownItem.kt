@@ -62,7 +62,8 @@ fun SelectableDropdownItem(
         }
     ) {
         Row (
-            modifier = Modifier.padding(20.dp),
+            // Figma 드롭다운 항목: 위아래 10 · 좌우 16 (항목 높이 74)
+            modifier = Modifier.padding(vertical = 10.dp, horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(AlterMargin.Small)
         ) {

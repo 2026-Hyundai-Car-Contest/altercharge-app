@@ -6,16 +6,16 @@ import androidx.compose.ui.res.stringResource
 import com.altercharge.app.R
 import com.altercharge.app.data.remote.model.ConnectorType
 
-/** 연결 타입들을 "DC콤보 · AC완속"처럼 잇는다. UNKNOWN은 보여 줄 이름이 없어 뺀다. 없으면 null */
+/**
+ * R2 목록 한 줄의 연결 타입 (Figma v2 가이드 V2-5): 대표 1개만 쓰고 나머지는 "외 N"으로 줄인다.
+ * 대표는 목록이 앞에 둔 타입이다(필터에서 고른 타입을 앞으로 보낸다). 없으면 null
+ */
 @Composable
-fun connectorLabelText(types: List<ConnectorType>): String? {
+fun connectorSummaryText(types: List<ConnectorType>): String? {
     val shown = types.distinct().filter { it != ConnectorType.UNKNOWN }
     if (shown.isEmpty()) return null
-    val labels = mutableListOf<String>()
-    for (type in shown) {
-        labels += connectorLabel(type)
-    }
-    return labels.joinToString(" · ")
+    val first = connectorLabel(shown.first())
+    return if (shown.size == 1) first else stringResource(R.string.card_item_connector_more, first, shown.size - 1)
 }
 
 @Composable

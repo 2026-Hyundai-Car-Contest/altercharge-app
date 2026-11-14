@@ -85,7 +85,8 @@ class StationListViewModel(
             // 처음에만 저장한 목록을 먼저 보여 준다: 연결이 느리거나 끊겨도 빈 화면을 보지 않게.
             // 이미 목록이 있으면 다시 요청할 때마다 '오프라인'으로 깜빡이지 않게 그대로 둔다
             if (allStations.isEmpty()) {
-                repository.cached()?.let { applyStations(it.stations, it.receivedAt, offline = true, loading = true) }
+                // 아직 요청 중이라 오프라인인지 모른다. 켤 때 오프라인 문구가 잠깐 비치지 않게 요청 결과가 올 때까지는 온라인처럼 둔다
+                repository.cached()?.let { applyStations(it.stations, it.receivedAt, offline = false, loading = true) }
             }
 
             val result = repository.nearby(lat, lng, keyword = null)
@@ -202,6 +203,7 @@ class StationListViewModel(
                 isLoading = loading,
                 offline = offline,
                 lastChecked = if (!offline || at == null) null else lastCheckedOf(at, clock.instant()),
+                lastCheckedAt = if (offline) at else null,
             )
         }
         rebuild()
@@ -213,7 +215,8 @@ class StationListViewModel(
         localCounts = repository.localVisitCounts()
         val built = buildStationList(
             all = allStations,
-            searchResults = searchResults,
+            // 오프라인이면 검색창이 비어 보이므로(REQ_SL_002 예외) 전체 목록을 쓴다. 검색어는 남겨 연결되면 다시 찾는다
+            searchResults = if (_uiState.value.offline) null else searchResults,
             sort = _uiState.value.sort,
             filter = _uiState.value.filter,
             localCounts = localCounts,

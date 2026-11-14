@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.altercharge.app.R
 import com.altercharge.app.data.remote.model.ConnectorType
-import com.altercharge.app.ui.card.stationitem.connectorLabelText
+import com.altercharge.app.ui.card.stationitem.connectorLabel
 import com.altercharge.app.ui.designsystem.component.IviButton
 import com.altercharge.app.ui.designsystem.component.IviButtonHierarchy
 import com.altercharge.app.ui.designsystem.component.IviButtonSize
@@ -76,34 +76,26 @@ fun CardStation(
                 )
             }
 
-            Text(
-                text = state.stationName,
-                color = AlterTheme.colors.textPrimary,
-                fontWeight = AlterFontWeight.Strong,
-                fontSize = 32.sp,
-                // Figma name은 한 줄(48). 긴 이름이 두 줄이 되면 카드가 길어져 R2가 밀린다
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            // Figma title_block · last_checked: text_dark_tertiary 20 regular
-            state.lastChecked?.let { lastChecked ->
+            // Figma title_block: 이름과 마지막 확인 시각 사이 4
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    text = lastCheckedText(lastChecked),
-                    style = AlterTheme.typography.labelSmall,
-                    color = AlterTheme.colors.textTertiary,
-                )
-            }
-
-            // 충전소 주소 (REQ_ST_007 상세 정보). 상세를 못 받았으면 줄을 숨긴다
-            state.stationAddress?.takeIf { it.isNotBlank() }?.let { address ->
-                Text(
-                    text = address,
-                    color = AlterTheme.colors.textTertiary,
-                    fontSize = 16.sp,
+                    text = state.stationName,
+                    color = AlterTheme.colors.textPrimary,
+                    fontWeight = AlterFontWeight.Strong,
+                    fontSize = 32.sp,
+                    // Figma name은 한 줄(48). 긴 이름이 두 줄이 되면 카드가 길어져 R2가 밀린다
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
+
+                // Figma title_block · last_checked: text_dark_tertiary 20 regular
+                state.lastChecked?.let { lastChecked ->
+                    Text(
+                        text = lastCheckedText(lastChecked),
+                        style = AlterTheme.typography.labelSmall,
+                        color = AlterTheme.colors.textTertiary,
+                    )
+                }
             }
 
             Row(
@@ -115,24 +107,23 @@ fun CardStation(
                         chargeInfoTag = chargeInfoTag
                     )
                 }
+            }
 
-                // 충전기 연결 타입 (REQ_ST_007). 여러 규격은 "DC콤보 · AC완속"으로 잇는다
-                connectorLabelText(state.connectorTypes)?.let { label ->
-                    Text(
-                        text = label,
-                        color = AlterTheme.colors.textTertiary,
-                        fontSize = 20.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
+            // Figma R1 시안 1032:80386 address_line (REQ_ST_007): 칩 아래 "커넥터 · 주소" 한 줄, 넘치면 말줄임.
+            // 커넥터가 여럿이면 "DC콤보, AC완속". 둘 다 없으면(상세를 못 받음) 줄을 숨긴다
+            stationAddressLine(state.connectorTypes, state.stationAddress)?.let { line ->
+                Text(
+                    text = line,
+                    style = AlterTheme.typography.labelXSmall,
+                    color = AlterTheme.colors.textTertiary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
 
-        Column(
-            modifier = modifier
-                .padding(top = 91.dp)
-        ) {
+        // 카드 높이는 부르는 쪽이 고정한다. SpaceBetween으로 아래 줄을 바닥에 붙인다
+        Column {
             Divider()
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -174,6 +165,17 @@ fun Divider() {
         .height(1.5.dp)
         .background(AlterTheme.colors.surfaceAccent)
     ) {}
+}
+
+/** R1 address_line: "DC콤보, AC완속 · 주소". 커넥터 · 주소 중 있는 것만 잇고, 둘 다 없으면 null */
+@Composable
+private fun stationAddressLine(connectorTypes: List<ConnectorType>, address: String?): String? {
+    val connectors = connectorTypes.distinct().filter { it != ConnectorType.UNKNOWN }.map { connectorLabel(it) }
+    val parts = listOfNotNull(
+        connectors.takeIf { it.isNotEmpty() }?.joinToString(", "),
+        address?.takeIf { it.isNotBlank() },
+    )
+    return parts.takeIf { it.isNotEmpty() }?.joinToString(" · ")
 }
 
 @Composable

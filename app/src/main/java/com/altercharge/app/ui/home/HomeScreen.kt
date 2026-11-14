@@ -1,8 +1,5 @@
 package com.altercharge.app.ui.home
 
-import com.altercharge.app.data.home.toRouteDestination
-import com.altercharge.app.ui.card.vehiclestatus.cardVehicleStatusModeFor
-import com.altercharge.app.ui.card.driverecord.cardDriveRecordModeFor
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -19,9 +16,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.altercharge.app.R
+import com.altercharge.app.data.home.toRouteDestination
 import com.altercharge.app.data.navi.NavigationOutcome
 import com.altercharge.app.data.remote.model.NavigationReason
 import com.altercharge.app.ui.card.driverecord.CardDriveRecord
+import com.altercharge.app.ui.card.driverecord.cardDriveRecordModeFor
 import com.altercharge.app.ui.card.info.CardInfo
 import com.altercharge.app.ui.card.info.cardInfoModeFor
 import com.altercharge.app.ui.card.station.CardStation
@@ -31,6 +30,7 @@ import com.altercharge.app.ui.card.station.toCardStationUiState
 import com.altercharge.app.ui.card.stationlist.RecommendedStationList
 import com.altercharge.app.ui.card.vehiclestatus.CardVehicleStatus
 import com.altercharge.app.ui.card.vehiclestatus.ChargingState
+import com.altercharge.app.ui.card.vehiclestatus.cardVehicleStatusModeFor
 import com.altercharge.app.ui.designsystem.component.DriveState
 import com.altercharge.app.ui.designsystem.component.StatusBar
 import com.altercharge.app.ui.designsystem.component.StatusBarUiState
@@ -55,6 +55,7 @@ fun HomeScreen(
     stationViewModel: StationListViewModel,
 ) {
     // 화면 전체를 레이아웃 틀에 맡긴다: 바깥 여백 · 배경은 AlterChargeLayout과 앱 배경 토큰이 정한다 (디버그 카탈로그 layout과 같은 구성)
+    // 라이트 · 다크는 기기 설정을 따른다 (REQ_CM_008). 시연 영상 · 데모는 기기를 다크로 두고 찍는다
     AlterChargeTheme {
         Box(
             modifier = Modifier
@@ -162,6 +163,8 @@ fun HomeScreen(
                             navigating = uiState.navigating,
                             // 좌표가 없으면 경로를 찾을 수 없어 안내를 막는다 (REQ_BR_004 예외)
                             canNavigate = recommended.toRouteDestination() != null,
+                            // Figma R1은 높이 고정. 오프라인 시각 · 주소 줄이 늘어도 R2가 밀리지 않게 한다
+                            modifier = Modifier.fillMaxWidth().height(cardStationHeightFor(LocalAppLayout.current)),
                         )
                     } else {
                         // 추천을 못 받았을 때 (REQ_CM_006). 첫 요청 중에는 "못 불러왔다"고 미리 말하지 않게 빈 카드만 둔다

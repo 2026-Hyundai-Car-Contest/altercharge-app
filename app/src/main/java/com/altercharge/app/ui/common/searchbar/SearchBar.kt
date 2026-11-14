@@ -17,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.SolidColor
@@ -62,7 +63,8 @@ fun SearchBar(
             painter = painterResource(R.drawable.ic_search),
             contentDescription = null,
             colorFilter = ColorFilter.tint(colors.contentNeutral),
-            modifier = Modifier.size(24.dp),
+            // Figma CM_006 · V2-3: 오프라인이면 검색 아이콘도 35%
+            modifier = Modifier.size(24.dp).alpha(if (offline) 0.35f else 1f),
         )
 
         val textStyle = AlterTheme.typography.labelSmall
@@ -96,9 +98,11 @@ fun SearchBar(
             painter = painterResource(R.drawable.ic_mic),
             contentDescription = stringResource(R.string.search_bar_voice),
             colorFilter = ColorFilter.tint(colors.contentNeutral),
+            // Figma v2 가이드 V2-3: 오프라인이면 음성 버튼도 비활성(35%)
             modifier = Modifier
                 .size(24.dp)
-                .clickable { onMicClick() },
+                .alpha(if (offline) 0.35f else 1f)
+                .clickable(enabled = !offline) { onMicClick() },
         )
     }
 }

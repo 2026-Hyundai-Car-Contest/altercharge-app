@@ -68,6 +68,9 @@ fun StationItem(
         ) {
             Text(
                 text = state.stationName,
+                // Figma station_item name: 20 Bold, 줄높이 30
+                fontSize = 20.sp,
+                lineHeight = 30.sp,
                 fontWeight = AlterFontWeight.Strong,
                 // Figma name: text_dark_secondary
                 color = AlterTheme.colors.textSecondary,
@@ -150,7 +153,7 @@ fun StationItem(
             )
 
             // Figma location_row: 거리 | 연결 타입 | 주소. 연결 타입은 배경 없는 글자(text_dark_secondary 16)
-            connectorLabelText(state.connectorTypes)?.let { label ->
+            connectorSummaryText(state.connectorTypes)?.let { label ->
                 Text(
                     text = label,
                     fontSize = 16.sp,
