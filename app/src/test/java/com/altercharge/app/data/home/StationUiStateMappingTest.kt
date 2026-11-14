@@ -204,6 +204,40 @@ class StationUiStateMappingTest {
         assertEquals(0, card.myChargingCount)
     }
 
+    // ---- R1 충전기 수 칩 상태 (Figma availability) ----
+
+    private fun r1(observedAt: java.time.Instant?, chargers: List<com.altercharge.app.data.remote.model.ChargerStatus> = emptyList()) =
+        com.altercharge.app.data.home.RecommendedStationInfo(
+            stationId = "ST1", name = "충전소", distanceMeters = 500, availableCount = 0, visitCount = null,
+            speedCategory = null, maxOutputKw = 50.0, fallbackUsed = false,
+            reasonCode = com.altercharge.app.data.remote.model.RecommendationReason.VISITS_THEN_DISTANCE,
+            chargers = chargers.mapIndexed { i, st ->
+                com.altercharge.app.data.remote.model.ChargerDetail("C$i", "04", emptyList(), "04", 50.0, st, "2", null, null)
+            },
+            statusObservedAt = observedAt,
+        )
+
+    private val nowR1 = java.time.Instant.parse("2026-11-14T12:00:00Z")
+
+    @Test
+    fun 빈_충전기_0곳도_관측이_15분_안이면_사용_가능_모양() {
+        val card = r1(nowR1.minusSeconds(60)).toCardStationUiState("추천", 0, now = nowR1)
+        assertEquals(com.altercharge.app.ui.card.station.ChargerStatus.AVAILABLE, card.chargerStatus)
+    }
+
+    @Test
+    fun 관측이_15분_지나면_정보_없음() {
+        val card = r1(nowR1.minusSeconds(16 * 60)).toCardStationUiState("추천", 0, now = nowR1)
+        assertEquals(com.altercharge.app.ui.card.station.ChargerStatus.UNKNOWN, card.chargerStatus)
+    }
+
+    @Test
+    fun 충전기가_모두_점검_정지면_점검_중() {
+        val all = listOf(com.altercharge.app.data.remote.model.ChargerStatus.MAINTENANCE, com.altercharge.app.data.remote.model.ChargerStatus.STOPPED)
+        val card = r1(nowR1, all).toCardStationUiState("추천", 0, now = nowR1)
+        assertEquals(com.altercharge.app.ui.card.station.ChargerStatus.UNDER_INSPECTION, card.chargerStatus)
+    }
+
     // ---- R1 추천 충전소 ----
 
     @Test

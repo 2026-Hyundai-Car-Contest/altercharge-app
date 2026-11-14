@@ -2,7 +2,7 @@
 <resources>
 <!--  충전소 정보-->
   <string name="card_station_availability_possible">%1$s기</string>
-  <string name="card_station_availability_impossibility">점검중</string>
+  <string name="card_station_availability_impossibility">점검 중</string>
 <!--  충전유형(완속,급속)-->
   <string name="card_station_charging_type_slow">완속</string>
   <string name="card_station_charging_type_fast">급속</string>

@@ -148,7 +148,8 @@ fun CardStation(
                     size = IviButtonSize.Compact,
                     text = stringResource(R.string.card_station_navigate),
                     onClick = onNavigate,
-                    enabled = !navigating,
+                    // 점검 중이면 안내를 막는다 (Figma availability=fault · REQ_EX_004)
+                    enabled = !navigating && state.chargerStatus != ChargerStatus.UNDER_INSPECTION,
                 )
             }
         }
@@ -214,9 +215,11 @@ fun ChargerAvailability(
     chargerStatus: ChargerStatus,
     modifier: Modifier = Modifier
 ) {
-    val chargerAvailableText =
-        if(chargerStatus == ChargerStatus.AVAILABLE) stringResource(R.string.card_station_availability_possible, "$availableChargerCount / $totalChargerCount")
-        else stringResource(R.string.card_station_availability_impossibility)
+    val chargerAvailableText = when (chargerStatus) {
+        ChargerStatus.AVAILABLE -> stringResource(R.string.card_station_availability_possible, "$availableChargerCount / $totalChargerCount")
+        ChargerStatus.UNDER_INSPECTION -> stringResource(R.string.card_station_availability_impossibility)
+        ChargerStatus.UNKNOWN -> stringResource(R.string.common_value_unavailable)
+    }
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -237,9 +240,9 @@ Row(
     )
     Text(
         text = chargerAvailableText,
-        color = AlterTheme.colors.textPrimary,
-        fontWeight = AlterFontWeight.Strong,
-        lineHeight = 30.sp,
+        // Figma value: 20 bold. 정보 없음은 text_dark_tertiary
+        style = AlterTheme.typography.bodyXXSmall,
+        color = if (chargerStatus == ChargerStatus.UNKNOWN) AlterTheme.colors.textTertiary else AlterTheme.colors.textPrimary,
         modifier = modifier
             .padding(start = AlterMargin.XSmall)
 
@@ -286,14 +289,16 @@ private fun ChargerStatus.statusColor(): Color {
     return when(this) {
         ChargerStatus.AVAILABLE -> AlterTheme.colors.blue500
         ChargerStatus.UNDER_INSPECTION -> AlterTheme.colors.negative
+        ChargerStatus.UNKNOWN -> UnknownDotColor
     }
 }
 
 @Composable
 private fun ChargerStatus.statusBackgroundColor(): Color {
     return when(this) {
-        ChargerStatus.AVAILABLE -> AlterTheme.colors.blue50
-        ChargerStatus.UNDER_INSPECTION -> AlterTheme.colors.negative.copy(alpha = 0.16f)
+        // Figma tag_seats bg는 세 상태 모두 16% 불투명도
+        ChargerStatus.AVAILABLE, ChargerStatus.UNKNOWN -> AlterTheme.colors.blue50.copy(alpha = SeatsBgAlpha)
+        ChargerStatus.UNDER_INSPECTION -> AlterTheme.colors.negative.copy(alpha = SeatsBgAlpha)
     }
 }
 
@@ -314,3 +319,8 @@ val samplePreviewUiState = CardStationUiState(
     connectorTypes = listOf(ConnectorType.DC_COMBO, ConnectorType.AC_SLOW)
 )
 
+/** Figma tag_seats · bg 불투명도 */
+private const val SeatsBgAlpha = 0.16f
+
+/** Figma basic_400 (라이트 · 다크 같은 값) */
+private val UnknownDotColor = Color(0xFFA4A8AE)

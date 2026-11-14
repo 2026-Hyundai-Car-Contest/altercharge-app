@@ -1,6 +1,7 @@
 /** R1 추천 충전소 카드 값 (REQ_ST_007). 추천 응답(03)에 없는 주소 · 충전기는 상세(02)로 채운다 */
 package com.altercharge.app.data.home
 
+import java.time.Instant
 import com.altercharge.app.data.remote.model.StationSummary
 import com.altercharge.app.data.navi.RouteDestination
 import com.altercharge.app.data.remote.model.ChargerDetail
@@ -31,6 +32,8 @@ data class RecommendedStationInfo(
     /** 길 안내 목적지 (REQ_BR_005). 추천 응답에는 없고 상세를 받아야 채워진다 */
     val lat: Double? = null,
     val lng: Double? = null,
+    /** 가용 대수를 관측한 시각. 15분이 지나면 R1에 "정보 없음" (REQ_CM_009) */
+    val statusObservedAt: Instant? = null,
 ) {
     /** 충전기별 연결 타입 합집합. 상세의 충전기 목록이 비면 추천 응답에 없으므로 빈 목록 */
     val allConnectorTypes: List<ConnectorType>
@@ -53,6 +56,7 @@ fun Recommendation.toRecommendedStationInfo(detail: StationDetail? = null): Reco
         address = detail?.address,
         lat = detail?.lat,
         lng = detail?.lng,
+        statusObservedAt = statusObservedAt,
         totalValidCount = detail?.totalValidCount,
         connectorTypes = detail?.chargers?.flatMap { it.connectorTypes }?.distinct().orEmpty(),
         chargers = detail?.chargers.orEmpty(),
@@ -85,4 +89,5 @@ fun StationSummary.toSelectedStationInfo(): RecommendedStationInfo = Recommended
     connectorTypes = chargerTypes,
     lat = lat,
     lng = lng,
+    statusObservedAt = statusObservedAt,
 )
