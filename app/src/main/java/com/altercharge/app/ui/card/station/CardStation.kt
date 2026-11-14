@@ -172,10 +172,11 @@ Row(
         .padding(vertical = AlterPadding.XXSmall, horizontal = AlterPadding.Small)
 ) {
     if (chargeInfoTag is ChargeInfoTag.Icon) {
-        // TODO: 이미지 추가 완료 시 대체이미지 제거
+        // Figma tag_speed: ic_charger 18 (속도별 아이콘)
         Image(
             painter = painterResource(id = chargeInfoTag.resId),
-            contentDescription = null
+            contentDescription = null,
+            modifier = Modifier.size(18.dp)
         )
     }
     val displayText = when (chargeInfoTag.type) {
@@ -298,7 +299,7 @@ val samplePreviewUiState = CardStationUiState(
     chargerStatus = ChargerStatus.UNDER_INSPECTION,
     stationName = "연희 사러가 마트",
     chargerInfo = listOf(
-        ChargeInfoTag.Icon(resId = R.drawable.ic_status_lte,"급속", type = ChargeInfoType.CHARGING_TYPE),
+        ChargeInfoTag.Icon(resId = R.drawable.ic_charger_fast, "급속", type = ChargeInfoType.CHARGING_TYPE),
         ChargeInfoTag.Text("100Kw", type = ChargeInfoType.POWER)
     ),
     distance = 1.8,

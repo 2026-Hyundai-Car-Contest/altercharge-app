@@ -1,6 +1,7 @@
 /** 추천 충전소 정보 → R1 카드 (REQ_ST_007) */
 package com.altercharge.app.ui.card.station
 
+import com.altercharge.app.R
 import com.altercharge.app.data.home.RecommendedStationInfo
 import com.altercharge.app.data.remote.model.SpeedCategory
 import com.altercharge.app.data.station.displayKm
@@ -36,9 +37,9 @@ fun RecommendedStationInfo.toCardStationUiState(
 private fun RecommendedStationInfo.chargerInfoTags(): List<ChargeInfoTag> {
     val tags = mutableListOf<ChargeInfoTag>()
     when (speedCategory ?: speedCategoryOf(maxOutputKw)) {
-        SpeedCategory.SLOW -> tags += ChargeInfoTag.Text("완속", ChargeInfoType.CHARGING_TYPE)
-        SpeedCategory.FAST -> tags += ChargeInfoTag.Text("급속", ChargeInfoType.CHARGING_TYPE)
-        SpeedCategory.ULTRA_FAST -> tags += ChargeInfoTag.Text("초급속", ChargeInfoType.CHARGING_TYPE)
+        SpeedCategory.SLOW -> tags += ChargeInfoTag.Icon(R.drawable.ic_charger_slow, "완속", ChargeInfoType.CHARGING_TYPE)
+        SpeedCategory.FAST -> tags += ChargeInfoTag.Icon(R.drawable.ic_charger_fast, "급속", ChargeInfoType.CHARGING_TYPE)
+        SpeedCategory.ULTRA_FAST -> tags += ChargeInfoTag.Icon(R.drawable.ic_charger_ultra, "초급속", ChargeInfoType.CHARGING_TYPE)
         null -> Unit
     }
     maxOutputKw?.let { tags += ChargeInfoTag.Text("${it.roundToInt()}kW", ChargeInfoType.POWER) }

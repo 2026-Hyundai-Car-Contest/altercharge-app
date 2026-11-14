@@ -14,4 +14,7 @@
 <!-- 추천 칩 (REQ_ST_007). 대체 추천은 가용 충전기가 없어 안내 직전 확인이 필요하다 -->
   <string name="card_station_chip_recommended">추천</string>
   <string name="card_station_chip_fallback">대체 추천</string>
+  <string name="card_station_empty_title">주변 충전소를 불러오지 못했어요</string>
+  <string name="card_station_empty_description">연결되면 주변 충전소를 보여 드려요</string>
+  <string name="card_station_refresh">새로고침</string>
 </resources>

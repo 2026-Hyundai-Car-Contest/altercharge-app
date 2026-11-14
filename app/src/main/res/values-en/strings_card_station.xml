@@ -11,4 +11,7 @@
 
   <string name="card_station_chip_recommended">Recommended</string>
   <string name="card_station_chip_fallback">Nearest station</string>
+  <string name="card_station_empty_title">Couldn’t load nearby stations</string>
+  <string name="card_station_empty_description">We’ll show nearby stations once connected</string>
+  <string name="card_station_refresh">Refresh</string>
 </resources>

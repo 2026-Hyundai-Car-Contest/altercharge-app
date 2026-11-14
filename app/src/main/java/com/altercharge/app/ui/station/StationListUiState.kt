@@ -26,6 +26,10 @@ data class StationListUiState(
 ) {
     /** 받은 충전소는 있는데 조건에 맞는 곳이 없다 */
     val isFilterEmpty: Boolean get() = message == StationListMessage.FILTER_EMPTY
+
+    /** 받아 둔 충전소가 하나도 없다: 검색 · 필터로 비운 게 아니라 목록 자체가 없을 때만 빈 상태 그림을 보여 준다 */
+    val showEmptyIllustration: Boolean
+        get() = items.isEmpty() && !isLoading && query.isBlank() && !isFilterEmpty && voice == VoiceSearchState.Idle
 }
 
 enum class StationListMessage {

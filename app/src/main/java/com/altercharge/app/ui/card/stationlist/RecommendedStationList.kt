@@ -179,11 +179,17 @@ fun RecommendedStationList(
         // 타이틀
         Text(
             text = stringResource(R.string.station_list_title),
-            fontWeight = AlterFontWeight.Strong,
-            fontSize = 28.sp,
+            style = AlterTheme.typography.bodyXSmall,
             color = AlterTheme.colors.textPrimary,
             textAlign = TextAlign.Left,
         )
+
+        // 받아 둔 충전소가 아예 없으면 헤더만 남기고 검색 · 필터 · 목록을 숨긴다 (Figma selection = empty, 807:59523).
+        // 검색 · 필터 결과가 없을 때는 조건을 바꿀 수 있게 그대로 둔다
+        if (state.showEmptyIllustration) {
+            StationListEmpty(modifier = Modifier.weight(1f))
+            return@Column
+        }
 
         // 1. 검색바 (REQ_SL_002 · REQ_SL_003)
         SearchBar(
@@ -191,6 +197,7 @@ fun RecommendedStationList(
             value = state.query,
             onValueChange = onQueryChange,
             onMicClick = onMicClick,
+            offline = state.offline,
         )
 
         // 2. 필터 영역 (정렬, 연결 타입, 속도)
@@ -431,6 +438,27 @@ fun RecommendedStationList(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun StationListEmpty(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Image(
+            painter = painterResource(R.drawable.img_empty_station_alert),
+            contentDescription = null,
+            modifier = Modifier.size(width = 260.dp, height = 188.dp),
+        )
+        Text(
+            text = stringResource(R.string.station_list_empty_title),
+            style = AlterTheme.typography.bodyXSmall,
+            color = AlterTheme.colors.textSecondary,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 

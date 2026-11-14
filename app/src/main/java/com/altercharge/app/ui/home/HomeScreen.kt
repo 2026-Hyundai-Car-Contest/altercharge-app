@@ -3,21 +3,23 @@ package com.altercharge.app.ui.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.altercharge.app.R
 import com.altercharge.app.ui.card.driverecord.CardDriveRecord
 import com.altercharge.app.ui.card.info.CardInfo
 import com.altercharge.app.ui.card.info.cardInfoModeFor
 import com.altercharge.app.ui.card.station.CardStation
+import com.altercharge.app.ui.card.station.CardStationEmpty
+import com.altercharge.app.ui.card.station.cardStationHeightFor
 import com.altercharge.app.ui.card.station.toCardStationUiState
 import com.altercharge.app.ui.card.stationlist.RecommendedStationList
 import com.altercharge.app.ui.card.vehiclestatus.CardVehicleStatus
@@ -29,6 +31,7 @@ import com.altercharge.app.ui.designsystem.component.StatusValue
 import com.altercharge.app.ui.designsystem.layout.AlterChargeLayout
 import com.altercharge.app.ui.designsystem.layout.LocalAppLayout
 import com.altercharge.app.ui.designsystem.theme.AlterChargeTheme
+import com.altercharge.app.ui.designsystem.theme.AlterRadius
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
 import com.altercharge.app.ui.station.StationListMessage
 import com.altercharge.app.ui.station.StationListViewModel
@@ -124,19 +127,20 @@ fun HomeScreen(
                             )
                         )
                     } else {
-                        // TODO: 추천 충전소가 없을 때 보여 줄 UI로 교체
-                        androidx.compose.foundation.layout.Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 32.dp),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            val fallbackText = when {
-                                uiState.isLoading -> "추천 충전소를 불러오는 중..."
-                                uiState.error != null -> "추천 충전소가 없습니다 (${uiState.error})"
-                                else -> "추천 충전소가 없습니다"
-                            }
-                            androidx.compose.material3.Text(text = fallbackText)
+                        // 추천을 못 받았을 때 (REQ_CM_006). 첫 요청 중에는 "못 불러왔다"고 미리 말하지 않게 빈 카드만 둔다
+                        if (uiState.isLoading && cards == null) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(cardStationHeightFor(LocalAppLayout.current))
+                                    .clip(RoundedCornerShape(AlterRadius.XXLarge))
+                                    .background(AlterTheme.colors.surface),
+                            )
+                        } else {
+                            CardStationEmpty(
+                                onRefresh = viewModel::loadHome,
+                                refreshing = uiState.isLoading,
+                            )
                         }
                     }
                 },

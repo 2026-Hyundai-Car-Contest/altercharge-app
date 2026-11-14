@@ -199,7 +199,7 @@ class StationUiStateMappingTest {
         assertEquals(4, card.availableChargerCount)
         assertEquals(4, card.totalChargerCount)
         assertEquals("서울특별시 중구 세종대로 110", card.stationAddress)
-        assertEquals(listOf("급속", "100kW"), card.chargerInfo.mapNotNull { (it as? ChargeInfoTag.Text)?.text })
+        assertEquals(listOf("급속", "100kW"), card.chargerInfo.map { it.text })
         assertEquals(listOf(ConnectorType.DC_COMBO), card.connectorTypes)
         assertEquals(0, card.myChargingCount)
     }
@@ -227,7 +227,7 @@ class StationUiStateMappingTest {
         assertEquals(2, card.totalChargerCount) // 상세의 totalValidCount
         assertEquals("서울특별시 강동구 구천면로 395(명일동)", card.stationAddress)
         assertEquals(2, card.myChargingCount)
-        assertEquals(listOf("급속", "50kW"), card.chargerInfo.mapNotNull { (it as? ChargeInfoTag.Text)?.text })
+        assertEquals(listOf("급속", "50kW"), card.chargerInfo.map { it.text })
         assertEquals(3, card.connectorTypes.size)
     }
 
@@ -239,7 +239,7 @@ class StationUiStateMappingTest {
         assertNull(card.stationAddress)
         assertTrue(card.connectorTypes.isEmpty())
         assertEquals(1, card.totalChargerCount) // 가용 수로 자리만 채운다
-        assertEquals(listOf("급속", "50kW"), card.chargerInfo.mapNotNull { (it as? ChargeInfoTag.Text)?.text })
+        assertEquals(listOf("급속", "50kW"), card.chargerInfo.map { it.text })
         assertEquals("대체 추천", card.chipState.text)
     }
 
