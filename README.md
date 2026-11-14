@@ -87,13 +87,9 @@ app/src/main/java/com/altercharge/app/
 
 - **1차 시연은 차량 값과 위치가 목업입니다.** 배터리 · 주행 가능 거리 · 충전 상태는 시안과 같은 고정 값(`MockVehicleTelemetrySource`)이고, 위치는 서울시청 좌표입니다. 차량 값을 읽는 부분은 `VehicleTelemetrySource` 하나로 모아 두어 Pleos Vehicle SDK 구현으로 바꾸면 화면 · 판정 코드는 그대로 씁니다. 목업 값으로는 방문 기록 · 충전 이벤트를 남기지 않습니다.
 - 상단 바의 외부 기온은 Pleos Vehicle SDK에 값이 없어(실내 온도만 제공) 1차에서는 표시하지 않습니다.
-<<<<<<< HEAD
 - 주행 중 음성 안내(브리핑)는 기획상 2차 범위라 Pleos TextToSpeech로 2차에 만듭니다. 위치는 1차 시연에서 고정 좌표를 쓰고 2차에 FusedLocation으로 바꿉니다.
 - 음성 검색은 Android `SpeechRecognizer`로 기기의 기본 음성 인식 서비스(Pleos 에뮬레이터에서는 차량 플랫폼 서비스)를 씁니다. 앱이 음성을 외부 서비스로 보내지 않습니다. Pleos SpeechToText 연동은 2차입니다.
 - 목업 값으로 서버 주행 기록이 섞이지 않게, 1차 시연에서는 주행 기록 전송을 꺼 두었습니다(연결 자리는 `HomeCardsLoader(uploader = …)`).
-=======
-- Pleos의 TextToSpeech, SpeechToText, FusedLocation은 아직 Coming Soon이라 음성 안내는 2차에서 만듭니다.
->>>>>>> origin/main
 - 충전 기록은 공모전 서버 정책상 테스트(MOCK) 데이터로 저장되어 방문 횟수에는 반영되지 않습니다.
 - 충전소 이름과 주소는 한국환경공단 원본(한국어)을 그대로 보여 줍니다.
 
