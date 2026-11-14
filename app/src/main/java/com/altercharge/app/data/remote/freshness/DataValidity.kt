@@ -32,13 +32,7 @@ fun stationValidity(receivedAt: Instant?, now: Instant): StationValidity = Stati
     info = validityOf(receivedAt, now, STATION_INFO_VALIDITY),
 )
 
-/** 정보가 없거나 만료면 30초마다, 연결이 돌아오면 바로 다시 요청 (REQ_CM_006) */
+/** 서버에 못 붙어 저장값을 보여 주는 동안 다시 요청하는 간격 (REQ_CM_006). 홈 ViewModel이 쓴다 */
 object RefreshRule {
     val AUTO_RETRY_INTERVAL: Duration = Duration.ofSeconds(30)
-
-    fun isDue(lastRequestAt: Instant?, now: Instant, reconnected: Boolean = false): Boolean = when {
-        reconnected -> true
-        lastRequestAt == null -> true
-        else -> Duration.between(lastRequestAt, now) >= AUTO_RETRY_INTERVAL
-    }
 }
