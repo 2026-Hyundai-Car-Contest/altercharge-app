@@ -91,8 +91,7 @@ class ChargingEventRecorder(
         save(queue.takeLast(MAX_PENDING))
     }
 
-    /** 같은 충전 시작이면 늘 같은 키가 나오게 시각과 충전소로 만든다 (1~100자) */
-    /** 길이 제한을 넘으면 뒤를 자르지 않고 충전소 ID를 해시로 줄인다: 잘린 두 ID가 같아지지 않게 */
+    /** 시각과 충전소로 만든다. 길이 제한을 넘으면 뒤를 자르지 않고 충전소 ID를 해시로 줄인다: 잘린 두 ID가 같아지지 않게 */
     private fun eventId(at: Instant, stationId: String?): String {
         val full = "visit-${at.toEpochMilli()}-${stationId ?: "none"}"
         if (full.length <= MAX_EVENT_ID_LENGTH) return full

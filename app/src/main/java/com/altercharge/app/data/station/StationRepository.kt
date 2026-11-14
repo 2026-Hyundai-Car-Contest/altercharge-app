@@ -4,9 +4,6 @@
  */
 package com.altercharge.app.data.station
 
-import java.time.Duration
-import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.sync.Mutex
 import com.altercharge.app.data.local.StationCacheStore
 import com.altercharge.app.data.local.VisitCountStore
 import com.altercharge.app.data.remote.AlterChargeApi
@@ -14,7 +11,10 @@ import com.altercharge.app.data.remote.ApiResult
 import com.altercharge.app.data.remote.model.StationSummary
 import com.altercharge.app.domain.time.KoreaZone
 import java.time.Clock
+import java.time.Duration
 import java.time.Instant
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /** REQ_SL_001 반경은 서버 기본값과 같은 3km다 */
 const val NEARBY_RADIUS_KM: Double = 3.0
