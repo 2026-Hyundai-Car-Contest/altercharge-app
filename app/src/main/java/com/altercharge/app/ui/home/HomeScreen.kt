@@ -1,7 +1,7 @@
 package com.altercharge.app.ui.home
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -29,6 +29,7 @@ import com.altercharge.app.ui.designsystem.component.StatusValue
 import com.altercharge.app.ui.designsystem.layout.AlterChargeLayout
 import com.altercharge.app.ui.designsystem.layout.LocalAppLayout
 import com.altercharge.app.ui.designsystem.theme.AlterChargeTheme
+import com.altercharge.app.ui.designsystem.theme.AlterTheme
 import com.altercharge.app.ui.station.StationListMessage
 import com.altercharge.app.ui.station.StationListViewModel
 import com.altercharge.app.ui.station.rememberVoiceSearch
@@ -43,37 +44,36 @@ fun HomeScreen(
     viewModel: HomeViewModel,
     stationViewModel: StationListViewModel,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
+    // 화면 전체를 레이아웃 틀에 맡긴다: 바깥 여백 · 배경은 AlterChargeLayout과 앱 배경 토큰이 정한다 (디버그 카탈로그 layout과 같은 구성)
+    AlterChargeTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(AlterTheme.colors.screenBackground),
+        ) {
 
-        val uiState by viewModel.uiState.collectAsState()
-        val cards = uiState.cards
-        val stationState by stationViewModel.uiState.collectAsState()
+            val uiState by viewModel.uiState.collectAsState()
+            val cards = uiState.cards
+            val stationState by stationViewModel.uiState.collectAsState()
 
-        LaunchedEffect(Unit) {
-            viewModel.loadHome()
-        }
-        // 충전이 시작돼 방문이 세어지면 목록의 방문 횟수 · 방문순도 바로 쓸 수 있게 한다 (REQ_ST_008)
-        LaunchedEffect(uiState.myVisitCount) {
-            stationViewModel.onVisitsChanged()
-        }
+            LaunchedEffect(Unit) {
+                viewModel.loadHome()
+            }
+            // 충전이 시작돼 방문이 세어지면 목록의 방문 횟수 · 방문순도 바로 쓸 수 있게 한다 (REQ_ST_008)
+            LaunchedEffect(uiState.myVisitCount) {
+                stationViewModel.onVisitsChanged()
+            }
 
-        val chipRecommended = stringResource(R.string.card_station_chip_recommended)
-        val chipFallback = stringResource(R.string.card_station_chip_fallback)
+            val chipRecommended = stringResource(R.string.card_station_chip_recommended)
+            val chipFallback = stringResource(R.string.card_station_chip_fallback)
 
-        // 음성 검색 (REQ_SL_003). 오프라인에서는 검색할 수 없어 마이크를 눌러도 안내만 한다
-        val startVoiceSearch = rememberVoiceSearch(
-            onResult = stationViewModel::onVoiceResult,
-            onListening = stationViewModel::onVoiceListening,
-            onError = stationViewModel::onVoiceError,
-        )
+            // 음성 검색 (REQ_SL_003). 오프라인에서는 검색할 수 없어 마이크를 눌러도 안내만 한다
+            val startVoiceSearch = rememberVoiceSearch(
+                onResult = stationViewModel::onVoiceResult,
+                onListening = stationViewModel::onVoiceListening,
+                onError = stationViewModel::onVoiceError,
+            )
 
-        AlterChargeTheme() {
             AlterChargeLayout(
                 statusBar = {
                     StatusBar(
@@ -102,9 +102,9 @@ fun HomeScreen(
                     cards?.let {
                         CardDriveRecord(
                             state = it.driveRecord,
-                            onPreviousWeek = {},
-                            onNextWeek = {},
-                            onToggleExpanded = {}
+                            onPreviousWeek = viewModel::showPreviousWeek,
+                            onNextWeek = viewModel::showNextWeek,
+                            onToggleExpanded = viewModel::toggleDriveRecordExpanded
                         )
                     }
                 },
@@ -156,7 +156,9 @@ fun HomeScreen(
                         onFilterChange = stationViewModel::onFilterChange,
                         onStationClick = {},
                     )
-                }
+                },
+                // L2를 펼치면(상황 15) 카드가 길어져 왼쪽 열만 스크롤한다
+                leftColumnScrollable = cards?.driveRecord?.expanded == true,
             )
         }
     }

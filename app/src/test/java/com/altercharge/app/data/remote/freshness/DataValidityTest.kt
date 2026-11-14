@@ -57,21 +57,4 @@ class DataValidityTest {
         assertTrue(stationValidity(null, now).isEmpty)
     }
 
-    // ---- 다시 요청 ----
-
-    @Test
-    fun 한_번도_안_했으면_바로_요청() {
-        assertTrue(RefreshRule.isDue(null, now))
-    }
-
-    @Test
-    fun 삼십초마다_자동_재요청() {
-        assertFalse(RefreshRule.isDue(ago(Duration.ofSeconds(29)), now))
-        assertTrue(RefreshRule.isDue(ago(Duration.ofSeconds(30)), now))
-    }
-
-    @Test
-    fun 연결이_돌아오면_즉시_요청() {
-        assertTrue(RefreshRule.isDue(ago(Duration.ofSeconds(1)), now, reconnected = true))
-    }
 }

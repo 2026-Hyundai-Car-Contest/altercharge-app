@@ -7,6 +7,7 @@ import com.altercharge.app.data.home.HomeCardsLoader
 import com.altercharge.app.data.home.LatLng
 import com.altercharge.app.data.home.VehicleReading
 import com.altercharge.app.data.home.toCardVehicleStatusUiState
+import com.altercharge.app.data.remote.freshness.RefreshRule
 import com.altercharge.app.data.local.VisitCountStore
 import com.altercharge.app.data.station.StationRepository
 import com.altercharge.app.data.upload.ChargingEventRecorder
@@ -14,12 +15,17 @@ import com.altercharge.app.data.vehicle.VehicleTelemetry
 import com.altercharge.app.data.vehicle.VehicleTelemetrySource
 import com.altercharge.app.data.vehicle.isChargeStart
 import com.altercharge.app.domain.time.KoreaZone
+import com.altercharge.app.ui.card.driverecord.CardDriveRecordUiState
 import com.altercharge.app.ui.card.vehiclestatus.ChargingState
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Clock
+import java.time.LocalDate
 
 class HomeViewModelFactory(
     private val loader: HomeCardsLoader,
@@ -65,7 +71,21 @@ class HomeViewModel(
     /** 직전에 읽은 충전 상태. 미연결 → 충전 중으로 바뀌는 순간을 방문으로 센다 (isChargeStart) */
     private var lastCharging: ChargingState? = null
 
+    private var loadJob: Job? = null
+
+    /** L2에서 보고 있는 주(월요일). null이면 이번 주. 다시 불러와도 보던 주를 유지한다 */
+    private var viewedWeekStart: LocalDate? = null
+
+    /** 서버에 못 붙으면 저장한 값을 보여 주고 30초마다 다시 요청한다 (REQ_CM_006). 다시 요청할 때마다 차량 값도 새로 읽는다 */
     fun loadHome() {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
+            while (loadOnce()) delay(RefreshRule.AUTO_RETRY_INTERVAL.toMillis())
+        }
+    }
+
+    /** @return 서버에 못 붙어 다시 요청해야 하면 true */
+    private suspend fun loadOnce(): Boolean {
         val reading = telemetry.read()
         // 차량 값은 네트워크와 관계없이 그대로 보여 준다 (REQ_CM_006)
         _uiState.update {
@@ -77,36 +97,68 @@ class HomeViewModel(
             // SOC · 주행가능거리를 못 읽으면 판정하지 않는다 (C 카드는 "정보 없음")
             lastCharging = reading.charging
             _uiState.update { it.copy(isLoading = false, cards = null) }
-            return
+            return false
         }
 
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
-            try {
-                // 못 보낸 방문 기록이 있으면 먼저 보낸다 (REQ_CM_006)
-                recorder.flush()
+        _uiState.update { it.copy(isLoading = true, error = null) }
+        return try {
+            // 못 보낸 방문 기록이 있으면 먼저 보낸다 (REQ_CM_006)
+            recorder.flush()
 
-                val cards = loader.load(vehicle, location)
-                val recommended = cards.recommended
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        cards = cards,
-                        recommended = recommended,
-                        myVisitCount = recommended?.let { info -> visits.count(info.stationId) } ?: 0,
-                        vehicleStatus = reading.toCardVehicleStatusUiState(driverName, cards.vehicleStatus),
-                    )
-                }
-                detectChargingStart(reading, vehicle)
-            } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        error = e.message,
-                    )
-                }
+            val cards = loader.load(vehicle, location)
+            val recommended = cards.recommended
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    cards = cards.copy(driveRecord = keepViewedWeek(cards.driveRecord)),
+                    recommended = recommended,
+                    myVisitCount = recommended?.let { info -> visits.count(info.stationId) } ?: 0,
+                    vehicleStatus = reading.toCardVehicleStatusUiState(driverName, cards.vehicleStatus),
+                )
             }
+            detectChargingStart(reading, vehicle)
+            cards.offline
+        } catch (e: CancellationException) {
+            throw e // 새 loadHome이 이전 요청을 멈춘 것: 오류로 남기지 않는다
+        } catch (e: Exception) {
+            // 연결 실패는 loader가 저장값으로 처리하니 여기 오는 것은 코드 · 규격 오류다. 다시 해도 같아서 재요청하지 않는다
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    error = e.message,
+                )
+            }
+            false
         }
+    }
+
+    fun showPreviousWeek() = moveWeek(-1)
+
+    fun showNextWeek() = moveWeek(1)
+
+    fun toggleDriveRecordExpanded() {
+        val current = _uiState.value.cards?.driveRecord ?: return
+        updateDriveRecord(current.weekStart, expanded = !current.expanded)
+    }
+
+    /** 다시 불러온 값은 이번 주 · 접힘이라, 보던 주와 펼침 상태로 바꿔 끼운다 */
+    private fun keepViewedWeek(loaded: CardDriveRecordUiState): CardDriveRecordUiState {
+        val expanded = _uiState.value.cards?.driveRecord?.expanded ?: false
+        val week = viewedWeekStart ?: return loaded.copy(expanded = expanded)
+        return loader.driveRecordFor(week, expanded = expanded)
+    }
+
+    private fun moveWeek(weeks: Long) {
+        val current = _uiState.value.cards?.driveRecord ?: return
+        val canMove = if (weeks < 0) current.hasPreviousWeek else current.hasNextWeek
+        if (!canMove) return
+        updateDriveRecord(current.weekStart.plusWeeks(weeks), expanded = current.expanded)
+    }
+
+    private fun updateDriveRecord(weekStart: LocalDate, expanded: Boolean) {
+        val record = loader.driveRecordFor(weekStart, expanded = expanded)
+        viewedWeekStart = if (record.todayIndex != null) null else weekStart
+        _uiState.update { state -> state.copy(cards = state.cards?.copy(driveRecord = record)) }
     }
 
     /**

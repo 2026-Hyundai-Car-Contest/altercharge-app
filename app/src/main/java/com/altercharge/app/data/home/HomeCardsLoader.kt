@@ -25,6 +25,7 @@ import com.altercharge.app.data.remote.mapper.weekStartOf
 import com.altercharge.app.data.remote.model.LatestChargeHistory
 import com.altercharge.app.data.remote.model.StationDetail
 import com.altercharge.app.data.remote.model.VehicleSnapshotHistory
+import com.altercharge.app.data.upload.SnapshotUploader
 import com.altercharge.app.domain.judgment.JudgmentInput
 import com.altercharge.app.domain.judgment.JudgmentResult
 import com.altercharge.app.domain.judgment.judge
@@ -55,6 +56,11 @@ class HomeCardsLoader(
     private val store: OfflineSnapshotStore,
     private val clock: Clock = Clock.system(KoreaZone),
     private val vehicleId: String = DEMO_VEHICLE_ID,
+    /**
+     * 주어지면 load마다 차량 값을 대기열에 넣고(30분마다) 기록을 받기 전에 보낸다 (REQ_JD_002 · REQ_CM_006).
+     * 차량 SDK 값을 실제로 읽을 때만 넘긴다: 고정 값을 보내면 공용 시연 차량의 서버 기록이 망가진다.
+     */
+    private val uploader: SnapshotUploader? = null,
 ) {
     // 주행 기록은 서버 보관이 원칙이라(REQ_JD_002) 기기에 저장하지 않고 앱이 켜져 있는 동안만 기억한다.
     // load(IO)와 driveRecordFor(화면 스레드)가 같이 읽어서 @Volatile.
@@ -65,6 +71,12 @@ class HomeCardsLoader(
     suspend fun load(vehicle: VehicleReading, location: LatLng?): HomeCards {
         val now = clock.instant()
         val today = now.atZone(KoreaZone).toLocalDate() // LocalDate.ofInstant는 API 34부터라 못 쓴다
+
+        // 방금 보낸 기록까지 판정에 들어가게 기록을 받기 전에 보낸다
+        uploader?.let {
+            it.record(vehicle, now)
+            it.flush(now)
+        }
 
         val historyResult = api.snapshots(vehicleId)
         val chargeResult = api.latestCharge(vehicleId)
