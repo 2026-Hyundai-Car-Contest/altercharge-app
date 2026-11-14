@@ -57,6 +57,8 @@ data class StatusBarUiState(
     val range: StatusValue,
     /** null이면 숨긴다 */
     val temperatureC: Int?,
+    /** 상단 바 시각 "HH:mm". null이면 시안 값(디자인 카탈로그 · 미리보기용) */
+    val time: String? = null,
 )
 
 /** Figma variant size. COMPACT는 km · 온도 · 연결 아이콘을 뺀다 */
@@ -79,7 +81,7 @@ private val ConnectivityGap = 12.dp
 private val BoltIconSize = 20.dp
 private val CheckIconSize = 16.dp
 
-/** 기획 확정: 연결 아이콘과 시간은 시안 값 더미로 표시한다 */
+/** 연결 아이콘은 시안 값 더미. 시각은 홈에서 실제 시각을 넘기고, 안 넘기면 이 시안 값을 쓴다 */
 private const val DummyTime = "14:05"
 
 /** Figma 05 Components status_bar/gear/{…}. 상단 바에서만 써서 여기 둔다 */
@@ -196,7 +198,7 @@ fun StatusBar(
                     }
                 }
             }
-            SingleLineText(text = DummyTime, style = labelStrong, color = colors.textPrimary)
+            SingleLineText(text = state.time ?: DummyTime, style = labelStrong, color = colors.textPrimary)
         }
     }
 }

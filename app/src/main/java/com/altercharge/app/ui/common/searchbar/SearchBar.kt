@@ -50,7 +50,8 @@ fun SearchBar(
     val shape = RoundedCornerShape(AlterRadius.Large)
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        // 오프라인 안내 문구(245)가 한 줄에 다 보이게 그때만 간격을 줄인다 (Figma CM_006 · 디자이너 QA 02)
+        horizontalArrangement = Arrangement.spacedBy(if (offline) 8.dp else 12.dp),
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)

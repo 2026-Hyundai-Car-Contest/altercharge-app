@@ -200,10 +200,14 @@ fun ChargePowerSlider(
                         modifier = Modifier.weight(1f),
                         contentAlignment = Alignment.Center
                     ) {
+                        // 패널 폭에 맞춰 칸이 좁아져도 "350+"가 두 줄로 꺾이지 않게 한다
                         Text(
                             text = label,
                             fontSize = 18.sp,
-                            color = textColor
+                            color = textColor,
+                            softWrap = false,
+                            maxLines = 1,
+                            modifier = Modifier.wrapContentWidth(unbounded = true)
                         )
                     }
                 }

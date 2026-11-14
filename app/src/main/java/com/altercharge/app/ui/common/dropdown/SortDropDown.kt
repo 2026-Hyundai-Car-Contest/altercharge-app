@@ -1,5 +1,6 @@
 package com.altercharge.app.ui.common.dropdown
 
+import androidx.compose.ui.draw.alpha
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -41,10 +42,18 @@ fun <T> SortDropDown(
     selectedItem: T,
     itemLabel: (T) -> String,
     onItemSelected: (T) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** 고를 수 없는 항목은 흐리게 두고 누르지 못하게 한다 (예: 방문 기록이 없을 때 방문순, REQ_SL_004 예외) */
+    isEnabled: (T) -> Boolean = { true },
+    /** 메뉴가 열리고 닫힐 때 알린다 (목록을 어둡게 덮는 데 쓴다) */
+    onExpandedChange: (Boolean) -> Unit = {},
 ) {
     var isDropDownMenuExpanded by remember {
         mutableStateOf(false)
+    }
+    val setExpanded: (Boolean) -> Unit = {
+        isDropDownMenuExpanded = it
+        onExpandedChange(it)
     }
     Box(
         modifier = Modifier.wrapContentSize(
@@ -56,22 +65,17 @@ fun <T> SortDropDown(
             label = itemLabel(selectedItem),
             selected = true,
             expanded = isDropDownMenuExpanded,
-            onClick = { isDropDownMenuExpanded = true },
+            onClick = { setExpanded(true) },
         )
 
-        DropdownMenu(
+        // Figma dropdown_sort: 칩 아래 8에 열리고, 항목을 누르면 바로 적용하고 닫는다 (디자이너 QA 04 · 05)
+        FilterDropdownPopup(
             expanded = isDropDownMenuExpanded,
-            onDismissRequest = {
-                isDropDownMenuExpanded = false
-            },
-            shape = RoundedCornerShape(AlterRadius.Large),
-            containerColor = AlterTheme.colors.containerBackgroundSubtle,
-            tonalElevation = 0.dp,
-            modifier = Modifier.width(216.dp)
+            onDismissRequest = { setExpanded(false) },
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .width(216.dp)
                     .padding(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -79,9 +83,10 @@ fun <T> SortDropDown(
                     SortDropDownItem(
                         text = itemLabel(item),
                         isSelected = item == selectedItem,
+                        enabled = isEnabled(item),
                         onClick = {
                             onItemSelected(item)
-                            isDropDownMenuExpanded = false
+                            setExpanded(false)
                         }
                     )
                 }
@@ -94,6 +99,7 @@ fun <T> SortDropDown(
 private fun SortDropDownItem(
     text: String,
     isSelected: Boolean,
+    enabled: Boolean,
     onClick: () -> Unit
 ) {
     Row(
@@ -119,7 +125,8 @@ private fun SortDropDownItem(
                 },
                 shape = RoundedCornerShape(AlterRadius.Medium)
             )
-            .clickable { onClick() }
+            .alpha(if (enabled) 1f else 0.35f)
+            .clickable(enabled = enabled) { onClick() }
             .padding(horizontal = 8.dp)
     ) {
         // 색을 정하지 않으면 Material 기본(검정)이라 다크 모드에서 글자 · 체크가 배경에 묻힌다
