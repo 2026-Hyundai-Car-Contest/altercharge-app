@@ -4,6 +4,7 @@ import ai.pleos.playground.navi.constants.RouteOption
 import ai.pleos.playground.navi.data.RouteInfo
 import ai.pleos.playground.navi.helper.NaviHelper
 import android.content.Context
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.coroutines.resume
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex

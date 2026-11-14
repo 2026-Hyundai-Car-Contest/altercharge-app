@@ -56,7 +56,7 @@ fun CardStationEmpty(
             .fillMaxWidth()
             .height(cardStationHeightFor(LocalAppLayout.current))
             .clip(RoundedCornerShape(AlterRadius.XXLarge))
-            .background(AlterTheme.colors.surface),
+            .background(AlterTheme.colors.containerBackground),
     ) {
         Column(
             modifier = Modifier

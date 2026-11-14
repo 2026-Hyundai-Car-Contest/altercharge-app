@@ -54,7 +54,7 @@ fun CardStation(
         verticalArrangement = Arrangement.SpaceBetween,
         modifier = modifier
             .clip(shape)
-            .background(AlterTheme.colors.surface)
+            .background(AlterTheme.colors.containerBackground)
             .padding(AlterMargin.Normal)
     ) {
 

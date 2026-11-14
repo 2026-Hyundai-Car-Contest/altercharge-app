@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <string name="search_bar_placeholder">충전소 이름이나 주소 검색</string>
-  <string name="search_bar_placeholder_offline">오프라인에서는 검색할 수 없어요</string>
+  <string name="search_bar_placeholder_offline">연결되면 검색할 수 있어요</string>
   <string name="search_bar_voice">음성 검색</string>
 </resources>
