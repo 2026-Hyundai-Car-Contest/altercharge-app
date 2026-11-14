@@ -94,7 +94,7 @@ fun SearchBar(
 
         Image(
             painter = painterResource(R.drawable.ic_mic),
-            contentDescription = null,
+            contentDescription = stringResource(R.string.search_bar_voice),
             colorFilter = ColorFilter.tint(colors.contentNeutral),
             modifier = Modifier
                 .size(24.dp)

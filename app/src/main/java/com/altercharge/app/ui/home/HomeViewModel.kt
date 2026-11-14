@@ -116,7 +116,7 @@ class HomeViewModel(
                     vehicleStatus = reading.toCardVehicleStatusUiState(driverName, cards.vehicleStatus),
                 )
             }
-            detectChargingStart(reading, vehicle)
+            if (!telemetry.isSimulated) detectChargingStart(reading, vehicle)
             cards.offline
         } catch (e: CancellationException) {
             throw e // 새 loadHome이 이전 요청을 멈춘 것: 오류로 남기지 않는다

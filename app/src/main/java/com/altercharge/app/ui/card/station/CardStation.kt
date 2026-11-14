@@ -1,5 +1,6 @@
 package com.altercharge.app.ui.card.station
 
+import androidx.compose.ui.res.pluralStringResource
 import com.altercharge.app.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -133,15 +134,16 @@ fun CardStation(
                         color = AlterTheme.colors.textPrimary
                     )
                     Text(
-                        text = stringResource(R.string.card_station_visit_count, state.myChargingCount),
+                        text = pluralStringResource(R.plurals.card_station_visit_count, state.myChargingCount, state.myChargingCount),
+                        style = AlterTheme.typography.labelXSmall,
                         color = AlterTheme.colors.textTertiary
                     )
                 }
 
                 IviButton(
                     hierarchy = IviButtonHierarchy.Contrast,
-                    size = IviButtonSize.Small,
-                    text = "여기로 안내",
+                    size = IviButtonSize.Compact,
+                    text = stringResource(R.string.card_station_navigate),
                     onClick = {}
                 )
             }
@@ -209,7 +211,7 @@ fun ChargerAvailability(
     modifier: Modifier = Modifier
 ) {
     val chargerAvailableText =
-        if(chargerStatus == ChargerStatus.AVAILABLE) stringResource(R.string.card_station_availability_possible, "${availableChargerCount}/${totalChargerCount}")
+        if(chargerStatus == ChargerStatus.AVAILABLE) stringResource(R.string.card_station_availability_possible, "$availableChargerCount / $totalChargerCount")
         else stringResource(R.string.card_station_availability_impossibility)
 
     Row(

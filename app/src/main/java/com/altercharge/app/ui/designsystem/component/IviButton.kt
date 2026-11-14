@@ -61,6 +61,9 @@ enum class IviButtonSize(
     Large(height = 100.dp, paddingHorizontal = 32.dp, gap = 12.dp, radius = 24.dp, iconSize = 36.dp),
     Medium(height = 80.dp, paddingHorizontal = 24.dp, gap = 12.dp, radius = 20.dp, iconSize = 32.dp),
     Small(height = 64.dp, paddingHorizontal = 16.dp, gap = 8.dp, radius = 16.dp, iconSize = 28.dp),
+
+    /** 카드 안 버튼. 시안이 Small을 52 높이 · 좌우 20으로 줄여 쓴다 (card_station button_navigate) */
+    Compact(height = 52.dp, paddingHorizontal = 20.dp, gap = 8.dp, radius = 16.dp, iconSize = 24.dp),
 }
 
 /** button/touch_target/min */
@@ -206,7 +209,7 @@ private fun Modifier.focusRing(visible: Boolean, color: Color, radius: Dp): Modi
 private fun IviButtonSize.textStyle(type: AlterTypography): TextStyle = when (this) {
     IviButtonSize.Large -> type.titleSmall
     IviButtonSize.Medium -> type.bodyMedium
-    IviButtonSize.Small -> type.bodySmall
+    IviButtonSize.Small, IviButtonSize.Compact -> type.bodySmall
 }
 
 private data class IviButtonPalette(

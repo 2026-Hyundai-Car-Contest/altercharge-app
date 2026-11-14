@@ -1,5 +1,6 @@
 package com.altercharge.app.ui.common.dropdown
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -52,37 +53,13 @@ fun <T> SortDropDown(
             Alignment.TopStart
         )
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier
-                .wrapContentSize()
-                .clip(RoundedCornerShape(AlterRadius.Full))
-                .background(AlterTheme.colors.blue50)
-                .clickable {
-                    isDropDownMenuExpanded = true
-                }
-                .padding(
-                    start = 16.dp,
-                    end = 12.dp,
-                    top = 4.dp,
-                    bottom = 4.dp
-                )
-        ) {
-            Text(
-                text = itemLabel(selectedItem),
-                color = AlterTheme.colors.blue500,
-                fontWeight = AlterFontWeight.Strong
-            )
-
-            Image(
-                painter = painterResource(R.drawable.ic_chevron_right),
-                contentDescription = null,
-                colorFilter = ColorFilter.tint(AlterTheme.colors.blue500),
-                modifier = Modifier.size(16.dp)
-                    .rotate(if (isDropDownMenuExpanded) -90F else 90F)
-            )
-        }
+        // 정렬은 늘 한 가지가 골라져 있어 선택 칩 모양이다 (Figma chip_filter selected=true)
+        FilterChip(
+            label = itemLabel(selectedItem),
+            selected = true,
+            expanded = isDropDownMenuExpanded,
+            onClick = { isDropDownMenuExpanded = true },
+        )
 
         DropdownMenu(
             expanded = isDropDownMenuExpanded,
@@ -163,11 +140,12 @@ private fun SortDropDownItem(
     }
 }
 
+/** 라벨은 문자열 리소스라 화면에서 stringResource(labelRes)로 읽는다 (영문 화면 대응) */
 enum class StationSortType(
-    val label: String
+    @StringRes val labelRes: Int
 ) {
-    DISTANCE("거리순"),
-    VISIT("방문순")
+    DISTANCE(R.string.station_list_sort_distance),
+    VISIT(R.string.station_list_sort_visit)
 }
 
 //@Preview(name = "Sort · chip_filter + dropdown_sort (거리순 / 방문순)")

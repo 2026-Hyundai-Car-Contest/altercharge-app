@@ -40,12 +40,15 @@ import com.altercharge.app.ui.designsystem.theme.AlterTheme
  *
  * R1 칸은 내용 높이만큼만 차지하므로 카드 높이를 시안 값으로 고정한다 ([cardStationHeightFor]). 채우면 R2가 밀려난다.
  *
+ * @param offline 연결이 끊겨 못 받았을 때만 "불러오지 못했어요 / 연결되면…"이다. 연결돼 있는데 추천이 없으면
+ *   (3km 안 충전소 없음 등) 오프라인 안내 대신 "추천할 충전소가 없어요"만 보여 준다 (시안에 없는 경우라 문구만 바꿈)
  * @param refreshing 요청 중이면 새로고침 버튼을 비활성으로 둔다 (시안 규칙). 30초 자동 재요청은 ViewModel이 계속한다
  */
 @Composable
 fun CardStationEmpty(
     onRefresh: () -> Unit,
     refreshing: Boolean,
+    offline: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -68,17 +71,19 @@ fun CardStationEmpty(
                 modifier = Modifier.size(width = 200.dp, height = 160.dp),
             )
             Text(
-                text = stringResource(R.string.card_station_empty_title),
+                text = stringResource(if (offline) R.string.card_station_empty_title else R.string.card_station_empty_online_title),
                 style = AlterTheme.typography.bodyXSmall,
                 color = AlterTheme.colors.textSecondary,
                 textAlign = TextAlign.Center,
             )
-            Text(
-                text = stringResource(R.string.card_station_empty_description),
-                style = AlterTheme.typography.labelSmall,
-                color = AlterTheme.colors.textTertiary,
-                textAlign = TextAlign.Center,
-            )
+            if (offline) {
+                Text(
+                    text = stringResource(R.string.card_station_empty_description),
+                    style = AlterTheme.typography.labelSmall,
+                    color = AlterTheme.colors.textTertiary,
+                    textAlign = TextAlign.Center,
+                )
+            }
         }
 
         // IviButton은 터치 영역 76 안에 64 버튼을 가운데 둔다: 바깥 10 + 안쪽 6 = 시안의 카드 안쪽 여백 16

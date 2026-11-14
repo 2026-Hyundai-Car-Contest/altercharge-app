@@ -51,6 +51,7 @@ import com.altercharge.app.ui.card.stationitem.StationItem
 import com.altercharge.app.ui.common.ChargePowerSlider
 import com.altercharge.app.ui.common.dropdown.DropDownWrapper
 import com.altercharge.app.ui.common.dropdown.SelectableDropdownItem
+import com.altercharge.app.ui.common.dropdown.FilterChip
 import com.altercharge.app.ui.common.dropdown.SortDropDown
 import com.altercharge.app.ui.common.dropdown.StationSortType
 import com.altercharge.app.ui.common.searchbar.SearchBar
@@ -161,6 +162,8 @@ fun RecommendedStationList(
     var pendingMinPower by remember { mutableIntStateOf(filter.power.minKw) }
     var pendingMaxPower by remember { mutableIntStateOf(filter.power.maxKw) }
 
+    val sortLabels = StationSortType.entries.associateWith { stringResource(it.labelRes) }
+
     // 방문 기록이 없으면 방문순을 고를 수 없다 (REQ_SL_004 예외)
     val sortItems = if (state.visitSortEnabled) {
         listOf(StationSortType.DISTANCE, StationSortType.VISIT)
@@ -207,18 +210,16 @@ fun RecommendedStationList(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // 정렬/필터 아이콘
+            // Figma button_filter: 배경 없는 22 아이콘, 원형 히트 영역 40
             Box(
                 contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(AlterTheme.colors.surfaceHigh),
+                modifier = Modifier.size(40.dp),
             ) {
                 Image(
                     painter = painterResource(R.drawable.ic_button_filter),
-                    contentDescription = "정렬 필터",
+                    contentDescription = null,
                     colorFilter = ColorFilter.tint(AlterTheme.colors.contentNeutral),
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier.size(22.dp),
                 )
             }
 
@@ -233,7 +234,7 @@ fun RecommendedStationList(
                 SortDropDown(
                     items = sortItems,
                     selectedItem = state.sort.toSortType(),
-                    itemLabel = { it.label },
+                    itemLabel = { sortLabels.getValue(it) },
                     onItemSelected = { onSortChange(it.toSort()) },
                 )
 
@@ -247,41 +248,15 @@ fun RecommendedStationList(
                         else -> stringResource(R.string.station_list_filter_connector_count, filter.connectors.size)
                     }
 
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier
-                            .wrapContentSize()
-                            .clip(RoundedCornerShape(AlterRadius.Full))
-                            .background(
-                                if (isFiltered || isConnectorMenuExpanded) AlterTheme.colors.blue50
-                                else AlterTheme.colors.surfaceHigh,
-                            )
-                            .clickable {
-                                pendingConnectors = filter.connectors
-                                isConnectorMenuExpanded = true
-                            }
-                            .padding(start = 14.dp, end = 10.dp, top = 6.dp, bottom = 6.dp),
-                    ) {
-                        Text(
-                            text = connectorChipLabel,
-                            color = if (isFiltered || isConnectorMenuExpanded) AlterTheme.colors.blue500
-                            else AlterTheme.colors.textSecondary,
-                            fontWeight = AlterFontWeight.Strong,
-                            fontSize = 15.sp,
-                        )
-                        Image(
-                            painter = painterResource(R.drawable.ic_chevron_right),
-                            contentDescription = null,
-                            colorFilter = ColorFilter.tint(
-                                if (isFiltered || isConnectorMenuExpanded) AlterTheme.colors.blue500
-                                else AlterTheme.colors.textSecondary,
-                            ),
-                            modifier = Modifier
-                                .size(16.dp)
-                                .rotate(if (isConnectorMenuExpanded) -90F else 90F),
-                        )
-                    }
+                    FilterChip(
+                        label = connectorChipLabel,
+                        selected = isFiltered,
+                        expanded = isConnectorMenuExpanded,
+                        onClick = {
+                            pendingConnectors = filter.connectors
+                            isConnectorMenuExpanded = true
+                        },
+                    )
 
                     DropdownMenu(
                         expanded = isConnectorMenuExpanded,
@@ -318,97 +293,71 @@ fun RecommendedStationList(
                         }
                     }
                 }
-            }
 
-            // 속도 (충전 출력) 필터 드롭다운 (REQ_SL_005)
-            Box(modifier = Modifier.wrapContentSize(Alignment.TopStart)) {
-                val isFiltered = !filter.power.isAll
-                val powerChipLabel = if (isFiltered) {
-                    if (filter.power.normalizedMaxKw >= POWER_STEPS.last()) {
-                        stringResource(
-                            R.string.station_list_filter_power_range_over,
-                            filter.power.normalizedMinKw,
-                            filter.power.normalizedMaxKw,
-                        )
+                // 속도 (충전 출력) 필터 드롭다운 (REQ_SL_005)
+                Box(modifier = Modifier.wrapContentSize(Alignment.TopStart)) {
+                    val isFiltered = !filter.power.isAll
+                    val powerChipLabel = if (isFiltered) {
+                        if (filter.power.normalizedMaxKw >= POWER_STEPS.last()) {
+                            stringResource(
+                                R.string.station_list_filter_power_range_over,
+                                filter.power.normalizedMinKw,
+                                filter.power.normalizedMaxKw,
+                            )
+                        } else {
+                            stringResource(
+                                R.string.station_list_filter_power_range,
+                                filter.power.normalizedMinKw,
+                                filter.power.normalizedMaxKw,
+                            )
+                        }
                     } else {
-                        stringResource(
-                            R.string.station_list_filter_power_range,
-                            filter.power.normalizedMinKw,
-                            filter.power.normalizedMaxKw,
-                        )
+                        stringResource(R.string.station_list_filter_power_all)
                     }
-                } else {
-                    stringResource(R.string.station_list_filter_power_all)
-                }
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier
-                        .wrapContentSize()
-                        .clip(RoundedCornerShape(AlterRadius.Full))
-                        .background(
-                            if (isFiltered || isPowerMenuExpanded) AlterTheme.colors.blue50
-                            else AlterTheme.colors.surfaceHigh,
-                        )
-                        .clickable {
+                    FilterChip(
+                        label = powerChipLabel,
+                        selected = isFiltered,
+                        expanded = isPowerMenuExpanded,
+                        onClick = {
                             pendingMinPower = filter.power.minKw
                             pendingMaxPower = filter.power.maxKw
                             isPowerMenuExpanded = true
-                        }
-                        .padding(start = 14.dp, end = 10.dp, top = 6.dp, bottom = 6.dp),
-                ) {
-                    Text(
-                        text = powerChipLabel,
-                        color = if (isFiltered || isPowerMenuExpanded) AlterTheme.colors.blue500
-                        else AlterTheme.colors.textSecondary,
-                        fontWeight = AlterFontWeight.Strong,
-                        fontSize = 15.sp,
+                        },
                     )
-                    Image(
-                        painter = painterResource(R.drawable.ic_chevron_right),
-                        contentDescription = null,
-                        colorFilter = ColorFilter.tint(
-                            if (isFiltered || isPowerMenuExpanded) AlterTheme.colors.blue500
-                            else AlterTheme.colors.textSecondary,
-                        ),
-                        modifier = Modifier
-                            .size(16.dp)
-                            .rotate(if (isPowerMenuExpanded) -90F else 90F),
-                    )
-                }
 
-                DropdownMenu(
-                    expanded = isPowerMenuExpanded,
-                    onDismissRequest = { isPowerMenuExpanded = false },
-                    shape = RoundedCornerShape(AlterRadius.Large),
-                    containerColor = AlterTheme.colors.containerBackgroundSubtle,
-                    tonalElevation = 0.dp,
-                ) {
-                    DropDownWrapper(
-                        title = "속도 (충전 출력)",
-                        subTitle = if (pendingMaxPower >= POWER_STEPS.last()) {
-                            stringResource(R.string.station_list_filter_power_range_over, pendingMinPower, pendingMaxPower)
-                        } else {
-                            stringResource(R.string.station_list_filter_power_range, pendingMinPower, pendingMaxPower)
-                        },
-                        onReset = {
-                            pendingMinPower = POWER_STEPS.first()
-                            pendingMaxPower = POWER_STEPS.last()
-                        },
-                        onApply = {
-                            onFilterChange(filter.copy(power = PowerRange(pendingMinPower, pendingMaxPower)))
-                            isPowerMenuExpanded = false
-                        },
+                    DropdownMenu(
+                        expanded = isPowerMenuExpanded,
+                        onDismissRequest = { isPowerMenuExpanded = false },
+                        shape = RoundedCornerShape(AlterRadius.Large),
+                        containerColor = AlterTheme.colors.containerBackgroundSubtle,
+                        tonalElevation = 0.dp,
                     ) {
-                        ChargePowerSlider(
-                            minPower = pendingMinPower,
-                            maxPower = pendingMaxPower,
-                            onRangeChange = { min, max ->
-                                pendingMinPower = min
-                                pendingMaxPower = max
+                        DropDownWrapper(
+                            title = "속도 (충전 출력)",
+                            subTitle = if (pendingMaxPower >= POWER_STEPS.last()) {
+                                stringResource(R.string.station_list_filter_power_range_over, pendingMinPower, pendingMaxPower)
+                            } else {
+                                stringResource(R.string.station_list_filter_power_range, pendingMinPower, pendingMaxPower)
                             },
-                        )
+                            onReset = {
+                                pendingMinPower = POWER_STEPS.first()
+                                pendingMaxPower = POWER_STEPS.last()
+                            },
+                            onApply = {
+                                onFilterChange(filter.copy(power = PowerRange(pendingMinPower, pendingMaxPower)))
+                                isPowerMenuExpanded = false
+                            },
+                        ) {
+                            ChargePowerSlider(
+                                minPower = pendingMinPower,
+                                maxPower = pendingMaxPower,
+                                onRangeChange = { min, max ->
+                                    pendingMinPower = min
+                                    pendingMaxPower = max
+                                },
+                            )
+                        }
                     }
                 }
             }
@@ -471,6 +420,8 @@ private fun listNotice(state: StationListUiState): String? = when {
     state.message == StationListMessage.VOICE_ERROR -> stringResource(R.string.station_list_voice_error)
     state.isFilterEmpty -> stringResource(R.string.station_list_filter_empty)
     state.isLoading && state.items.isEmpty() -> stringResource(R.string.station_list_loading)
+    // 검색 때문에 비었으면 반경 문구("3km 안에 없음") 대신 검색 결과 문구
+    state.query.isNotBlank() && state.items.isEmpty() -> stringResource(R.string.station_list_search_empty)
     state.items.isEmpty() -> stringResource(R.string.station_list_empty)
     state.offline && state.lastChecked != null ->
         stringResource(R.string.station_list_offline_notice, lastCheckedText(state.lastChecked))

@@ -6,6 +6,9 @@
  */
 package com.altercharge.app.data.vehicle
 
+import java.time.format.FormatStyle
+import java.time.format.DateTimeFormatter
+import java.time.LocalTime
 import com.altercharge.app.data.home.VehicleReading
 import com.altercharge.app.ui.card.vehiclestatus.ChargeFault
 import com.altercharge.app.ui.card.vehiclestatus.ChargingState
@@ -44,6 +47,9 @@ fun isChargeStart(previous: ChargingState?, current: ChargingState): Boolean =
 /** 테스트와 목업이 갈아 끼우는 자리 */
 fun interface VehicleTelemetrySource {
     fun read(): VehicleTelemetry
+
+    /** 차에서 읽은 값이 아니다(목업). 방문 기록 · 충전 이벤트처럼 남는 기록은 만들지 않는다 */
+    val isSimulated: Boolean get() = false
 }
 
 /** Pleos Vehicle SDK 연동 전까지 쓰는 목업 값. 시안의 '충전 중' 화면과 같은 숫자다 */
@@ -52,6 +58,9 @@ class MockVehicleTelemetrySource(
 ) : VehicleTelemetrySource {
     override fun read(): VehicleTelemetry = telemetry
 
+    // 목업은 늘 충전 중이라 앱을 켤 때마다 방문 +1 · 공용 시연 차량에 START 이벤트가 쌓인다
+    override val isSimulated: Boolean get() = true
+
     companion object {
         val DEFAULT: VehicleTelemetry = VehicleTelemetry(
             socPercent = 32,
@@ -59,7 +68,8 @@ class MockVehicleTelemetrySource(
             odometerKm = 12500.0,
             charging = ChargingState.CHARGING,
             remainingMinutes = 45,
-            fullAt = "오후 2:30",
+            // 화면 언어에 맞춘 시각 (KO "오후 2:30", EN "2:30 PM")
+            fullAt = LocalTime.of(14, 30).format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)),
         )
     }
 }

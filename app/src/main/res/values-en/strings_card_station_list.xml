@@ -16,4 +16,7 @@
   <string name="station_list_filter_power_range">%1$d–%2$d kW</string>
   <string name="station_list_filter_power_range_over">%1$d–%2$d kW and above</string>
   <string name="station_list_empty_title">No stations to show</string>
+  <string name="station_list_sort_distance">Distance</string>
+  <string name="station_list_sort_visit">Visits</string>
+  <string name="station_list_search_empty">No search results</string>
 </resources>

@@ -140,6 +140,8 @@ fun HomeScreen(
                             CardStationEmpty(
                                 onRefresh = viewModel::loadHome,
                                 refreshing = uiState.isLoading,
+                                // 차량 값을 못 읽어 판정이 없을 때(cards == null)도 서버 탓이 아니니 오프라인 문구를 쓰지 않는다
+                                offline = cards?.offline == true,
                             )
                         }
                     }

@@ -17,4 +17,7 @@
   <string name="station_list_filter_power_range">%1$d~%2$dkW</string>
   <string name="station_list_filter_power_range_over">%1$d~%2$dkW 이상</string>
   <string name="station_list_empty_title">표시할 충전소가 없어요</string>
+  <string name="station_list_sort_distance">거리순</string>
+  <string name="station_list_sort_visit">방문순</string>
+  <string name="station_list_search_empty">검색 결과가 없어요</string>
 </resources>

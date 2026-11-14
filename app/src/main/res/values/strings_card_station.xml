@@ -9,7 +9,10 @@
   <string name="card_station_charging_type_ultra_fast">초급속</string>
 
 <!-- 충전소 방문 횟수 -->
-  <string name="card_station_visit_count">방문 %1$d회</string>
+  <plurals name="card_station_visit_count">
+    <item quantity="one">방문 %1$d회</item>
+    <item quantity="other">방문 %1$d회</item>
+  </plurals>
 
 <!-- 추천 칩 (REQ_ST_007). 대체 추천은 가용 충전기가 없어 안내 직전 확인이 필요하다 -->
   <string name="card_station_chip_recommended">추천</string>
@@ -17,4 +20,6 @@
   <string name="card_station_empty_title">주변 충전소를 불러오지 못했어요</string>
   <string name="card_station_empty_description">연결되면 주변 충전소를 보여 드려요</string>
   <string name="card_station_refresh">새로고침</string>
+  <string name="card_station_navigate">여기로 안내</string>
+  <string name="card_station_empty_online_title">추천할 충전소가 없어요</string>
 </resources>
