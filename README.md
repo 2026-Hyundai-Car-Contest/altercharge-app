@@ -5,12 +5,19 @@
 
 - 충전소 "찾기" 앱은 많지만, 얼터차지는 **"언제 충전할지"** 를 먼저 알려 줍니다.
 - 배터리 잔량과 최근 주행 기록으로 "오늘 충전 / 내일 충전 / N일내 충전"을 판정합니다.
-- 충전이 필요하면 주변 충전소와 빈 충전기 수를 보여 주고, 고르면 바로 내비 목적지가 됩니다.
+- 충전이 필요하면 주변 충전소와 빈 충전기 수를 보여 주고, 고른 충전소로 "여기로 안내"를 누르면 내비 목적지가 됩니다.
+
+| 다크 | 라이트 |
+|---|---|
+| ![홈 화면 다크](docs/images/home_dark.png) | ![홈 화면 라이트](docs/images/home_light.png) |
+
+시연 영상(2분 17초, 한국어 자막): [docs/demo/AlterCharge_demo.mp4](docs/demo/AlterCharge_demo.mp4)
 
 | 항목 | 내용 |
 |---|---|
 | 팀명 | 얼터차지 |
-| APK | `apk/얼터차지_AlterCharge_release.apk` (제출 시 추가) |
+| APK | [`apk/얼터차지_AlterCharge_release.apk`](apk/얼터차지_AlterCharge_release.apk) (서명한 release 빌드) |
+| 시연 영상 | [`docs/demo/AlterCharge_demo.mp4`](docs/demo/AlterCharge_demo.mp4) |
 | 테스트 환경 | Pleos Connect Emulator v2.1.0 (Automotive, Android API 34), RAM 4GB |
 | 화면 규격 | 메인 디스플레이(display 0) 2560 × 1440, 160dpi. 앱은 W-Standard 가로 · 세로, W-Extended, S-17, WF 화면 4종에 맞춥니다 |
 | 서버 저장소 | [altercharge-server](https://github.com/2026-Hyundai-Car-Contest/altercharge-server) |
