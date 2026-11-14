@@ -29,7 +29,9 @@ import com.altercharge.app.ui.designsystem.component.StatusValue
 import com.altercharge.app.ui.designsystem.layout.AlterChargeLayout
 import com.altercharge.app.ui.designsystem.layout.LocalAppLayout
 import com.altercharge.app.ui.designsystem.theme.AlterChargeTheme
+import com.altercharge.app.ui.station.StationListMessage
 import com.altercharge.app.ui.station.StationListViewModel
+import com.altercharge.app.ui.station.rememberVoiceSearch
 
 /**
  * 임시 홈 화면 (#76). 카드마다 실제 값을 넣는다:
@@ -63,6 +65,13 @@ fun HomeScreen(
 
         val chipRecommended = stringResource(R.string.card_station_chip_recommended)
         val chipFallback = stringResource(R.string.card_station_chip_fallback)
+
+        // 음성 검색 (REQ_SL_003). 오프라인에서는 검색할 수 없어 마이크를 눌러도 안내만 한다
+        val startVoiceSearch = rememberVoiceSearch(
+            onResult = stationViewModel::onVoiceResult,
+            onListening = stationViewModel::onVoiceListening,
+            onError = stationViewModel::onVoiceError,
+        )
 
         AlterChargeTheme() {
             AlterChargeLayout(
@@ -136,6 +145,13 @@ fun HomeScreen(
                         modifier = Modifier.fillMaxSize(),
                         state = stationState,
                         onQueryChange = stationViewModel::onQueryChange,
+                        onMicClick = {
+                            if (stationState.offline) {
+                                stationViewModel.onVoiceError(StationListMessage.SEARCH_UNAVAILABLE)
+                            } else {
+                                startVoiceSearch()
+                            }
+                        },
                         onStationClick = {},
                     )
                 }

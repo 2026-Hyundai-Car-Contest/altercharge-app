@@ -56,6 +56,7 @@ import com.altercharge.app.ui.designsystem.theme.AlterRadius
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
 import com.altercharge.app.ui.station.StationListMessage
 import com.altercharge.app.ui.station.StationListUiState
+import com.altercharge.app.ui.station.VoiceSearchState
 
 data class ConnectorTypeFilter(
     val id: String,
@@ -123,7 +124,7 @@ private val previewStations = listOf(
 )
 
 /**
- * R2 주변 충전소 목록 (REQ_SL_001 · REQ_SL_002). 받은 목록과 검색은 [state]의 값을 따른다.
+ * R2 주변 충전소 목록 (REQ_SL_001 ~ REQ_SL_003). 받은 목록 · 검색 · 음성 안내는 [state]의 값을 따른다.
  */
 @Composable
 fun RecommendedStationList(
@@ -385,7 +386,7 @@ fun RecommendedStationList(
             }
         }
 
-        // 안내 줄: 불러오는 중 · 빈 목록 · 오프라인 · 검색 안 됨 (REQ_CM_006 · REQ_SL_002)
+        // 안내 줄: 불러오는 중 · 빈 목록 · 오프라인 · 검색 · 음성 안내 (REQ_CM_006 · REQ_SL_002 · REQ_SL_003)
         listNotice(state)?.let { notice ->
             Text(
                 text = notice,
@@ -414,7 +415,11 @@ fun RecommendedStationList(
 
 @Composable
 private fun listNotice(state: StationListUiState): String? = when {
+    state.voice == VoiceSearchState.Listening -> stringResource(R.string.station_list_voice_listening)
     state.message == StationListMessage.SEARCH_UNAVAILABLE -> stringResource(R.string.station_list_offline_search_blocked)
+    state.message == StationListMessage.VOICE_PERMISSION -> stringResource(R.string.station_list_voice_permission)
+    state.message == StationListMessage.VOICE_UNAVAILABLE -> stringResource(R.string.station_list_voice_unavailable)
+    state.message == StationListMessage.VOICE_ERROR -> stringResource(R.string.station_list_voice_error)
     state.isLoading && state.items.isEmpty() -> stringResource(R.string.station_list_loading)
     state.items.isEmpty() -> stringResource(R.string.station_list_empty)
     state.offline && state.lastChecked != null ->
