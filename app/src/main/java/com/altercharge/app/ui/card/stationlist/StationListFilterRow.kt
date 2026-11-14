@@ -113,6 +113,10 @@ internal fun StationListFilterRow(
         horizontalArrangement = Arrangement.spacedBy(AlterMargin.XSmall),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+<<<<<<< HEAD
+=======
+        // 정렬/필터 아이콘
+>>>>>>> origin/main
         // Figma button_filter: 배경 없는 22 아이콘, 원형 히트 영역 40
         Box(
             contentAlignment = Alignment.Center,
