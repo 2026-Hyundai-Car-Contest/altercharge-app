@@ -5,7 +5,6 @@
   <string name="station_list_empty">No charging stations within 3 km</string>
   <string name="station_list_filter_empty">No stations match the filters</string>
   <string name="station_list_offline_search_blocked">Search is not available offline</string>
-  <string name="station_list_offline_notice">Saved list · %1$s</string>
   <string name="station_list_voice_listening">Listening</string>
   <string name="station_list_voice_permission">Voice search needs microphone permission</string>
   <string name="station_list_voice_unavailable">Voice recognition is not available on this device</string>

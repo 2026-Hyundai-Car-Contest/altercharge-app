@@ -200,7 +200,8 @@ Row(
     }
     Text(
         text = displayText,
-        color = AlterTheme.colors.textPrimary,
+        // Figma tag value: text_dark_tertiary 20 regular
+        color = AlterTheme.colors.textTertiary,
         fontSize = 20.sp,
         lineHeight = 30.sp,
         modifier = modifier
@@ -279,7 +280,7 @@ private fun ChipTone.backgroundColor(): Color {
 @Composable
 private fun ChipTone.textColor(): Color {
     return when(this) {
-        ChipTone.ACCENT -> AlterTheme.colors.blue700
+        ChipTone.ACCENT -> AlterTheme.colors.blue500 // Figma chip_info tone=accent label = blue_500
         ChipTone.NEUTRAL -> AlterTheme.colors.contentNeutral
     }
 }

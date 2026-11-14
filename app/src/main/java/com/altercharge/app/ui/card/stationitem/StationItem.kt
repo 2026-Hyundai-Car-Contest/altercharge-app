@@ -1,5 +1,7 @@
 package com.altercharge.app.ui.card.stationitem
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.border
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.foundation.Image
@@ -48,6 +50,8 @@ fun StationItem(
     Column(
         modifier = modifier
             .fillMaxWidth()
+            // Figma item 그림자: y 2 · blur 8 · 검정 5%
+            .shadow(elevation = 2.dp, shape = RoundedCornerShape(AlterRadius.Small), ambientColor = ItemShadow, spotColor = ItemShadow)
             .clip(RoundedCornerShape(AlterRadius.Small))
             // Figma item/enabled/container = basic_00(라이트 흰색 · 다크 #131417)
             .background(if (selected) AlterTheme.colors.blue50 else AlterTheme.colors.surface)
@@ -67,7 +71,8 @@ fun StationItem(
             Text(
                 text = state.stationName,
                 fontWeight = AlterFontWeight.Strong,
-                color = AlterTheme.colors.textPrimary,
+                // Figma name: text_dark_secondary
+                color = AlterTheme.colors.textSecondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
@@ -102,15 +107,9 @@ fun StationItem(
                         color = AlterTheme.colors.textPrimary,
                         modifier = Modifier.padding(start = 3.dp)
                     )
+                    // Figma seats: "2" · "/4" · "대" (사선과 전체 수는 붙여 쓴다)
                     Text(
-                        text = "/",
-                        fontSize = 16.sp,
-                        lineHeight = 24.sp,
-                        color = AlterTheme.colors.textTertiary,
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
-                    Text(
-                        text = state.totalChargerCount.toString(),
+                        text = "/${state.totalChargerCount}",
                         fontSize = 16.sp,
                         lineHeight = 24.sp,
                         color = AlterTheme.colors.textTertiary,
@@ -249,3 +248,6 @@ private fun StationItemListDarkKoPreview() {
         }
     }
 }
+
+/** Figma station_item 그림자 색: #141417 5% */
+private val ItemShadow = Color(0x0D141417)

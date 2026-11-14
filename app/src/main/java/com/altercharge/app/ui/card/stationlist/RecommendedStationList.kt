@@ -1,5 +1,6 @@
 package com.altercharge.app.ui.card.stationlist
 
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -110,13 +111,28 @@ fun RecommendedStationList(
             )
             .padding(AlterMargin.Normal),
     ) {
-        // 타이틀
-        Text(
-            text = stringResource(R.string.station_list_title),
-            style = AlterTheme.typography.bodyXSmall,
-            color = AlterTheme.colors.textPrimary,
-            textAlign = TextAlign.Left,
-        )
+        // 타이틀. 오프라인으로 저장한 목록이면 옆에 "N분 전 기준" (Figma header · title_row · last_checked, REQ_CM_006)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.Bottom,
+        ) {
+            Text(
+                text = stringResource(R.string.station_list_title),
+                style = AlterTheme.typography.bodyXSmall,
+                color = AlterTheme.colors.textPrimary,
+                textAlign = TextAlign.Left,
+                modifier = Modifier.alignByBaseline(),
+            )
+            val lastChecked = state.lastChecked
+            if (state.offline && lastChecked != null) {
+                Text(
+                    text = lastCheckedText(lastChecked),
+                    style = AlterTheme.typography.labelXSmall,
+                    color = AlterTheme.colors.textTertiary,
+                    modifier = Modifier.alignByBaseline(),
+                )
+            }
+        }
 
         // 받아 둔 충전소가 아예 없으면 헤더만 남기고 검색 · 필터 · 목록을 숨긴다 (Figma selection = empty, 807:59523).
         // 검색 · 필터 결과가 없을 때는 조건을 바꿀 수 있게 그대로 둔다
@@ -156,7 +172,8 @@ fun RecommendedStationList(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            // Figma list gap 8
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(state.items) { station ->
                 StationItem(
@@ -202,8 +219,6 @@ private fun listNotice(state: StationListUiState): String? = when {
     // 검색 때문에 비었으면 반경 문구("3km 안에 없음") 대신 검색 결과 문구
     state.query.isNotBlank() && state.items.isEmpty() -> stringResource(R.string.station_list_search_empty)
     state.items.isEmpty() -> stringResource(R.string.station_list_empty)
-    state.offline && state.lastChecked != null ->
-        stringResource(R.string.station_list_offline_notice, lastCheckedText(state.lastChecked))
     else -> null
 }
 
