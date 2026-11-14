@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="station_list_title">EV charging stations</string>
+  <string name="station_list_loading">Loading stations</string>
+  <string name="station_list_empty">No charging stations within 3 km</string>
+  <string name="station_list_filter_empty">No stations match the filters</string>
+  <string name="station_list_offline_search_blocked">Search is not available offline</string>
+  <string name="station_list_offline_notice">Saved list · %1$s</string>
+  <string name="station_list_voice_listening">Listening</string>
+  <string name="station_list_voice_permission">Voice search needs microphone permission</string>
+  <string name="station_list_voice_unavailable">Voice recognition is not available on this device</string>
+  <string name="station_list_voice_error">I didn\'t catch that. Please try again</string>
+  <string name="station_list_filter_connector_all">All connectors</string>
+  <string name="station_list_filter_connector_count">%1$d connectors</string>
+  <string name="station_list_filter_power_all">All speeds</string>
+  <string name="station_list_filter_power_range">%1$d–%2$d kW</string>
+  <string name="station_list_filter_power_range_over">%1$d–%2$d kW and above</string>
+</resources>

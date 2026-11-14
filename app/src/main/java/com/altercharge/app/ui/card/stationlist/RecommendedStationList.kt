@@ -3,6 +3,7 @@ package com.altercharge.app.ui.card.stationlist
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
@@ -30,11 +32,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.altercharge.app.R
+import com.altercharge.app.data.remote.model.ConnectorType
+import com.altercharge.app.ui.card.info.lastCheckedText
 import com.altercharge.app.ui.card.station.ChargingType
 import com.altercharge.app.ui.card.stationitem.CardItemUiState
 import com.altercharge.app.ui.card.stationitem.StationItem
@@ -49,8 +54,7 @@ import com.altercharge.app.ui.designsystem.theme.AlterFontWeight
 import com.altercharge.app.ui.designsystem.theme.AlterMargin
 import com.altercharge.app.ui.designsystem.theme.AlterRadius
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
+import com.altercharge.app.ui.station.StationListUiState
 
 data class ConnectorTypeFilter(
     val id: String,
@@ -81,63 +85,51 @@ val defaultConnectorOptions = listOf(
     ),
 )
 
-val defaultDummyStations = listOf(
+/** 미리보기용 값. 실제 화면은 ViewModel이 만든 state를 넘긴다 */
+private val previewStations = listOf(
     CardItemUiState(
+        stationId = "ST-001",
         stationName = "홍대입구역 공영주차장",
         availableChargerCount = 2,
-        occupiedChargerCount = 2,
+        totalChargerCount = 4,
         chargingType = ChargingType.DC,
         distance = 0.6,
         chargeStationAddress = "서울 마포구 양화로 160",
+        connectorTypes = listOf(ConnectorType.DC_COMBO),
+        visitCount = 3,
     ),
     CardItemUiState(
+        stationId = "ST-002",
         stationName = "연남동 공영주차장",
         availableChargerCount = 3,
-        occupiedChargerCount = 3,
+        totalChargerCount = 3,
         chargingType = ChargingType.DC,
         distance = 1.2,
         chargeStationAddress = "서울 마포구 동교로 263",
+        connectorTypes = listOf(ConnectorType.DC_CHADEMO, ConnectorType.AC_3PHASE),
     ),
     CardItemUiState(
+        stationId = "ST-003",
         stationName = "연희동 주민센터",
         availableChargerCount = 1,
-        occupiedChargerCount = 1,
-        chargingType = ChargingType.DC,
+        totalChargerCount = 1,
+        chargingType = ChargingType.AC,
         distance = 1.8,
         chargeStationAddress = "서울 서대문구 연희로 140",
-    ),
-    CardItemUiState(
-        stationName = "연희 사러가 마트",
-        availableChargerCount = 0,
-        occupiedChargerCount = 4,
-        chargingType = ChargingType.DC,
-        distance = 2.1,
-        chargeStationAddress = "서울 서대문구 연희맛로 25",
-    ),
-    CardItemUiState(
-        stationName = "연희 사러가 마트",
-        availableChargerCount = 0,
-        occupiedChargerCount = 4,
-        chargingType = ChargingType.DC,
-        distance = 2.1,
-        chargeStationAddress = "서울 서대문구 연희맛로 25",
-    ),
-    CardItemUiState(
-        stationName = "연희 사러가 마트",
-        availableChargerCount = 0,
-        occupiedChargerCount = 4,
-        chargingType = ChargingType.DC,
-        distance = 2.1,
-        chargeStationAddress = "서울 서대문구 연희맛로 25",
+        connectorTypes = listOf(ConnectorType.AC_SLOW),
+        visitCount = 1,
     ),
 )
 
+/**
+ * R2 주변 충전소 목록 (REQ_SL_001). 받은 목록은 [state]에서 온다.
+ */
 @Composable
 fun RecommendedStationList(
     modifier: Modifier = Modifier,
-    stations: List<CardItemUiState> = defaultDummyStations,
-    onStationClick: (CardItemUiState) -> Unit = {},
+    state: StationListUiState,
     onMicClick: () -> Unit = {},
+    onStationClick: (CardItemUiState) -> Unit = {},
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedSortType by remember { mutableStateOf(StationSortType.DISTANCE) }
@@ -155,7 +147,8 @@ fun RecommendedStationList(
     var pendingMaxPower by remember { mutableIntStateOf(350) }
 
     // 검색어 및 정렬 필터링
-    val filteredStations = remember(stations, searchQuery, selectedSortType) {
+    val filteredStations = remember(state.items, searchQuery, selectedSortType) {
+        val stations = state.items
         val list = if (searchQuery.isBlank()) {
             stations
         } else {
@@ -180,7 +173,7 @@ fun RecommendedStationList(
     ) {
         // 타이틀
         Text(
-            text = "전기차 충전소",
+            text = stringResource(R.string.station_list_title),
             fontWeight = AlterFontWeight.Strong,
             fontSize = 28.sp,
             color = AlterTheme.colors.textPrimary,
@@ -398,6 +391,16 @@ fun RecommendedStationList(
             }
         }
 
+        // 안내 줄: 불러오는 중 · 빈 목록 · 오프라인 (REQ_CM_006)
+        listNotice(state)?.let { notice ->
+            Text(
+                text = notice,
+                fontSize = 15.sp,
+                color = AlterTheme.colors.textTertiary,
+                modifier = Modifier.padding(start = 4.dp),
+            )
+        }
+
         // 3. 충전소 목록 (스크롤 가능한 LazyColumn)
         LazyColumn(
             modifier = Modifier
@@ -415,11 +418,22 @@ fun RecommendedStationList(
     }
 }
 
+@Composable
+private fun listNotice(state: StationListUiState): String? = when {
+    state.isLoading && state.items.isEmpty() -> stringResource(R.string.station_list_loading)
+    state.items.isEmpty() -> stringResource(R.string.station_list_empty)
+    state.offline && state.lastChecked != null ->
+        stringResource(R.string.station_list_offline_notice, lastCheckedText(state.lastChecked))
+    else -> null
+}
+
+private val previewState = StationListUiState(items = previewStations)
+
 @Preview(name = "RecommendedStationList(Light)", widthDp = 383, heightDp = 600)
 @Composable
 private fun RecommendedStationListLightPreview() {
     AlterChargeTheme(darkTheme = false) {
-        RecommendedStationList()
+        RecommendedStationList(state = previewState)
     }
 }
 
@@ -427,6 +441,6 @@ private fun RecommendedStationListLightPreview() {
 @Composable
 private fun RecommendedStationListDarkPreview() {
     AlterChargeTheme(darkTheme = true) {
-        RecommendedStationList()
+        RecommendedStationList(state = previewState)
     }
 }

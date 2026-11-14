@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- R2 주변 충전소 목록 문구 (REQ_SL_001 ~ REQ_SL_005) -->
+<resources>
+  <string name="station_list_title">전기차 충전소</string>
+  <string name="station_list_loading">충전소를 불러오는 중</string>
+  <string name="station_list_empty">주변 3km 안에 충전소가 없습니다</string>
+  <string name="station_list_filter_empty">조건에 맞는 충전소가 없습니다</string>
+  <string name="station_list_offline_search_blocked">오프라인에서는 검색할 수 없습니다</string>
+  <string name="station_list_offline_notice">저장된 목록 · %1$s</string>
+  <string name="station_list_voice_listening">듣고 있어요</string>
+  <string name="station_list_voice_permission">음성 검색에는 마이크 권한이 필요합니다</string>
+  <string name="station_list_voice_unavailable">이 기기에서는 음성 인식을 쓸 수 없습니다</string>
+  <string name="station_list_voice_error">음성을 알아듣지 못했습니다. 다시 말씀해 주세요</string>
+  <string name="station_list_filter_connector_all">연결 타입 전체</string>
+  <string name="station_list_filter_connector_count">연결 타입 %1$d개</string>
+  <string name="station_list_filter_power_all">속도 전체</string>
+  <string name="station_list_filter_power_range">%1$d~%2$dkW</string>
+  <string name="station_list_filter_power_range_over">%1$d~%2$dkW 이상</string>
+</resources>
