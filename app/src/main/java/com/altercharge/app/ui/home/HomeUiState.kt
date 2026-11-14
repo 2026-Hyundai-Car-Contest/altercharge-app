@@ -11,5 +11,7 @@ data class HomeUiState(
     val vehicleStatus: CardVehicleStatusUiState? = null,
     /** R1 추천 충전소 (REQ_ST_007) */
     val recommended: RecommendedStationInfo? = null,
+    /** 내가 이 충전소에 충전하러 간 횟수 (REQ_ST_008) */
+    val myVisitCount: Int = 0,
     val error: String? = null,
 )
