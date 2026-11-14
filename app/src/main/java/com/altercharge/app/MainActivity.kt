@@ -12,7 +12,11 @@ import com.altercharge.app.data.home.DEMO_LOCATION
 import com.altercharge.app.data.home.HomeCardsLoader
 import com.altercharge.app.data.local.OfflineSnapshotStore
 import com.altercharge.app.data.local.SharedPreferencesStore
+import com.altercharge.app.data.local.StationCacheStore
+import com.altercharge.app.data.local.VisitCountStore
 import com.altercharge.app.data.remote.AlterChargeApi
+import com.altercharge.app.data.station.StationRepository
+import com.altercharge.app.data.upload.ChargingEventRecorder
 import com.altercharge.app.data.vehicle.MockVehicleTelemetrySource
 import com.altercharge.app.ui.home.HomeScreen
 import com.altercharge.app.ui.home.HomeViewModel
@@ -25,9 +29,20 @@ class MainActivity : ComponentActivity() {
         // 의존성은 한 곳에서 만들어 넘긴다 (Gradle에 DI 라이브러리를 넣지 않는다)
         val store = SharedPreferencesStore(context = applicationContext)
         val api = AlterChargeApi()
+        val visits = VisitCountStore(store)
+        val stations = StationRepository(
+            api = api,
+            cache = StationCacheStore(store),
+            visits = visits,
+        )
         val loader = HomeCardsLoader(
             api = api,
             store = OfflineSnapshotStore(store = store),
+        )
+        val recorder = ChargingEventRecorder(
+            api = api,
+            store = store,
+            visits = visits,
         )
         // 충전 상태 · SOC는 아직 차량 SDK 대신 목업이다 (REQ_VS_002 · REQ_VS_003)
         val telemetry = MockVehicleTelemetrySource()
@@ -38,6 +53,9 @@ class MainActivity : ComponentActivity() {
                 factory = HomeViewModelFactory(
                     loader = loader,
                     telemetry = telemetry,
+                    recorder = recorder,
+                    visits = visits,
+                    stations = stations,
                     location = DEMO_LOCATION,
                     driverName = driverName,
                 )

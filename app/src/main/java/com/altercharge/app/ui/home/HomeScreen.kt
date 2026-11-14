@@ -104,8 +104,7 @@ fun HomeScreen(
                         CardStation(
                             state = recommended.toCardStationUiState(
                                 chipText = if (recommended.fallbackUsed) chipFallback else chipRecommended,
-                                // 방문 횟수는 아직 세지 않는다 (REQ_ST_008)
-                                myChargingCount = 0,
+                                myChargingCount = uiState.myVisitCount,
                             )
                         )
                     } else {
