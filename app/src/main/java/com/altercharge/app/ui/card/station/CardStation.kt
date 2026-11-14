@@ -78,7 +78,10 @@ fun CardStation(
                 text = state.stationName,
                 color = AlterTheme.colors.textPrimary,
                 fontWeight = AlterFontWeight.Strong,
-                fontSize = 32.sp
+                fontSize = 32.sp,
+                // Figma name은 한 줄(48). 긴 이름이 두 줄이 되면 카드가 길어져 R2가 밀린다
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
 
             // 충전소 주소 (REQ_ST_007 상세 정보). 상세를 못 받았으면 줄을 숨긴다

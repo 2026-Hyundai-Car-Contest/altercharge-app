@@ -1,5 +1,6 @@
 package com.altercharge.app.ui.card.stationitem
 
+import androidx.compose.foundation.border
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -39,14 +40,21 @@ import com.altercharge.app.ui.designsystem.theme.AlterTheme
 @Composable
 fun StationItem(
     state: CardItemUiState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** 목록에서 고른 충전소 (REQ_SL_006). Figma state=selected: blue_50 바탕 + blue_500 2px 테두리 */
+    selected: Boolean = false,
 ) {
     // 전체 컨테이너
     Column(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(AlterRadius.Small))
-            .background(AlterTheme.colors.background)
+            // Figma item/enabled/container = basic_00(라이트 흰색 · 다크 #131417)
+            .background(if (selected) AlterTheme.colors.blue50 else AlterTheme.colors.surface)
+            .then(
+                if (selected) Modifier.border(2.dp, AlterTheme.colors.blue500, RoundedCornerShape(AlterRadius.Small))
+                else Modifier
+            )
             .padding(vertical = 10.dp, horizontal = 16.dp)
     ) {
         // 충전소명(좌측), 충전소자리(우측)

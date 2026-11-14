@@ -67,6 +67,11 @@ fun HomeScreen(
                 viewModel.loadHome()
             }
 
+            // 정렬을 바꾸면 고른 충전소를 놓고 원래 추천으로 돌아간다 (REQ_SL_006)
+            LaunchedEffect(stationState.sort) {
+                viewModel.clearSelectedStation()
+            }
+
             // 길 안내 결과는 짧은 안내로 한 번만 알린다 (빈 충전기 없음 · 오프라인 등, REQ_BR_004 예외)
             val context = LocalContext.current
             val navigationMessage = uiState.navigationResult?.let { navigationMessageOf(it) }
@@ -132,7 +137,8 @@ fun HomeScreen(
                     }
                 },
                 r1 = {
-                    val recommended = uiState.recommended
+                    // 목록에서 고른 충전소가 있으면 추천 대신 보여 준다 (REQ_SL_006)
+                    val recommended = uiState.r1Station
                     if (recommended != null) {
                         CardStation(
                             state = recommended.toCardStationUiState(
@@ -176,7 +182,10 @@ fun HomeScreen(
                         },
                         onSortChange = stationViewModel::onSortChange,
                         onFilterChange = stationViewModel::onFilterChange,
-                        onStationClick = {},
+                        onStationClick = { item ->
+                            stationViewModel.summaryOf(item.stationId)?.let(viewModel::onStationSelected)
+                        },
+                        selectedStationId = uiState.selectedStation?.stationId,
                     )
                 },
                 // L2를 펼치면(상황 15) 카드가 길어져 왼쪽 열만 스크롤한다

@@ -1,6 +1,7 @@
 /** R1 추천 충전소 카드 값 (REQ_ST_007). 추천 응답(03)에 없는 주소 · 충전기는 상세(02)로 채운다 */
 package com.altercharge.app.data.home
 
+import com.altercharge.app.data.remote.model.StationSummary
 import com.altercharge.app.data.navi.RouteDestination
 import com.altercharge.app.data.remote.model.ChargerDetail
 import com.altercharge.app.data.remote.model.ConnectorType
@@ -64,3 +65,24 @@ fun RecommendedStationInfo.toRouteDestination(): RouteDestination? {
     val lng = lng ?: return null
     return RouteDestination(stationId = stationId, name = name, lat = lat, lng = lng, address = address)
 }
+
+/**
+ * 목록에서 고른 충전소를 R1 값으로 (REQ_SL_006). 목록 응답에 좌표 · 주소 · 충전기 수가 있어 상세를 다시 받지 않는다.
+ * 방문 횟수는 서버 값만 쓴다(기기 방문 수는 화면에서 따로 센다).
+ */
+fun StationSummary.toSelectedStationInfo(): RecommendedStationInfo = RecommendedStationInfo(
+    stationId = stationId,
+    name = name,
+    distanceMeters = distanceMeters,
+    availableCount = availableCount,
+    visitCount = visitCount,
+    speedCategory = null,
+    maxOutputKw = maxOutputKw,
+    fallbackUsed = false,
+    reasonCode = RecommendationReason.UNKNOWN,
+    address = address,
+    totalValidCount = totalValidCount,
+    connectorTypes = chargerTypes,
+    lat = lat,
+    lng = lng,
+)

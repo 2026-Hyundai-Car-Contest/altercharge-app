@@ -1,5 +1,7 @@
 package com.altercharge.app.ui.home
 
+import com.altercharge.app.data.home.toSelectedStationInfo
+import com.altercharge.app.data.remote.model.StationSummary
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -116,7 +118,8 @@ class HomeViewModel(
                     isLoading = false,
                     cards = cards.copy(driveRecord = keepViewedWeek(cards.driveRecord)),
                     recommended = recommended,
-                    myVisitCount = recommended?.let { info -> visits.count(info.stationId) } ?: 0,
+                    // 목록에서 고른 충전소가 R1에 있으면 그 충전소의 방문 횟수를 유지한다 (REQ_SL_006)
+                    myVisitCount = (it.selectedStation ?: recommended)?.let { info -> visits.count(info.stationId) } ?: 0,
                     vehicleStatus = reading.toCardVehicleStatusUiState(driverName, cards.vehicleStatus),
                 )
             }
@@ -141,12 +144,35 @@ class HomeViewModel(
      * 요청 중에는 다시 누르지 못하게 한다.
      */
     fun navigateToRecommended() {
-        val station = _uiState.value.recommended ?: return
+        val station = _uiState.value.r1Station ?: return
         if (_uiState.value.navigating) return
         viewModelScope.launch {
             _uiState.update { it.copy(navigating = true) }
             val outcome = navigator.navigate(station.toRouteDestination())
             _uiState.update { it.copy(navigating = false, navigationResult = outcome) }
+        }
+    }
+
+    /**
+     * 목록에서 충전소를 고르면 R1에 추천 대신 보여 준다 (REQ_SL_006).
+     * 같은 충전소를 다시 고르면 원래 추천으로 돌아간다.
+     */
+    fun onStationSelected(station: StationSummary) {
+        val current = _uiState.value.selectedStation
+        if (current?.stationId == station.stationId) {
+            clearSelectedStation()
+            return
+        }
+        _uiState.update {
+            it.copy(selectedStation = station.toSelectedStationInfo(), myVisitCount = visits.count(station.stationId))
+        }
+    }
+
+    /** 정렬을 바꾸면 원래 추천으로 돌아간다 (REQ_SL_006) */
+    fun clearSelectedStation() {
+        if (_uiState.value.selectedStation == null) return
+        _uiState.update { state ->
+            state.copy(selectedStation = null, myVisitCount = state.recommended?.let { visits.count(it.stationId) } ?: 0)
         }
     }
 

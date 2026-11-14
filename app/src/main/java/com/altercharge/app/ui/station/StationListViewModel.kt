@@ -72,6 +72,10 @@ class StationListViewModel(
         retryWhileOffline()
     }
 
+    /** 목록에서 고른 충전소의 원본 값 (REQ_SL_006: R1에 대신 보여 줄 때 쓴다) */
+    fun summaryOf(stationId: String): StationSummary? =
+        (searchResults.orEmpty() + allStations).firstOrNull { it.stationId == stationId }
+
     /** 화면에 다시 들어왔거나 사용자가 다시 시도했을 때 */
     fun refresh() {
         refreshJob?.cancel()

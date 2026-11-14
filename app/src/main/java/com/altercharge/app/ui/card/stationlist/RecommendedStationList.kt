@@ -90,6 +90,8 @@ fun RecommendedStationList(
     onSortChange: (StationSort) -> Unit = {},
     onFilterChange: (StationFilter) -> Unit = {},
     onStationClick: (CardItemUiState) -> Unit = {},
+    /** R1에 대신 보여 주는 충전소 (REQ_SL_006). 목록에서 강조한다 */
+    selectedStationId: String? = null,
 ) {
 
     Column(
@@ -160,6 +162,7 @@ fun RecommendedStationList(
                 StationItem(
                     state = station,
                     modifier = Modifier.clickable { onStationClick(station) },
+                    selected = station.stationId == selectedStationId,
                 )
             }
         }
