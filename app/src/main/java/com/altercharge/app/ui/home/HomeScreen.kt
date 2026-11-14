@@ -153,6 +153,7 @@ fun HomeScreen(
                             }
                         },
                         onSortChange = stationViewModel::onSortChange,
+                        onFilterChange = stationViewModel::onFilterChange,
                         onStationClick = {},
                     )
                 }

@@ -1,7 +1,7 @@
 /**
- * R2 주변 충전소 목록 (REQ_SL_001 ~ REQ_SL_004).
- * 받은 목록을 들고 있다가 검색어 · 정렬이 바뀔 때마다 앱에서 다시 만든다:
- * 서버는 거리순 한 가지로만 주고, 정렬은 저장한 목록에서도 동작해야 하기 때문이다 (REQ_CM_006).
+ * R2 주변 충전소 목록 (REQ_SL_001 ~ REQ_SL_005).
+ * 받은 목록을 들고 있다가 검색어 · 정렬 · 필터가 바뀔 때마다 앱에서 다시 만든다:
+ * 서버는 거리순 한 가지로만 주고, 정렬 · 필터는 저장한 목록에서도 동작해야 하기 때문이다 (REQ_CM_006).
  */
 package com.altercharge.app.ui.station
 
@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.altercharge.app.data.remote.freshness.RefreshRule
 import com.altercharge.app.data.remote.model.StationSummary
+import com.altercharge.app.data.station.StationFilter
 import com.altercharge.app.data.station.StationRepository
 import com.altercharge.app.data.station.StationSort
 import com.altercharge.app.domain.time.KoreaZone
@@ -50,7 +51,7 @@ class StationListViewModel(
     private val _uiState = MutableStateFlow(StationListUiState(isLoading = true))
     val uiState = _uiState.asStateFlow()
 
-    /** 반경 3km 전체 목록. 화면 값은 언제나 이 목록(또는 검색 결과)에서 만든다 */
+    /** 반경 3km 전체 목록. 정렬 · 필터는 언제나 이 목록(또는 검색 결과)에서 한다 */
     private var allStations: List<StationSummary> = emptyList()
 
     /** 서버 검색 결과. 검색어를 지우면 null이 되어 전체 목록으로 돌아간다 (REQ_SL_002) */
@@ -130,15 +131,21 @@ class StationListViewModel(
         _uiState.update { it.copy(voice = VoiceSearchState.Idle) }
     }
 
-    /** 방문 기록이 새로 생겼을 때(충전 시작) 화면 값을 다시 만든다. 서버를 부르지 않는다 (REQ_ST_008) */
+    /** 방문 기록이 새로 생겼을 때(충전 시작) 횟수만 다시 읽는다. 서버를 부르지 않는다 (REQ_ST_008) */
     fun onVisitsChanged() {
         rebuild()
     }
 
-    /** 거리순 · 방문순 (REQ_SL_004). 방문 기록이 없으면 방문순으로 바뀌지 않는다 */
+    /** 거리순 · 방문순 (REQ_SL_004). 방문 기록이 없으면 방문순으로 바꾸지 않는다 */
     fun onSortChange(sort: StationSort) {
         if (sort == StationSort.VISIT && !_uiState.value.visitSortEnabled) return
         _uiState.update { it.copy(sort = sort, message = null) }
+        rebuild()
+    }
+
+    /** 연결 타입 · 출력 필터 (REQ_SL_005) */
+    fun onFilterChange(filter: StationFilter) {
+        _uiState.update { it.copy(filter = filter, message = null) }
         rebuild()
     }
 
@@ -176,12 +183,15 @@ class StationListViewModel(
         rebuild()
     }
 
-    /** 지금 목록(전체 또는 검색 결과)에 정렬을 적용해 화면 값을 만든다 */
+    /** 지금 목록(전체 또는 검색 결과)에 필터 · 정렬을 적용해 화면 값을 만든다 */
     private fun rebuild() {
+        // 방문 횟수는 화면을 그릴 때마다 기기 저장값에서 읽는다 (충전 시작으로 바로 늘어난 값을 반영)
+        localCounts = repository.localVisitCounts()
         val built = buildStationList(
             all = allStations,
             searchResults = searchResults,
             sort = _uiState.value.sort,
+            filter = _uiState.value.filter,
             localCounts = localCounts,
             receivedAt = receivedAt,
             now = clock.instant(),
@@ -191,6 +201,11 @@ class StationListViewModel(
                 items = built.items,
                 sort = built.sort,
                 visitSortEnabled = built.visitSortEnabled,
+                message = when {
+                    built.message != null -> built.message
+                    it.message == StationListMessage.FILTER_EMPTY -> null
+                    else -> it.message
+                },
             )
         }
     }
