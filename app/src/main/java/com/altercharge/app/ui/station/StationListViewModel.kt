@@ -102,6 +102,8 @@ class StationListViewModel(
         if (word.isEmpty()) {
             searchWord = null
             searchResults = null
+            // 검색 요청 중에 지웠으면 그 요청은 취소됐으니 로딩 표시도 내린다
+            _uiState.update { it.copy(isLoading = false) }
             rebuild()
             return
         }
@@ -125,6 +127,7 @@ class StationListViewModel(
         if (word.isEmpty()) {
             searchWord = null
             searchResults = null
+            _uiState.update { it.copy(isLoading = false) }
             rebuild()
         } else {
             startSearch(word)
