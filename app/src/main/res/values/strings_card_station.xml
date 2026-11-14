@@ -22,4 +22,11 @@
   <string name="card_station_refresh">새로고침</string>
   <string name="card_station_navigate">여기로 안내</string>
   <string name="card_station_empty_online_title">추천할 충전소가 없어요</string>
+  <!-- 길 안내 결과 (REQ_BR_004 · REQ_BR_005) -->
+  <string name="navigation_started">내비에 목적지를 보냈어요</string>
+  <string name="navigation_offline">연결되면 길 안내를 할 수 있어요</string>
+  <string name="navigation_failed">길 안내를 시작하지 못했어요</string>
+  <string name="navigation_no_available_charger">지금 빈 충전기가 없어요</string>
+  <string name="navigation_station_unavailable">지금 이용할 수 없는 충전소예요</string>
+  <string name="navigation_status_unknown">충전기 상태를 확인할 수 없어요</string>
 </resources>

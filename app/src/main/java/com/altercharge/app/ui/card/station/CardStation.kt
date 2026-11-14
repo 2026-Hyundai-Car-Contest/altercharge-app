@@ -40,7 +40,10 @@ import com.altercharge.app.ui.designsystem.theme.AlterTheme
 @Composable
 fun CardStation(
     state: CardStationUiState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** "여기로 안내" (REQ_BR_004). 요청 중이면 [navigating]으로 버튼을 막는다 */
+    onNavigate: () -> Unit = {},
+    navigating: Boolean = false,
 ) {
     val shape = RoundedCornerShape(AlterRadius.XXLarge)
 
@@ -141,7 +144,8 @@ fun CardStation(
                     hierarchy = IviButtonHierarchy.Contrast,
                     size = IviButtonSize.Compact,
                     text = stringResource(R.string.card_station_navigate),
-                    onClick = {}
+                    onClick = onNavigate,
+                    enabled = !navigating,
                 )
             }
         }

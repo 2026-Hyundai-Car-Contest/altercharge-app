@@ -1,5 +1,7 @@
 package com.altercharge.app.ui.home
 
+import com.altercharge.app.data.home.toRouteDestination
+import com.altercharge.app.data.navi.StationNavigator
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -35,6 +37,7 @@ class HomeViewModelFactory(
     private val stations: StationRepository,
     private val location: LatLng?,
     private val driverName: String,
+    private val navigator: StationNavigator,
 ) : ViewModelProvider.Factory {
 
     override fun <T : ViewModel> create(
@@ -42,7 +45,7 @@ class HomeViewModelFactory(
     ): T {
         if (modelClass.isAssignableFrom(HomeViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return HomeViewModel(loader, telemetry, recorder, visits, stations, location, driverName) as T
+            return HomeViewModel(loader, telemetry, recorder, visits, stations, location, driverName, navigator) as T
         }
 
         throw IllegalArgumentException("Unknown ViewModel")
@@ -62,6 +65,7 @@ class HomeViewModel(
     private val stations: StationRepository,
     private val location: LatLng?,
     private val driverName: String,
+    private val navigator: StationNavigator,
     private val clock: Clock = Clock.system(KoreaZone),
 ) : ViewModel() {
 
@@ -130,6 +134,24 @@ class HomeViewModel(
             }
             false
         }
+    }
+
+    /**
+     * R1 "여기로 안내" (REQ_BR_004 · REQ_BR_005). 서버에 충전기 상태를 다시 묻고, 갈 수 있으면 내비 목적지를 바꾼다.
+     * 요청 중에는 다시 누르지 못하게 한다.
+     */
+    fun navigateToRecommended() {
+        val station = _uiState.value.recommended ?: return
+        if (_uiState.value.navigating) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(navigating = true) }
+            val outcome = navigator.navigate(station.toRouteDestination())
+            _uiState.update { it.copy(navigating = false, navigationResult = outcome) }
+        }
+    }
+
+    fun onNavigationResultShown() {
+        _uiState.update { it.copy(navigationResult = null) }
     }
 
     fun showPreviousWeek() = moveWeek(-1)

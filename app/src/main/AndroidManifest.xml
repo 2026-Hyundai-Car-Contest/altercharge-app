@@ -16,6 +16,8 @@
     <!-- 충전소 음성 검색(REQ_SL_003). Pleos SpeechToText가 Coming Soon이라 Android SpeechRecognizer를 쓴다.
          마이크는 음성 검색 버튼을 처음 누를 때만 요청한다. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- 길 안내: 내비 목적지 변경 (REQ_BR_005, NaviHelper requestRoute). 공모전 공지 #8에서 NaviHelper SDK 사용 허용 -->
+    <uses-permission android:name="pleos.car.permission.NAVI_ROUTE_SEARCH" />
 
     <!-- targetSdk 30부터는 다른 앱의 서비스가 보이지 않아 SpeechRecognizer를 찾지 못한다 -->
     <queries>

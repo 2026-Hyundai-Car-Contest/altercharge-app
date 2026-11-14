@@ -1,5 +1,9 @@
 package com.altercharge.app.ui.home
 
+import com.altercharge.app.data.remote.model.NavigationReason
+import com.altercharge.app.data.navi.NavigationOutcome
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -61,6 +65,16 @@ fun HomeScreen(
 
             LaunchedEffect(Unit) {
                 viewModel.loadHome()
+            }
+
+            // 길 안내 결과는 짧은 안내로 한 번만 알린다 (빈 충전기 없음 · 오프라인 등, REQ_BR_004 예외)
+            val context = LocalContext.current
+            val navigationMessage = uiState.navigationResult?.let { navigationMessageOf(it) }
+            LaunchedEffect(uiState.navigationResult) {
+                if (navigationMessage != null) {
+                    Toast.makeText(context, navigationMessage, Toast.LENGTH_SHORT).show()
+                    viewModel.onNavigationResultShown()
+                }
             }
             // 충전이 시작돼 방문이 세어지면 목록의 방문 횟수 · 방문순도 바로 쓸 수 있게 한다 (REQ_ST_008)
             LaunchedEffect(uiState.myVisitCount) {
@@ -124,7 +138,9 @@ fun HomeScreen(
                             state = recommended.toCardStationUiState(
                                 chipText = if (recommended.fallbackUsed) chipFallback else chipRecommended,
                                 myChargingCount = uiState.myVisitCount,
-                            )
+                            ),
+                            onNavigate = viewModel::navigateToRecommended,
+                            navigating = uiState.navigating,
                         )
                     } else {
                         // 추천을 못 받았을 때 (REQ_CM_006). 첫 요청 중에는 "못 불러왔다"고 미리 말하지 않게 빈 카드만 둔다
@@ -167,5 +183,17 @@ fun HomeScreen(
                 leftColumnScrollable = cards?.driveRecord?.expanded == true,
             )
         }
+    }
+}
+
+@Composable
+private fun navigationMessageOf(outcome: NavigationOutcome): String = when (outcome) {
+    NavigationOutcome.Started -> stringResource(R.string.navigation_started)
+    NavigationOutcome.Offline -> stringResource(R.string.navigation_offline)
+    NavigationOutcome.NoDestination, NavigationOutcome.Failed -> stringResource(R.string.navigation_failed)
+    is NavigationOutcome.Unavailable -> when (outcome.reason) {
+        NavigationReason.NO_AVAILABLE_CHARGER -> stringResource(R.string.navigation_no_available_charger)
+        NavigationReason.OUT_OF_SERVICE, NavigationReason.MAINTENANCE -> stringResource(R.string.navigation_station_unavailable)
+        else -> stringResource(R.string.navigation_status_unknown)
     }
 }

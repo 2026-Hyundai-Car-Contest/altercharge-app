@@ -1,5 +1,6 @@
 package com.altercharge.app.ui.home
 
+import com.altercharge.app.data.navi.NavigationOutcome
 import com.altercharge.app.data.home.HomeCards
 import com.altercharge.app.data.home.RecommendedStationInfo
 import com.altercharge.app.ui.card.vehiclestatus.CardVehicleStatusUiState
@@ -13,5 +14,9 @@ data class HomeUiState(
     val recommended: RecommendedStationInfo? = null,
     /** 내가 이 충전소에 충전하러 간 횟수 (REQ_ST_008) */
     val myVisitCount: Int = 0,
+    /** 길 안내 요청 중 (REQ_BR_004). 이동 중 버튼을 비활성으로 둔다 */
+    val navigating: Boolean = false,
+    /** 길 안내 결과 안내. 한 번 보여 주면 [HomeViewModel.onNavigationResultShown]으로 지운다 */
+    val navigationResult: NavigationOutcome? = null,
     val error: String? = null,
 )

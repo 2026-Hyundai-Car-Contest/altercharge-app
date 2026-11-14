@@ -74,4 +74,5 @@ dependencies {
 
     // Pleos Connect SDK
     implementation(libs.pleos.vehicle)
+    implementation(libs.pleos.navihelper)
 }

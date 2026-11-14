@@ -1,6 +1,7 @@
 /** R1 추천 충전소 카드 값 (REQ_ST_007). 추천 응답(03)에 없는 주소 · 충전기는 상세(02)로 채운다 */
 package com.altercharge.app.data.home
 
+import com.altercharge.app.data.navi.RouteDestination
 import com.altercharge.app.data.remote.model.ChargerDetail
 import com.altercharge.app.data.remote.model.ConnectorType
 import com.altercharge.app.data.remote.model.Recommendation
@@ -26,6 +27,9 @@ data class RecommendedStationInfo(
     val totalValidCount: Int? = null,
     val connectorTypes: List<ConnectorType> = emptyList(),
     val chargers: List<ChargerDetail> = emptyList(),
+    /** 길 안내 목적지 (REQ_BR_005). 추천 응답에는 없고 상세를 받아야 채워진다 */
+    val lat: Double? = null,
+    val lng: Double? = null,
 ) {
     /** 충전기별 연결 타입 합집합. 상세의 충전기 목록이 비면 추천 응답에 없으므로 빈 목록 */
     val allConnectorTypes: List<ConnectorType>
@@ -46,8 +50,17 @@ fun Recommendation.toRecommendedStationInfo(detail: StationDetail? = null): Reco
         fallbackUsed = fallbackUsed,
         reasonCode = reasonCode,
         address = detail?.address,
+        lat = detail?.lat,
+        lng = detail?.lng,
         totalValidCount = detail?.totalValidCount,
         connectorTypes = detail?.chargers?.flatMap { it.connectorTypes }?.distinct().orEmpty(),
         chargers = detail?.chargers.orEmpty(),
     )
+}
+
+/** 길 안내 목적지. 좌표는 상세를 받아야 있어서, 없으면 안내할 수 없다 (null) */
+fun RecommendedStationInfo.toRouteDestination(): RouteDestination? {
+    val lat = lat ?: return null
+    val lng = lng ?: return null
+    return RouteDestination(stationId = stationId, name = name, lat = lat, lng = lng, address = address)
 }
