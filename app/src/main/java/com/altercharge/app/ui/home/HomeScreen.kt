@@ -42,9 +42,9 @@ import com.altercharge.app.ui.station.StationListViewModel
 import com.altercharge.app.ui.station.rememberVoiceSearch
 
 /**
- * 임시 홈 화면 (#76). 카드마다 실제 값을 넣는다:
+ * 홈 화면. 카드마다 실제 값을 넣는다:
  * C 차량 상태(#79) · R1 추천 충전소(#82) · R2 주변 충전소 목록(#84 ~ #88).
- * 위치는 아직 FusedLocation이 Coming Soon이라 MainActivity가 넘긴 고정 좌표를 쓴다.
+ * 위치는 1차 시연용 고정 좌표(MainActivity가 넘김)를 쓴다.
  */
 @Composable
 fun HomeScreen(

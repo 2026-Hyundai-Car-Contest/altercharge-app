@@ -50,7 +50,7 @@ enum class CardDriveRecordMode {
 }
 
 /**
- * TODO 디자이너 확인: W-Standard 가로(높이 810)는 시안이 없어 S-17 가로(LANDSCAPE)로 대신한다.
+ * 시안 메모: W-Standard 가로(높이 810)는 시안이 없어 S-17 가로(LANDSCAPE)로 대신한다.
  */
 fun cardDriveRecordModeFor(info: AppLayoutInfo): CardDriveRecordMode = when (info.formFactor) {
     FormFactor.WF -> if (info.isLandscape) CardDriveRecordMode.WF_LANDSCAPE else CardDriveRecordMode.WF_PORTRAIT

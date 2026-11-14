@@ -45,7 +45,7 @@ enum class FormFactor(
         // 디자이너 확정(Q&A Q4): pleos layout/connect_wf/portrait. 폭 648은 화면 452:54321.
         // 세로 홈 배치는 하이파이 화면 값을 따른다 (PortraitSpec)
         portrait = AreaSpec(648.dp, 800.dp, margin = 32.dp, gutter = 16.dp, vertical = 24.dp, columns = 4),
-        // TODO 카드 작업: WF 가로는 L2 미니 카드 제외 · 충전소 목록 2개. 틀은 슬롯만 두고 카드 쪽에서 처리한다.
+        // 카드 쪽에서 처리: WF 가로는 L2 미니 카드 제외 · 충전소 목록 2개. 틀은 슬롯만 두고 카드 쪽에서 처리한다.
         landscapeSpans = ColumnSpans(left = 4, center = 4, right = 4),
         landscapeLeftScrollable = false,
     ),

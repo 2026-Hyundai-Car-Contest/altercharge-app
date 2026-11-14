@@ -8,7 +8,7 @@ import kotlin.math.ceil
 /**
  * 배터리 구간 표(377:11454)와 상황별 시안 기준.
  *
- * TODO 디자이너 확인: battery_gauge 설명은 칸마다 다른 색(text_dark_primary → blue_700 → blue_500 → blue_200)인데,
+ * 시안 메모: battery_gauge 설명은 칸마다 다른 색(text_dark_primary → blue_700 → blue_500 → blue_200)인데,
  * 상황별 시안은 모든 칸이 상태 색 하나라 시안을 따랐다.
  */
 internal fun accentColor(situation: VehicleSituation, colors: AlterColors): Color = when (situation) {

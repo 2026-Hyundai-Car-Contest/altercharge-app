@@ -34,7 +34,7 @@ import com.altercharge.app.ui.designsystem.theme.alterShadow
 /**
  * Figma state = empty, empty_overlay 648:58509. 요일 라벨 줄은 덮지 않는다.
  * 시안 설명은 "chart/background 40% + 배경 블러 6"이지만 그려진 인스턴스는 막 아래가 거의 순백이라 불투명하게 얹는다.
- * TODO 디자이너 확인: 막 불투명도와 블러 값이 설명과 그림이 다르다.
+ * 시안 메모: 막 불투명도와 블러 값이 설명과 그림이 다르다.
  */
 @Composable
 internal fun ChartEmptyOverlay(mode: CardDriveRecordMode, modifier: Modifier = Modifier) {

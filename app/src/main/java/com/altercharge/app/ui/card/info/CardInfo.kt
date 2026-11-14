@@ -48,7 +48,7 @@ enum class CardInfoMode(val height: Dp) {
 
 /**
  * card_info 시안은 S-17 · WF 모드만 있다. W-Standard 세로(452:53649)는 PORTRAIT(378×358)를 쓴다.
- * TODO 디자이너 확인: W-Standard 가로 · W-Extended는 card_info 시안이 없어 S-17 모드(LANDSCAPE · PORTRAIT)로 대신한다.
+ * 시안 메모: W-Standard 가로 · W-Extended는 card_info 시안이 없어 S-17 모드(LANDSCAPE · PORTRAIT)로 대신한다.
  */
 fun cardInfoModeFor(info: AppLayoutInfo): CardInfoMode = when {
     info.formFactor == FormFactor.WF ->
@@ -140,7 +140,7 @@ private fun PlaceContent(state: CardInfoUiState, spec: ModeSpec, showIcon: Boole
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (showIcon) {
-                // TODO 디자이너 확인: 시안이 장소 아이콘 자리에 Loading 아이콘을 쓰고 있다. 확정 아이콘이 오면 바꾼다.
+                // 시안 메모: 시안이 장소 아이콘 자리에 Loading 아이콘을 쓰고 있다. 확정 아이콘이 오면 바꾼다.
                 Image(
                     painter = painterResource(R.drawable.card_info_ic_place),
                     contentDescription = null,

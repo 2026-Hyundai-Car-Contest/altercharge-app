@@ -44,7 +44,7 @@ enum class CardVehicleStatusMode {
 }
 
 /**
- * TODO 디자이너 확인: W-Standard 가로(높이 810)는 시안이 없어 S-17 가로 모드로 대신한다.
+ * 시안 메모: W-Standard 가로(높이 810)는 시안이 없어 S-17 가로 모드로 대신한다.
  */
 fun cardVehicleStatusModeFor(info: AppLayoutInfo): CardVehicleStatusMode = when (info.formFactor) {
     FormFactor.WF ->
