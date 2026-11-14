@@ -19,4 +19,15 @@
   <string name="station_list_sort_distance">Distance</string>
   <string name="station_list_sort_visit">Visits</string>
   <string name="station_list_search_empty">No search results</string>
+  <!-- 필터 팝업 (Figma dropdown_connector · dropdown_speed) -->
+  <string name="station_list_filter_connector_title">Connector type</string>
+  <string name="station_list_filter_connector_subtitle">Select multiple</string>
+  <string name="station_list_filter_power_title">Charging speed</string>
+  <string name="station_list_connector_ac_slow_spec">(5-pin, Type 1)</string>
+  <string name="station_list_connector_ac_three_phase_spec">(7-pin, Type 2)</string>
+  <string name="station_list_connector_ac_slow_desc">AC single-phase · 220V · Most domestic EVs</string>
+  <string name="station_list_connector_ac_three_phase_desc">AC 3-phase · 380V · Some, e.g. Renault Zoe</string>
+  <string name="station_list_connector_dc_chademo_desc">DC fast · ~50–500V · Older Soul EV · IONIQ</string>
+  <string name="station_list_connector_dc_combo_desc">DC fast · ~200–1000V · Korean standard (Hyundai · Kia · Genesis)</string>
+  <string name="station_list_connector_nacs_desc">AC/DC · DC up to ~1000V · Tesla, some new EVs</string>
 </resources>

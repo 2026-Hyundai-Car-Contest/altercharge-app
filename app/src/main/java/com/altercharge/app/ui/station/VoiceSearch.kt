@@ -117,6 +117,7 @@ private class VoiceSearch(
         recognizer.startListening(
             Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                // 충전소 이름 · 주소가 한국어 데이터라 앱이 영어여도 한국어로 듣는다 (영어로 들으면 검색이 맞지 않는다)
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.KOREAN.toLanguageTag())
                 putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
                 putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false)
