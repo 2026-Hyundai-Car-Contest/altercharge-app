@@ -21,6 +21,8 @@ import com.altercharge.app.data.vehicle.MockVehicleTelemetrySource
 import com.altercharge.app.ui.home.HomeScreen
 import com.altercharge.app.ui.home.HomeViewModel
 import com.altercharge.app.ui.home.HomeViewModelFactory
+import com.altercharge.app.ui.station.StationListViewModel
+import com.altercharge.app.ui.station.StationListViewModelFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,10 +62,20 @@ class MainActivity : ComponentActivity() {
                     driverName = driverName,
                 )
             )
+            val stationViewModel: StationListViewModel = viewModel(
+                factory = StationListViewModelFactory(
+                    repository = stations,
+                    lat = DEMO_LOCATION.lat,
+                    lng = DEMO_LOCATION.lng,
+                )
+            )
 
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    HomeScreen(viewModel = homeViewModel)
+                    HomeScreen(
+                        viewModel = homeViewModel,
+                        stationViewModel = stationViewModel,
+                    )
                 }
             }
         }

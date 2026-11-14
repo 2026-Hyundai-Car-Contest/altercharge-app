@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <string name="card_item_avaliable_unit_text">%1$s</string>
+<!--  방문순에서 거리 대신 보여 주는 방문 횟수 (REQ_SL_004)-->
+  <string name="card_item_visit_count">방문 %1$d회</string>
 <!--  연결 타입 이름. 서버 ConnectorType 값과 짝을 맞춘다 (REQ_SL_001)-->
   <string name="card_item_connector_ac_slow">AC완속</string>
   <string name="card_item_connector_ac_three_phase">AC3상</string>

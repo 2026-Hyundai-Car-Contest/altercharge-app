@@ -13,6 +13,17 @@
          INTERNET은 Android 일반 권한이라 위의 Vehicle SDK 퍼미션(Pleos 승인 대상)에 해당하지 않는다. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- 충전소 음성 검색(REQ_SL_003). Pleos SpeechToText가 Coming Soon이라 Android SpeechRecognizer를 쓴다.
+         마이크는 음성 검색 버튼을 처음 누를 때만 요청한다. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <!-- targetSdk 30부터는 다른 앱의 서비스가 보이지 않아 SpeechRecognizer를 찾지 못한다 -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
+
     <application
         android:allowBackup="false"
         android:label="@string/app_name"

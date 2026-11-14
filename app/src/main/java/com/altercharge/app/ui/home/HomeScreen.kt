@@ -30,15 +30,19 @@ import com.altercharge.app.ui.designsystem.layout.AlterChargeLayout
 import com.altercharge.app.ui.designsystem.layout.LocalAppLayout
 import com.altercharge.app.ui.designsystem.theme.AlterChargeTheme
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
+import com.altercharge.app.ui.station.StationListMessage
+import com.altercharge.app.ui.station.StationListViewModel
+import com.altercharge.app.ui.station.rememberVoiceSearch
 
 /**
  * 임시 홈 화면 (#76). 카드마다 실제 값을 넣는다:
- * C 차량 상태(#79) · R1 추천 충전소(#82). R2 주변 충전소 목록은 아직 목업이다.
+ * C 차량 상태(#79) · R1 추천 충전소(#82) · R2 주변 충전소 목록(#84 ~ #88).
  * 위치는 아직 FusedLocation이 Coming Soon이라 MainActivity가 넘긴 고정 좌표를 쓴다.
  */
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel
+    viewModel: HomeViewModel,
+    stationViewModel: StationListViewModel,
 ) {
     // 화면 전체를 레이아웃 틀에 맡긴다: 바깥 여백 · 배경은 AlterChargeLayout과 앱 배경 토큰이 정한다 (디버그 카탈로그 layout과 같은 구성)
     AlterChargeTheme {
@@ -50,13 +54,25 @@ fun HomeScreen(
 
             val uiState by viewModel.uiState.collectAsState()
             val cards = uiState.cards
+            val stationState by stationViewModel.uiState.collectAsState()
 
             LaunchedEffect(Unit) {
                 viewModel.loadHome()
             }
+            // 충전이 시작돼 방문이 세어지면 목록의 방문 횟수 · 방문순도 바로 쓸 수 있게 한다 (REQ_ST_008)
+            LaunchedEffect(uiState.myVisitCount) {
+                stationViewModel.onVisitsChanged()
+            }
 
             val chipRecommended = stringResource(R.string.card_station_chip_recommended)
             val chipFallback = stringResource(R.string.card_station_chip_fallback)
+
+            // 음성 검색 (REQ_SL_003). 오프라인에서는 검색할 수 없어 마이크를 눌러도 안내만 한다
+            val startVoiceSearch = rememberVoiceSearch(
+                onResult = stationViewModel::onVoiceResult,
+                onListening = stationViewModel::onVoiceListening,
+                onError = stationViewModel::onVoiceError,
+            )
 
             AlterChargeLayout(
                 statusBar = {
@@ -126,7 +142,19 @@ fun HomeScreen(
                 },
                 r2 = {
                     RecommendedStationList(
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
+                        state = stationState,
+                        onQueryChange = stationViewModel::onQueryChange,
+                        onMicClick = {
+                            if (stationState.offline) {
+                                stationViewModel.onVoiceError(StationListMessage.SEARCH_UNAVAILABLE)
+                            } else {
+                                startVoiceSearch()
+                            }
+                        },
+                        onSortChange = stationViewModel::onSortChange,
+                        onFilterChange = stationViewModel::onFilterChange,
+                        onStationClick = {},
                     )
                 },
                 // L2를 펼치면(상황 15) 카드가 길어져 왼쪽 열만 스크롤한다
