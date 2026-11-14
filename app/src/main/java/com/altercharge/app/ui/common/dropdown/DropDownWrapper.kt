@@ -1,5 +1,7 @@
 package com.altercharge.app.ui.common.dropdown
 
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -38,13 +40,14 @@ fun DropDownWrapper(
     onApply: () -> Unit,
     content: @Composable () -> Unit
 ) {
+    // 폭 · 최대 높이는 팝업이 정한다(패널 폭). 높이가 모자라면 옵션만 스크롤하고 초기화 · 적용은 아래에 고정한다
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier
+            .fillMaxWidth()
             .clip(RoundedCornerShape(AlterRadius.Large))
             .background(AlterTheme.colors.background)
             .padding(AlterMargin.XSmall)
-            .width(351.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -65,7 +68,13 @@ fun DropDownWrapper(
             )
         }
 
-        content()
+        Box(
+            modifier = Modifier
+                .weight(1f, fill = false)
+                .verticalScroll(rememberScrollState()),
+        ) {
+            content()
+        }
 
         FilterActionButtons(
             onReset = onReset,

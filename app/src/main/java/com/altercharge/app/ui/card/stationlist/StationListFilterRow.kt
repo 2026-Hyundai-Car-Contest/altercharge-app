@@ -1,5 +1,10 @@
 package com.altercharge.app.ui.card.stationlist
 
+import com.altercharge.app.ui.common.dropdown.FilterRowBounds
+import kotlin.math.roundToInt
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -84,6 +89,8 @@ internal fun StationListFilterRow(
     state: StationListUiState,
     onSortChange: (StationSort) -> Unit,
     onFilterChange: (StationFilter) -> Unit,
+    /** 정렬 · 연결 타입 · 속도 메뉴 중 하나라도 열려 있으면 true. 목록을 어둡게 덮는 데 쓴다 (Figma scrim) */
+    onMenuOpenChange: (Boolean) -> Unit = {},
 ) {
     val options = connectorOptions()
     val filter = state.filter
@@ -99,15 +106,23 @@ internal fun StationListFilterRow(
 
     val sortLabels = StationSortType.entries.associateWith { stringResource(it.labelRes) }
 
-    // 방문 기록이 없으면 방문순을 고를 수 없다 (REQ_SL_004 예외)
-    val sortItems = if (state.visitSortEnabled) {
-        listOf(StationSortType.DISTANCE, StationSortType.VISIT)
-    } else {
-        listOf(StationSortType.DISTANCE)
-    }
+    // Figma dropdown_sort는 거리순 · 방문순 두 항목이다. 방문 기록이 없으면 방문순은 흐리게 두고 고를 수 없다 (REQ_SL_004 예외)
+    val sortItems = listOf(StationSortType.DISTANCE, StationSortType.VISIT)
+    var isSortMenuExpanded by remember { mutableStateOf(false) }
+
+    val anyMenuOpen = isSortMenuExpanded || isConnectorMenuExpanded || isPowerMenuExpanded
+    LaunchedEffect(anyMenuOpen) { onMenuOpenChange(anyMenuOpen) }
+
+    // 드롭다운을 패널 폭에 맞추려고 필터 줄의 자리를 잰다 (디자이너 QA 06)
+    var rowBounds by remember { mutableStateOf<FilterRowBounds?>(null) }
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .onGloballyPositioned { coordinates ->
+                val rect = coordinates.boundsInWindow()
+                rowBounds = FilterRowBounds(left = rect.left.roundToInt(), width = rect.width.roundToInt(), bottom = rect.bottom.roundToInt())
+            },
         horizontalArrangement = Arrangement.spacedBy(AlterMargin.XSmall),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -132,6 +147,8 @@ internal fun StationListFilterRow(
                 selectedItem = state.sort.toSortType(),
                 itemLabel = { sortLabels.getValue(it) },
                 onItemSelected = { onSortChange(it.toSort()) },
+                isEnabled = { it != StationSortType.VISIT || state.visitSortEnabled },
+                onExpandedChange = { isSortMenuExpanded = it },
             )
 
             // 연결 타입 필터 드롭다운 (REQ_SL_005)
@@ -157,6 +174,7 @@ internal fun StationListFilterRow(
                 FilterDropdownPopup(
                     expanded = isConnectorMenuExpanded,
                     onDismissRequest = { isConnectorMenuExpanded = false },
+                    panel = rowBounds,
                 ) {
                     DropDownWrapper(
                         title = stringResource(R.string.station_list_filter_connector_title),
@@ -222,6 +240,7 @@ internal fun StationListFilterRow(
                 FilterDropdownPopup(
                     expanded = isPowerMenuExpanded,
                     onDismissRequest = { isPowerMenuExpanded = false },
+                    panel = rowBounds,
                 ) {
                     DropDownWrapper(
                         title = stringResource(R.string.station_list_filter_power_title),

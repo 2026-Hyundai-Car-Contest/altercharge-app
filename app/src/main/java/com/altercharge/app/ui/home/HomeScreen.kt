@@ -1,5 +1,10 @@
 package com.altercharge.app.ui.home
 
+import java.time.format.DateTimeFormatter
+import java.time.LocalTime
+import com.altercharge.app.domain.time.KoreaZone
+import kotlinx.coroutines.delay
+import androidx.compose.runtime.produceState
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -92,6 +97,14 @@ fun HomeScreen(
                 stationViewModel.onVisitsChanged()
             }
 
+            // 상단 바 시각: 분이 바뀔 때마다 다시 그린다
+            val statusBarTime by produceState(initialValue = currentStatusBarTime()) {
+                while (true) {
+                    delay(60_000L - System.currentTimeMillis() % 60_000L)
+                    value = currentStatusBarTime()
+                }
+            }
+
             val chipRecommended = stringResource(R.string.card_station_chip_recommended)
             val chipFallback = stringResource(R.string.card_station_chip_fallback)
 
@@ -114,7 +127,9 @@ fun HomeScreen(
                             range = uiState.vehicleStatus?.rangeKm?.let { StatusValue.Ready(it) }
                                 ?: StatusValue.Unavailable,
                             // 차량 온도는 아직 SDK 값이 없어 숨긴다 (목업 숫자를 지어내지 않는다)
-                            temperatureC = null
+                            temperatureC = null,
+                            // 목록의 "14:30 기준" · 충전 완료 예정 시각과 같은 시계(한국 시간)를 쓴다
+                            time = statusBarTime,
                         )
                     )
                 },
@@ -217,6 +232,9 @@ fun HomeScreen(
         }
     }
 }
+
+private fun currentStatusBarTime(): String =
+    LocalTime.now(KoreaZone).format(DateTimeFormatter.ofPattern("HH:mm"))
 
 @Composable
 private fun navigationMessageOf(outcome: NavigationOutcome): String = when (outcome) {

@@ -6,6 +6,7 @@
  */
 package com.altercharge.app.data.vehicle
 
+import com.altercharge.app.domain.time.KoreaZone
 import java.time.format.FormatStyle
 import java.time.format.DateTimeFormatter
 import java.time.LocalTime
@@ -56,9 +57,10 @@ fun interface VehicleTelemetrySource {
 class MockVehicleTelemetrySource(
     private val telemetry: VehicleTelemetry = DEFAULT,
 ) : VehicleTelemetrySource {
-    // 완충 시각은 읽을 때마다 화면 언어로 만든다: 미리 만들어 두면 언어를 바꿔도 옛 형식으로 남는다
+    // 완충 시각은 읽을 때마다 "지금 + 남은 시간"으로, 화면 언어에 맞춰 만든다.
+    // 고정 시각으로 두면 상단 바 시각 · "N분 남았어요"와 어긋난다
     override fun read(): VehicleTelemetry =
-        if (telemetry === DEFAULT) telemetry.copy(fullAt = LocalTime.of(14, 30).format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)))
+        if (telemetry === DEFAULT) telemetry.copy(fullAt = fullAtFrom(LocalTime.now(KoreaZone), telemetry.remainingMinutes))
         else telemetry
 
     // 목업은 늘 충전 중이라 앱을 켤 때마다 방문 +1 · 공용 시연 차량에 START 이벤트가 쌓인다
@@ -71,8 +73,14 @@ class MockVehicleTelemetrySource(
             odometerKm = 12500.0,
             charging = ChargingState.CHARGING,
             remainingMinutes = 45,
-            // 화면 언어에 맞춘 시각 (KO "오후 2:30", EN "2:30 PM")
-            fullAt = LocalTime.of(14, 30).format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)),
+            // read()가 읽는 시각 기준으로 다시 만든다
+            fullAt = null,
         )
+
+        /** 지금 시각에 남은 시간을 더한 완충 시각. 화면 언어 형식 (KO "오후 2:50", EN "2:50 PM") */
+        internal fun fullAtFrom(now: LocalTime, remainingMinutes: Int?): String? =
+            remainingMinutes?.let {
+                now.plusMinutes(it.toLong()).format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)).replace('\u202F', ' ')
+            }
     }
 }

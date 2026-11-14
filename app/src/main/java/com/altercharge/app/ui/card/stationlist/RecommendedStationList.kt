@@ -1,5 +1,9 @@
 package com.altercharge.app.ui.card.stationlist
 
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -164,11 +168,15 @@ fun RecommendedStationList(
             offline = state.offline,
         )
 
+        // 필터 메뉴가 열려 있으면 목록을 어둡게 덮는다 (Figma 필터 드롭다운 scrim)
+        var menuOpen by remember { mutableStateOf(false) }
+
         // 필터 영역 (정렬, 연결 타입, 속도)
         StationListFilterRow(
             state = state,
             onSortChange = onSortChange,
             onFilterChange = onFilterChange,
+            onMenuOpenChange = { menuOpen = it },
         )
 
         // 안내 줄: 불러오는 중 · 빈 목록 · 오프라인 · 음성 안내 (REQ_CM_006 · REQ_SL_003)
@@ -183,8 +191,10 @@ fun RecommendedStationList(
 
         // 충전소 목록
         val listState = rememberLazyListState()
-        val scrollbarTrack = AlterTheme.colors.containerBackgroundSubtle
-        val scrollbarThumb = AlterTheme.colors.gray300
+        // Figma scrollbar(디자이너 QA 01): 손잡이가 어두운 패널에서도 보이게 다크는 #F7F8FA
+        val scrollbarTrack = AlterTheme.colors.textPrimary.copy(alpha = 0.08f)
+        val scrollbarThumb = if (AlterTheme.colors.isDark) Color(0xFFF7F8FA) else AlterTheme.colors.gray300
+        val scrimColor = AlterTheme.colors.screenBackground.copy(alpha = 0.92f)
         // 패널 맨 아래 색: 바탕 위에 bg_glow의 blue_100 55%
         val fadeColor = AlterTheme.colors.blue100.copy(alpha = 0.55f).compositeOver(AlterTheme.colors.containerBackgroundSubtle)
         LazyColumn(
@@ -196,6 +206,11 @@ fun RecommendedStationList(
                 .drawWithContent {
                     drawContent()
                     drawStationListScrollbar(listState, track = scrollbarTrack, thumb = scrollbarThumb)
+                    if (menuOpen) {
+                        // 패널 안쪽 여백까지 덮는다
+                        val pad = AlterMargin.Normal.toPx()
+                        drawRect(color = scrimColor, topLeft = Offset(-pad, 0f), size = Size(size.width + pad * 2, size.height + pad))
+                    }
                 }
                 // Figma fade_bottom: 아래에 더 있으면 패널 바닥색(배경 + blue_100 55%)을 덮어 마지막 항목이 흐려진다.
                 // 끝까지 내리면 없앤다. 오프스크린 레이어로 내용을 지우는 방식은 다시 연결된 뒤 목록이 통째로
@@ -268,9 +283,11 @@ private fun DrawScope.drawStationListScrollbar(state: LazyListState, track: Colo
     val scrolled = state.firstVisibleItemIndex * itemStep + state.firstVisibleItemScrollOffset
     val width = SCROLLBAR_WIDTH.toPx()
     val x = size.width + AlterMargin.Normal.toPx() - width
-    val radius = CornerRadius(width / 2, width / 2)
+    val radius = CornerRadius(SCROLLBAR_RADIUS.toPx(), SCROLLBAR_RADIUS.toPx())
     drawRoundRect(color = track, topLeft = Offset(x, 0f), size = Size(width, viewport), cornerRadius = radius)
-    val thumbHeight = (viewport / contentHeight * viewport).coerceIn(SCROLLBAR_MIN_THUMB.toPx(), viewport)
+    // 목록 길이에 비례하되 너무 짧아지지 않게 한다 (시안 손잡이는 목록 높이의 절반쯤)
+    val minThumb = SCROLLBAR_MIN_THUMB.toPx().coerceAtMost(viewport * 0.6f)
+    val thumbHeight = (viewport / contentHeight * viewport).coerceIn(minThumb, viewport)
     val progress = (scrolled / (contentHeight - viewport)).coerceIn(0f, 1f)
     drawRoundRect(
         color = thumb,
@@ -281,7 +298,8 @@ private fun DrawScope.drawStationListScrollbar(state: LazyListState, track: Colo
 }
 
 private val SCROLLBAR_WIDTH = 5.dp
-private val SCROLLBAR_MIN_THUMB = 32.dp
+private val SCROLLBAR_RADIUS = 4.dp
+private val SCROLLBAR_MIN_THUMB = 160.dp
 
 /**
  * R2 헤더의 마지막 확인 시각 (Figma CM_006 보드 ②): 1분 미만 "방금 기준", 하루 안 "14:30 기준", 그 전 "11.11 14:30 기준".
