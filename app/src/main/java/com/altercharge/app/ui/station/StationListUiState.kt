@@ -1,7 +1,8 @@
-/** R2 주변 충전소 목록 화면 값 (REQ_SL_001 ~ REQ_SL_003) */
+/** R2 주변 충전소 목록 화면 값 (REQ_SL_001 ~ REQ_SL_004) */
 package com.altercharge.app.ui.station
 
 import androidx.compose.runtime.Immutable
+import com.altercharge.app.data.station.StationSort
 import com.altercharge.app.ui.card.info.LastChecked
 import com.altercharge.app.ui.card.stationitem.CardItemUiState
 
@@ -10,6 +11,9 @@ data class StationListUiState(
     val items: List<CardItemUiState> = emptyList(),
     /** 검색어. 음성 검색 결과도 여기에 들어간다 (REQ_SL_002 · REQ_SL_003) */
     val query: String = "",
+    val sort: StationSort = StationSort.DISTANCE,
+    /** 방문 기록이 한 곳이라도 있어야 방문순을 고를 수 있다 (REQ_SL_004 예외) */
+    val visitSortEnabled: Boolean = false,
     val isLoading: Boolean = false,
     /** 서버에 못 받아 저장한 목록을 쓰고 있다 (REQ_CM_006) */
     val offline: Boolean = false,
