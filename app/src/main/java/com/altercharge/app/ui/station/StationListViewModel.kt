@@ -102,6 +102,33 @@ class StationListViewModel(
         }
     }
 
+    /** 음성 인식 결과. 텍스트 검색과 같은 결과를 낸다 (REQ_SL_003) */
+    fun onVoiceResult(text: String) {
+        _uiState.update { it.copy(query = text, voice = VoiceSearchState.Idle, message = null) }
+        searchJob?.cancel()
+        val word = text.trim()
+        if (word.isEmpty()) {
+            searchWord = null
+            searchResults = null
+            rebuild()
+        } else {
+            viewModelScope.launch { search(word) }
+        }
+    }
+
+    fun onVoiceListening() {
+        _uiState.update { it.copy(voice = VoiceSearchState.Listening) }
+    }
+
+    /** 마이크 권한 거부 · 인식기 없음 · 인식 실패 (REQ_SL_003) */
+    fun onVoiceError(message: StationListMessage) {
+        _uiState.update { it.copy(voice = VoiceSearchState.Idle, message = message) }
+    }
+
+    fun onVoiceFinished() {
+        _uiState.update { it.copy(voice = VoiceSearchState.Idle) }
+    }
+
     /** 방문 기록이 새로 생겼을 때(충전 시작) 화면 값을 다시 만든다. 서버를 부르지 않는다 (REQ_ST_008) */
     fun onVisitsChanged() {
         rebuild()
