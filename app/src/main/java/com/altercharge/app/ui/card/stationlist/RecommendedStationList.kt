@@ -1,5 +1,6 @@
 package com.altercharge.app.ui.card.stationlist
 
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -191,6 +192,8 @@ fun RecommendedStationList(
 
         // 충전소 목록
         val listState = rememberLazyListState()
+        // 정렬 · 필터를 바꾸면 새 목록의 맨 위부터 보여 준다
+        LaunchedEffect(state.sort, state.filter) { listState.scrollToItem(0) }
         // Figma scrollbar(디자이너 QA 01): 손잡이가 어두운 패널에서도 보이게 다크는 #F7F8FA
         val scrollbarTrack = AlterTheme.colors.textPrimary.copy(alpha = 0.08f)
         val scrollbarThumb = if (AlterTheme.colors.isDark) Color(0xFFF7F8FA) else AlterTheme.colors.gray300

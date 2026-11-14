@@ -1,5 +1,6 @@
 package com.altercharge.app.ui.common.dropdown
 
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.background
@@ -62,8 +63,13 @@ fun DropDownWrapper(
             Text(
                 text = subTitle,
                 textAlign = TextAlign.End,
-                modifier = Modifier.weight(1f).padding(AlterMargin.Small),
-                fontSize = 16.sp,
+                // "100kW ~ 350kW 이상"처럼 길어져도 두 줄로 꺾여 아래 내용을 밀지 않게 한다
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f).padding(start = 4.dp, end = 4.dp),
+                // 패널 폭 안에서 가장 긴 문구("100kW ~ 350kW 이상")가 잘리지 않는 크기
+                fontSize = 14.sp,
                 color = AlterTheme.colors.textTertiary.copy(0.64f)
             )
         }

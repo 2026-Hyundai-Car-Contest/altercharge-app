@@ -94,6 +94,17 @@ class HomeViewModel(
         }
     }
 
+    /**
+     * 차량 값만 다시 읽어 C 카드를 고친다. 상단 바 시각이 바뀔 때마다 불러서
+     * "충전 완료 예정" 시각이 화면 시각 + 남은 시간과 어긋나지 않게 한다 (서버 요청은 하지 않는다)
+     */
+    fun refreshVehicleStatus() {
+        val reading = telemetry.read()
+        _uiState.update {
+            it.copy(vehicleStatus = reading.toCardVehicleStatusUiState(driverName, it.cards?.vehicleStatus))
+        }
+    }
+
     /** @return 서버에 못 붙어 다시 요청해야 하면 true */
     private suspend fun loadOnce(): Boolean {
         val reading = telemetry.read()

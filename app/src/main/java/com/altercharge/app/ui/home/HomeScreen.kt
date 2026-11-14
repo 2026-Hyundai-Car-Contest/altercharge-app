@@ -105,6 +105,9 @@ fun HomeScreen(
                 }
             }
 
+            // 분이 바뀌면 차량 값도 다시 읽어 충전 완료 예정 시각을 상단 바 시각에 맞춘다
+            LaunchedEffect(statusBarTime) { viewModel.refreshVehicleStatus() }
+
             val chipRecommended = stringResource(R.string.card_station_chip_recommended)
             val chipFallback = stringResource(R.string.card_station_chip_fallback)
 
