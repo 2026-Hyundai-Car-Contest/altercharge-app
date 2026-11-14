@@ -1,7 +1,7 @@
 /**
- * R2 주변 충전소 목록 (REQ_SL_001 · REQ_SL_002).
- * 받은 목록을 들고 있다가 검색어가 바뀔 때마다 앱에서 다시 만든다:
- * 서버는 거리순 한 가지로만 주고, 저장한 목록에서도 검색이 동작해야 하기 때문이다 (REQ_CM_006).
+ * R2 주변 충전소 목록 (REQ_SL_001 ~ REQ_SL_004).
+ * 받은 목록을 들고 있다가 검색어 · 정렬이 바뀔 때마다 앱에서 다시 만든다:
+ * 서버는 거리순 한 가지로만 주고, 정렬은 저장한 목록에서도 동작해야 하기 때문이다 (REQ_CM_006).
  */
 package com.altercharge.app.ui.station
 
@@ -11,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import com.altercharge.app.data.remote.freshness.RefreshRule
 import com.altercharge.app.data.remote.model.StationSummary
 import com.altercharge.app.data.station.StationRepository
+import com.altercharge.app.data.station.StationSort
 import com.altercharge.app.domain.time.KoreaZone
 import com.altercharge.app.ui.card.info.lastCheckedOf
 import kotlinx.coroutines.Job
@@ -134,6 +135,13 @@ class StationListViewModel(
         rebuild()
     }
 
+    /** 거리순 · 방문순 (REQ_SL_004). 방문 기록이 없으면 방문순으로 바뀌지 않는다 */
+    fun onSortChange(sort: StationSort) {
+        if (sort == StationSort.VISIT && !_uiState.value.visitSortEnabled) return
+        _uiState.update { it.copy(sort = sort, message = null) }
+        rebuild()
+    }
+
     private suspend fun search(word: String) {
         if (_uiState.value.offline) {
             // 오프라인에서는 검색할 수 없다 (REQ_SL_002 예외)
@@ -168,15 +176,23 @@ class StationListViewModel(
         rebuild()
     }
 
-    /** 지금 목록(전체 또는 검색 결과)으로 화면 값을 만든다 */
+    /** 지금 목록(전체 또는 검색 결과)에 정렬을 적용해 화면 값을 만든다 */
     private fun rebuild() {
         val built = buildStationList(
             all = allStations,
             searchResults = searchResults,
+            sort = _uiState.value.sort,
+            localCounts = localCounts,
             receivedAt = receivedAt,
             now = clock.instant(),
         )
-        _uiState.update { it.copy(items = built.items) }
+        _uiState.update {
+            it.copy(
+                items = built.items,
+                sort = built.sort,
+                visitSortEnabled = built.visitSortEnabled,
+            )
+        }
     }
 
     /** 연결이 끊긴 동안 30초마다 다시 요청한다 (REQ_CM_006) */

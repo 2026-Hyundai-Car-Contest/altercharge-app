@@ -152,6 +152,7 @@ fun HomeScreen(
                                 startVoiceSearch()
                             }
                         },
+                        onSortChange = stationViewModel::onSortChange,
                         onStationClick = {},
                     )
                 }

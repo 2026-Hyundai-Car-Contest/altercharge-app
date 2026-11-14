@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.altercharge.app.R
 import com.altercharge.app.data.remote.model.ConnectorType
+import com.altercharge.app.data.station.StationSort
 import com.altercharge.app.ui.card.info.lastCheckedText
 import com.altercharge.app.ui.card.station.ChargingType
 import com.altercharge.app.ui.card.stationitem.CardItemUiState
@@ -124,7 +125,8 @@ private val previewStations = listOf(
 )
 
 /**
- * R2 주변 충전소 목록 (REQ_SL_001 ~ REQ_SL_003). 받은 목록 · 검색 · 음성 안내는 [state]의 값을 따른다.
+ * R2 주변 충전소 목록 (REQ_SL_001 ~ REQ_SL_004).
+ * 검색 · 정렬은 [state]의 값을 따르고, 바뀌면 콜백으로 알린다 (값은 ViewModel이 만든다).
  */
 @Composable
 fun RecommendedStationList(
@@ -132,10 +134,9 @@ fun RecommendedStationList(
     state: StationListUiState,
     onQueryChange: (String) -> Unit = {},
     onMicClick: () -> Unit = {},
+    onSortChange: (StationSort) -> Unit = {},
     onStationClick: (CardItemUiState) -> Unit = {},
 ) {
-    var selectedSortType by remember { mutableStateOf(StationSortType.DISTANCE) }
-
     // 연결 타입 필터 상태
     var isConnectorMenuExpanded by remember { mutableStateOf(false) }
     var selectedConnectors by remember { mutableStateOf(setOf<String>()) }
@@ -148,14 +149,14 @@ fun RecommendedStationList(
     var pendingMinPower by remember { mutableIntStateOf(3) }
     var pendingMaxPower by remember { mutableIntStateOf(350) }
 
-    // 정렬은 아직 화면에서 한다 (REQ_SL_004 정렬에서 서버 목록 정렬로 옮긴다)
-    val filteredStations = remember(state.items, selectedSortType) {
-        val stations = state.items
-        when (selectedSortType) {
-            StationSortType.DISTANCE -> stations.sortedBy { it.distance }
-            StationSortType.VISIT -> stations
-        }
+    // 방문 기록이 없으면 방문순을 고를 수 없다 (REQ_SL_004 예외)
+    val sortItems = if (state.visitSortEnabled) {
+        listOf(StationSortType.DISTANCE, StationSortType.VISIT)
+    } else {
+        listOf(StationSortType.DISTANCE)
     }
+
+    // 정렬은 화면에서 하지 않는다: 목록은 ViewModel이 정렬해서 준다 (REQ_SL_004)
 
     Column(
         verticalArrangement = Arrangement.spacedBy(AlterMargin.Normal),
@@ -211,12 +212,12 @@ fun RecommendedStationList(
                 horizontalArrangement = Arrangement.spacedBy(AlterMargin.XSmall),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // 거리순 / 방문순 드롭다운
+                // 거리순 / 방문순 드롭다운 (REQ_SL_004)
                 SortDropDown(
-                    items = listOf(StationSortType.DISTANCE, StationSortType.VISIT),
-                    selectedItem = selectedSortType,
+                    items = sortItems,
+                    selectedItem = state.sort.toSortType(),
                     itemLabel = { it.label },
-                    onItemSelected = { selectedSortType = it },
+                    onItemSelected = { onSortChange(it.toSort()) },
                 )
 
                 // 연결 타입 필터 드롭다운
@@ -403,7 +404,7 @@ fun RecommendedStationList(
                 .weight(1f),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            items(filteredStations) { station ->
+            items(state.items) { station ->
                 StationItem(
                     state = station,
                     modifier = Modifier.clickable { onStationClick(station) },
@@ -427,7 +428,17 @@ private fun listNotice(state: StationListUiState): String? = when {
     else -> null
 }
 
-private val previewState = StationListUiState(items = previewStations)
+private fun StationSort.toSortType(): StationSortType = when (this) {
+    StationSort.DISTANCE -> StationSortType.DISTANCE
+    StationSort.VISIT -> StationSortType.VISIT
+}
+
+private fun StationSortType.toSort(): StationSort = when (this) {
+    StationSortType.DISTANCE -> StationSort.DISTANCE
+    StationSortType.VISIT -> StationSort.VISIT
+}
+
+private val previewState = StationListUiState(items = previewStations, visitSortEnabled = true)
 
 @Preview(name = "RecommendedStationList(Light)", widthDp = 383, heightDp = 600)
 @Composable
