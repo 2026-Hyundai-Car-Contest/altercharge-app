@@ -11,7 +11,10 @@ import com.altercharge.app.data.remote.ApiResult
 import com.altercharge.app.data.remote.model.StationSummary
 import com.altercharge.app.domain.time.KoreaZone
 import java.time.Clock
+import java.time.Duration
 import java.time.Instant
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /** REQ_SL_001 반경은 서버 기본값과 같은 3km다 */
 const val NEARBY_RADIUS_KM: Double = 3.0
@@ -36,6 +39,13 @@ class StationRepository(
         val failure: ApiResult.Failure? = null,
     )
 
+    /**
+     * 방금 받은 전체 목록 (위치 · 받은 시각). 홈 시작 때 목록 · 충전 시작 판정이 같은 목록을 연달아 부르므로
+     * [FRESH_REUSE] 안에서는 다시 받지 않는다. 동시에 불러도 [nearbyLock]으로 한 번만 받는다.
+     */
+    private var lastFresh: Triple<Double, Double, NearbyResult>? = null
+    private val nearbyLock = Mutex()
+
     /** 받아 둔 목록. 없으면 null */
     fun cached(): NearbyResult? = cache.load()?.let {
         NearbyResult(it.stations, it.receivedAt, offline = true, fromCache = true)
@@ -50,6 +60,21 @@ class StationRepository(
      */
     suspend fun nearby(lat: Double, lng: Double, keyword: String? = null): NearbyResult {
         val word = keyword?.trim()?.takeIf { it.isNotEmpty() }
+        if (word != null) return fetch(lat, lng, word)
+        return nearbyLock.withLock {
+            val recent = lastFresh
+            val now = clock.instant()
+            if (recent != null && recent.first == lat && recent.second == lng &&
+                recent.third.receivedAt?.let { Duration.between(it, now) < FRESH_REUSE } == true
+            ) {
+                recent.third
+            } else {
+                fetch(lat, lng, word = null).also { if (!it.offline) lastFresh = Triple(lat, lng, it) }
+            }
+        }
+    }
+
+    private suspend fun fetch(lat: Double, lng: Double, word: String?): NearbyResult {
         val collected = mutableListOf<StationSummary>()
         var failure: ApiResult.Failure? = null
         var page = 0
@@ -91,6 +116,9 @@ class StationRepository(
     }
 
     private companion object {
+        /** 다시 받지 않고 쓰는 시간. 가용 대수 유효 15분(REQ_CM_009)보다 훨씬 짧게 둔다 */
+        val FRESH_REUSE: Duration = Duration.ofSeconds(30)
+
         /** 서버가 허용하는 최대 페이지 크기 */
         const val PAGE_SIZE = 200
 

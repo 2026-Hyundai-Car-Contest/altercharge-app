@@ -27,13 +27,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.altercharge.app.R
-import com.altercharge.app.ui.designsystem.theme.AlterFontWeight
 import com.altercharge.app.ui.designsystem.theme.AlterRadius
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
 
@@ -147,9 +144,3 @@ enum class StationSortType(
     DISTANCE(R.string.station_list_sort_distance),
     VISIT(R.string.station_list_sort_visit)
 }
-
-//@Preview(name = "Sort · chip_filter + dropdown_sort (거리순 / 방문순)")
-//@Composable
-//private fun SortDropDownPreview() {
-//    SortDropDown()
-//}

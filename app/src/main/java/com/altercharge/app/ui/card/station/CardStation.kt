@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -32,8 +31,6 @@ import com.altercharge.app.ui.card.stationitem.connectorLabelText
 import com.altercharge.app.ui.designsystem.component.IviButton
 import com.altercharge.app.ui.designsystem.component.IviButtonHierarchy
 import com.altercharge.app.ui.designsystem.component.IviButtonSize
-import com.altercharge.app.ui.designsystem.theme.AlterChargeTheme
-import com.altercharge.app.ui.designsystem.theme.AlterColors
 import com.altercharge.app.ui.designsystem.theme.AlterFontWeight
 import com.altercharge.app.ui.designsystem.theme.AlterMargin
 import com.altercharge.app.ui.designsystem.theme.AlterPadding

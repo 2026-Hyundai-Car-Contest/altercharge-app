@@ -20,4 +20,15 @@
   <string name="station_list_sort_distance">거리순</string>
   <string name="station_list_sort_visit">방문순</string>
   <string name="station_list_search_empty">검색 결과가 없어요</string>
+  <!-- 필터 팝업 (Figma dropdown_connector · dropdown_speed) -->
+  <string name="station_list_filter_connector_title">연결 타입</string>
+  <string name="station_list_filter_connector_subtitle">여러 개 선택</string>
+  <string name="station_list_filter_power_title">속도 (충전 출력)</string>
+  <string name="station_list_connector_ac_slow_spec">(5핀, Type 1)</string>
+  <string name="station_list_connector_ac_three_phase_spec">(7핀, Type 2)</string>
+  <string name="station_list_connector_ac_slow_desc">AC 단상 · 220V · 국내 대부분 차량</string>
+  <string name="station_list_connector_ac_three_phase_desc">AC 3상 · 380V · 르노 조에 등 일부</string>
+  <string name="station_list_connector_dc_chademo_desc">DC 급속 · 약 50~500V · 구형 쏘울EV · 아이오닉 · 리프</string>
+  <string name="station_list_connector_dc_combo_desc">DC 급속 · 약 200~1000V · 현대 · 기아 · 제네시스 등 국내 표준</string>
+  <string name="station_list_connector_nacs_desc">DC 급속 · 테슬라 표준 · 신규 충전소</string>
 </resources>
