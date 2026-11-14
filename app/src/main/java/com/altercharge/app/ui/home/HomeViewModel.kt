@@ -64,11 +64,13 @@ class HomeViewModel(
 
             try {
                 val cards = loader.load(vehicle, location)
+                val recommended = cards.recommended
 
                 _uiState.update {
                     it.copy(
                         isLoading = false,
                         cards = cards,
+                        recommended = recommended,
                         vehicleStatus = reading.toCardVehicleStatusUiState(driverName, cards.vehicleStatus),
                     )
                 }

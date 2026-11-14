@@ -3,6 +3,7 @@ package com.altercharge.app.ui.home
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -10,17 +11,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.altercharge.app.R
 import com.altercharge.app.ui.card.driverecord.CardDriveRecord
 import com.altercharge.app.ui.card.info.CardInfo
 import com.altercharge.app.ui.card.info.cardInfoModeFor
 import com.altercharge.app.ui.card.station.CardStation
-import com.altercharge.app.ui.card.station.CardStationUiState
-import com.altercharge.app.ui.card.station.ChargeInfoTag
-import com.altercharge.app.ui.card.station.ChargeInfoType
-import com.altercharge.app.ui.card.station.ChargerStatus
-import com.altercharge.app.ui.card.station.ChipState
-import com.altercharge.app.ui.card.station.ChipTone
+import com.altercharge.app.ui.card.station.toCardStationUiState
 import com.altercharge.app.ui.card.stationlist.RecommendedStationList
 import com.altercharge.app.ui.card.vehiclestatus.CardVehicleStatus
 import com.altercharge.app.ui.card.vehiclestatus.ChargingState
@@ -34,7 +32,7 @@ import com.altercharge.app.ui.designsystem.theme.AlterChargeTheme
 
 /**
  * 임시 홈 화면 (#76). 카드마다 실제 값을 넣는다:
- * C 차량 상태(#79). R1 추천 충전소 · R2 주변 충전소 목록은 아직 목업이다.
+ * C 차량 상태(#79) · R1 추천 충전소(#82). R2 주변 충전소 목록은 아직 목업이다.
  * 위치는 아직 FusedLocation이 Coming Soon이라 MainActivity가 넘긴 고정 좌표를 쓴다.
  */
 @Composable
@@ -55,23 +53,9 @@ fun HomeScreen(
         LaunchedEffect(Unit) {
             viewModel.loadHome()
         }
-        // TODO: R1-충전소 카드 실제 데이터로 변경
 
-        val dummyStation = CardStationUiState(
-            chipState = ChipState(
-                text = "추천",
-                chipTone = ChipTone.ACCENT
-            ),
-            availableChargerCount = 3,
-            occupiedChargerCount = 5,
-            chargerStatus = ChargerStatus.AVAILABLE,
-            stationName = "연희동 주차장",
-            chargerInfo = listOf(
-                ChargeInfoTag.Text(text = "100Km", type = ChargeInfoType.POWER)
-            ),
-            distance = 1.2,
-            myChargingCount = 12
-        )
+        val chipRecommended = stringResource(R.string.card_station_chip_recommended)
+        val chipFallback = stringResource(R.string.card_station_chip_fallback)
 
         AlterChargeTheme() {
             AlterChargeLayout(
@@ -114,7 +98,33 @@ fun HomeScreen(
                         CardVehicleStatus(state = status)
                     }
                 },
-                r1 = { CardStation(state = dummyStation) },
+                r1 = {
+                    val recommended = uiState.recommended
+                    if (recommended != null) {
+                        CardStation(
+                            state = recommended.toCardStationUiState(
+                                chipText = if (recommended.fallbackUsed) chipFallback else chipRecommended,
+                                // 방문 횟수는 아직 세지 않는다 (REQ_ST_008)
+                                myChargingCount = 0,
+                            )
+                        )
+                    } else {
+                        // TODO: 추천 충전소가 없을 때 보여 줄 UI로 교체
+                        androidx.compose.foundation.layout.Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 32.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            val fallbackText = when {
+                                uiState.isLoading -> "추천 충전소를 불러오는 중..."
+                                uiState.error != null -> "추천 충전소가 없습니다 (${uiState.error})"
+                                else -> "추천 충전소가 없습니다"
+                            }
+                            androidx.compose.material3.Text(text = fallbackText)
+                        }
+                    }
+                },
                 r2 = {
                     RecommendedStationList(
                         modifier = Modifier.fillMaxSize()
