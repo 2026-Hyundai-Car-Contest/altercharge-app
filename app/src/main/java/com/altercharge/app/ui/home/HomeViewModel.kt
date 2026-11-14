@@ -1,7 +1,5 @@
 package com.altercharge.app.ui.home
 
-import com.altercharge.app.data.home.toSelectedStationInfo
-import com.altercharge.app.data.remote.model.StationSummary
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -10,9 +8,11 @@ import com.altercharge.app.data.home.LatLng
 import com.altercharge.app.data.home.VehicleReading
 import com.altercharge.app.data.home.toCardVehicleStatusUiState
 import com.altercharge.app.data.home.toRouteDestination
+import com.altercharge.app.data.home.toSelectedStationInfo
 import com.altercharge.app.data.local.VisitCountStore
 import com.altercharge.app.data.navi.StationNavigator
 import com.altercharge.app.data.remote.freshness.RefreshRule
+import com.altercharge.app.data.remote.model.StationSummary
 import com.altercharge.app.data.station.StationRepository
 import com.altercharge.app.data.upload.ChargingEventRecorder
 import com.altercharge.app.data.vehicle.VehicleTelemetry
@@ -166,6 +166,12 @@ class HomeViewModel(
         _uiState.update {
             it.copy(selectedStation = station.toSelectedStationInfo(), myVisitCount = visits.count(station.stationId))
         }
+    }
+
+    /** 목록이 새로 오면 고른 충전소 값(가용 대수 · 관측 시각)을 새 값으로 바꾼다. 선택은 그대로 둔다 */
+    fun refreshSelectedStation(station: StationSummary) {
+        if (_uiState.value.selectedStation?.stationId != station.stationId) return
+        _uiState.update { it.copy(selectedStation = station.toSelectedStationInfo()) }
     }
 
     /** 정렬을 바꾸면 원래 추천으로 돌아간다 (REQ_SL_006) */

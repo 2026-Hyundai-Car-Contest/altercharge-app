@@ -1,8 +1,6 @@
 /** R1 추천 충전소 카드 값 (REQ_ST_007). 추천 응답(03)에 없는 주소 · 충전기는 상세(02)로 채운다 */
 package com.altercharge.app.data.home
 
-import java.time.Instant
-import com.altercharge.app.data.remote.model.StationSummary
 import com.altercharge.app.data.navi.RouteDestination
 import com.altercharge.app.data.remote.model.ChargerDetail
 import com.altercharge.app.data.remote.model.ConnectorType
@@ -10,6 +8,8 @@ import com.altercharge.app.data.remote.model.Recommendation
 import com.altercharge.app.data.remote.model.RecommendationReason
 import com.altercharge.app.data.remote.model.SpeedCategory
 import com.altercharge.app.data.remote.model.StationDetail
+import com.altercharge.app.data.remote.model.StationSummary
+import java.time.Instant
 
 /**
  * R1 추천 충전소 카드에 필요한 값 (REQ_ST_007).

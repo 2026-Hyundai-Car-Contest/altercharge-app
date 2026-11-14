@@ -1,15 +1,16 @@
 /** 추천 충전소 정보 → R1 카드 (REQ_ST_007) */
 package com.altercharge.app.ui.card.station
 
-import com.altercharge.app.data.remote.freshness.validityOf
-import com.altercharge.app.data.remote.freshness.Validity
-import com.altercharge.app.data.remote.freshness.AVAILABILITY_VALIDITY
-import java.time.Instant
 import com.altercharge.app.R
 import com.altercharge.app.data.home.RecommendedStationInfo
+import com.altercharge.app.data.remote.freshness.AVAILABILITY_VALIDITY
+import com.altercharge.app.data.remote.freshness.Validity
+import com.altercharge.app.data.remote.freshness.validityOf
+import com.altercharge.app.data.remote.model.ChargerStatus as RemoteChargerStatus
 import com.altercharge.app.data.remote.model.SpeedCategory
 import com.altercharge.app.data.station.displayKm
 import com.altercharge.app.data.station.speedCategoryOf
+import java.time.Instant
 import kotlin.math.roundToInt
 
 /**
@@ -60,7 +61,4 @@ private fun RecommendedStationInfo.availabilityStatus(now: Instant): ChargerStat
     else -> ChargerStatus.AVAILABLE
 }
 
-private val INSPECTION_STATUSES = setOf(
-    com.altercharge.app.data.remote.model.ChargerStatus.MAINTENANCE,
-    com.altercharge.app.data.remote.model.ChargerStatus.STOPPED,
-)
+private val INSPECTION_STATUSES = setOf(RemoteChargerStatus.MAINTENANCE, RemoteChargerStatus.STOPPED)

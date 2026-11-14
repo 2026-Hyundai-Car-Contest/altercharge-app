@@ -11,6 +11,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
@@ -67,9 +70,18 @@ fun HomeScreen(
                 viewModel.loadHome()
             }
 
-            // 정렬을 바꾸면 고른 충전소를 놓고 원래 추천으로 돌아간다 (REQ_SL_006)
+            // 정렬을 바꾸면 고른 충전소를 놓고 원래 추천으로 돌아간다 (REQ_SL_006).
+            // 화면을 다시 만들 때는 선택을 유지해야 해서, 바로 전 정렬과 다를 때만 지운다
+            var lastSort by rememberSaveable { mutableStateOf(stationState.sort) }
             LaunchedEffect(stationState.sort) {
-                viewModel.clearSelectedStation()
+                if (stationState.sort != lastSort) viewModel.clearSelectedStation()
+                lastSort = stationState.sort
+            }
+            // 목록이 새로 오면 고른 충전소도 새 가용 대수로 바꾼다
+            LaunchedEffect(stationState.items) {
+                uiState.selectedStation?.let { selected ->
+                    stationViewModel.summaryOf(selected.stationId)?.let(viewModel::refreshSelectedStation)
+                }
             }
 
             // 길 안내 결과는 짧은 안내로 한 번만 알린다 (빈 충전기 없음 · 오프라인 등, REQ_BR_004 예외)
