@@ -84,6 +84,7 @@ app/src/main/java/com/altercharge/app/
 ## 알려진 한계
 
 - **1차 시연은 차량 값과 위치가 목업입니다.** 배터리 · 주행 가능 거리 · 충전 상태는 시안과 같은 고정 값(`MockVehicleTelemetrySource`)이고, 위치는 서울시청 좌표입니다. 차량 값을 읽는 부분은 `VehicleTelemetrySource` 하나로 모아 두어 Pleos Vehicle SDK 구현으로 바꾸면 화면 · 판정 코드는 그대로 씁니다. 목업 값으로는 방문 기록 · 충전 이벤트를 남기지 않습니다.
+- 상단 바의 외부 기온은 Pleos Vehicle SDK에 값이 없어(실내 온도만 제공) 1차에서는 표시하지 않습니다.
 - Pleos의 TextToSpeech, SpeechToText, FusedLocation은 아직 Coming Soon이라 음성 안내는 2차에서 만듭니다.
 - 충전 기록은 공모전 서버 정책상 테스트(MOCK) 데이터로 저장되어 방문 횟수에는 반영되지 않습니다.
 - 충전소 이름과 주소는 한국환경공단 원본(한국어)을 그대로 보여 줍니다.
