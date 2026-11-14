@@ -24,7 +24,6 @@ import com.altercharge.app.ui.designsystem.layout.AlterChargeLayout
 import androidx.compose.runtime.getValue
 import com.altercharge.app.data.home.LatLng
 import com.altercharge.app.data.home.VehicleReading
-import com.altercharge.app.debug.VehicleStatusCatalog
 import com.altercharge.app.ui.card.driverecord.CardDriveRecord
 import com.altercharge.app.ui.card.station.CardStation
 import com.altercharge.app.ui.card.station.CardStationUiState

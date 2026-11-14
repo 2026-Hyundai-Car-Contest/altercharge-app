@@ -51,6 +51,11 @@ jobs:
         if: steps.project.outputs.exists == 'true'
         run: ./gradlew assembleDebug
 
+      # 제출본은 release라 디버그 전용 코드(src/debug)를 main에서 참조하면 여기서 잡는다. 서명 없이 컴파일만 본다.
+      - name: Release 컴파일
+        if: steps.project.outputs.exists == 'true'
+        run: ./gradlew compileReleaseKotlin
+
       # main에 합쳐질 때마다 디버그 APK를 Actions 결과물(Artifacts)로 보관한다. (서명 키 불필요, 30일 보관)
       - name: 디버그 APK 보관
         if: steps.project.outputs.exists == 'true' && github.event_name == 'push'
