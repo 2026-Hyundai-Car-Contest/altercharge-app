@@ -1,8 +1,8 @@
 package com.altercharge.app.ui.home
 
-import com.altercharge.app.data.navi.NavigationOutcome
 import com.altercharge.app.data.home.HomeCards
 import com.altercharge.app.data.home.RecommendedStationInfo
+import com.altercharge.app.data.navi.NavigationOutcome
 import com.altercharge.app.ui.card.vehiclestatus.CardVehicleStatusUiState
 
 data class HomeUiState(

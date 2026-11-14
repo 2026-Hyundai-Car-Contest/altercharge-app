@@ -1,7 +1,5 @@
 package com.altercharge.app.ui.home
 
-import com.altercharge.app.data.home.toRouteDestination
-import com.altercharge.app.data.navi.StationNavigator
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -9,8 +7,10 @@ import com.altercharge.app.data.home.HomeCardsLoader
 import com.altercharge.app.data.home.LatLng
 import com.altercharge.app.data.home.VehicleReading
 import com.altercharge.app.data.home.toCardVehicleStatusUiState
-import com.altercharge.app.data.remote.freshness.RefreshRule
+import com.altercharge.app.data.home.toRouteDestination
 import com.altercharge.app.data.local.VisitCountStore
+import com.altercharge.app.data.navi.StationNavigator
+import com.altercharge.app.data.remote.freshness.RefreshRule
 import com.altercharge.app.data.station.StationRepository
 import com.altercharge.app.data.upload.ChargingEventRecorder
 import com.altercharge.app.data.vehicle.VehicleTelemetry
@@ -19,6 +19,8 @@ import com.altercharge.app.data.vehicle.isChargeStart
 import com.altercharge.app.domain.time.KoreaZone
 import com.altercharge.app.ui.card.driverecord.CardDriveRecordUiState
 import com.altercharge.app.ui.card.vehiclestatus.ChargingState
+import java.time.Clock
+import java.time.LocalDate
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -26,8 +28,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.Clock
-import java.time.LocalDate
 
 class HomeViewModelFactory(
     private val loader: HomeCardsLoader,
@@ -152,6 +152,11 @@ class HomeViewModel(
 
     fun onNavigationResultShown() {
         _uiState.update { it.copy(navigationResult = null) }
+    }
+
+    override fun onCleared() {
+        navigator.release()
+        super.onCleared()
     }
 
     fun showPreviousWeek() = moveWeek(-1)

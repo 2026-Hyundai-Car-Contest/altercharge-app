@@ -69,4 +69,14 @@ class StationNavigatorTest {
         launcher.accept = false
         assertEquals(NavigationOutcome.Failed, navigator.navigate(destination))
     }
+
+    @Test
+    fun 서버_오류면_실패() = runBlocking {
+        val failing = StationNavigator(
+            AlterChargeApi("https://example.test/api/v1/") { _, _, _ -> HttpResponse(500, """{"error":"INTERNAL","message":"x"}""") },
+            launcher,
+        )
+        assertEquals(NavigationOutcome.Failed, failing.navigate(destination))
+        assertTrue(launcher.launched.isEmpty())
+    }
 }

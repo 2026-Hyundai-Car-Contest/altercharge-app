@@ -22,6 +22,9 @@ data class RouteDestination(
 fun interface RouteLauncher {
     /** @return 목적지 요청을 내비에 넘겼으면 true. 경로 탐색 결과는 내비가 화면에 보여 준다 */
     suspend fun launch(destination: RouteDestination): Boolean
+
+    /** 내비 연결을 닫는다. 화면이 아니라 홈 ViewModel이 끝날 때 부른다 (화면을 다시 만들어도 연결을 재사용) */
+    fun release() {}
 }
 
 sealed interface NavigationOutcome {
@@ -52,8 +55,11 @@ class StationNavigator(
                 launcher.launch(destination) -> NavigationOutcome.Started
                 else -> NavigationOutcome.Failed
             }
-            is ApiResult.NetworkError, ApiResult.NotConfigured -> NavigationOutcome.Offline
+            is ApiResult.NetworkError -> NavigationOutcome.Offline
+            // 서버 주소 미설정 · 서버 오류 · 응답 형식 오류
             else -> NavigationOutcome.Failed
         }
     }
+
+    fun release() = launcher.release()
 }

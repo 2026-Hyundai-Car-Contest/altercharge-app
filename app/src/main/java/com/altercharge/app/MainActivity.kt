@@ -1,7 +1,5 @@
 package com.altercharge.app
 
-import com.altercharge.app.data.navi.StationNavigator
-import com.altercharge.app.data.navi.PleosRouteLauncher
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,6 +14,8 @@ import com.altercharge.app.data.local.OfflineSnapshotStore
 import com.altercharge.app.data.local.SharedPreferencesStore
 import com.altercharge.app.data.local.StationCacheStore
 import com.altercharge.app.data.local.VisitCountStore
+import com.altercharge.app.data.navi.PleosRouteLauncher
+import com.altercharge.app.data.navi.StationNavigator
 import com.altercharge.app.data.remote.AlterChargeApi
 import com.altercharge.app.data.station.StationRepository
 import com.altercharge.app.data.upload.ChargingEventRecorder
@@ -27,8 +27,6 @@ import com.altercharge.app.ui.station.StationListViewModel
 import com.altercharge.app.ui.station.StationListViewModelFactory
 
 class MainActivity : ComponentActivity() {
-    private lateinit var routeLauncher: PleosRouteLauncher
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -54,8 +52,8 @@ class MainActivity : ComponentActivity() {
         val telemetry = MockVehicleTelemetrySource()
         val driverName = getString(R.string.common_driver_name)
         // 길 안내 (REQ_BR_004 · REQ_BR_005): 서버 상태 확인 후 Pleos 내비 목적지 변경
-        routeLauncher = PleosRouteLauncher(applicationContext)
-        val navigator = StationNavigator(api = api, launcher = routeLauncher)
+        // 화면을 다시 만들면 ViewModel은 처음 만든 navigator를 계속 쓴다. 연결은 ViewModel.onCleared에서 닫는다
+        val navigator = StationNavigator(api = api, launcher = PleosRouteLauncher(applicationContext))
 
         setContent {
             val homeViewModel: HomeViewModel = viewModel(
@@ -89,9 +87,4 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onDestroy() {
-        // 내비 서비스 연결을 닫는다 (NaviHelper release)
-        if (::routeLauncher.isInitialized) routeLauncher.release()
-        super.onDestroy()
-    }
 }
