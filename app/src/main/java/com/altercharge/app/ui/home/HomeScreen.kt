@@ -29,15 +29,17 @@ import com.altercharge.app.ui.designsystem.component.StatusValue
 import com.altercharge.app.ui.designsystem.layout.AlterChargeLayout
 import com.altercharge.app.ui.designsystem.layout.LocalAppLayout
 import com.altercharge.app.ui.designsystem.theme.AlterChargeTheme
+import com.altercharge.app.ui.station.StationListViewModel
 
 /**
  * 임시 홈 화면 (#76). 카드마다 실제 값을 넣는다:
- * C 차량 상태(#79) · R1 추천 충전소(#82). R2 주변 충전소 목록은 아직 목업이다.
+ * C 차량 상태(#79) · R1 추천 충전소(#82) · R2 주변 충전소 목록(#84 ~ #88).
  * 위치는 아직 FusedLocation이 Coming Soon이라 MainActivity가 넘긴 고정 좌표를 쓴다.
  */
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel
+    viewModel: HomeViewModel,
+    stationViewModel: StationListViewModel,
 ) {
     Column(
         modifier = Modifier
@@ -49,9 +51,14 @@ fun HomeScreen(
 
         val uiState by viewModel.uiState.collectAsState()
         val cards = uiState.cards
+        val stationState by stationViewModel.uiState.collectAsState()
 
         LaunchedEffect(Unit) {
             viewModel.loadHome()
+        }
+        // 충전이 시작돼 방문이 세어지면 목록의 방문 횟수 · 방문순도 바로 쓸 수 있게 한다 (REQ_ST_008)
+        LaunchedEffect(uiState.myVisitCount) {
+            stationViewModel.onVisitsChanged()
         }
 
         val chipRecommended = stringResource(R.string.card_station_chip_recommended)
@@ -126,7 +133,9 @@ fun HomeScreen(
                 },
                 r2 = {
                     RecommendedStationList(
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
+                        state = stationState,
+                        onStationClick = {},
                     )
                 }
             )
