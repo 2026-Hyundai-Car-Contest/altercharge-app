@@ -14,9 +14,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
@@ -73,13 +70,6 @@ fun HomeScreen(
                 viewModel.loadHome()
             }
 
-            // 정렬을 바꾸면 고른 충전소를 놓고 원래 추천으로 돌아간다 (REQ_SL_006).
-            // 화면을 다시 만들 때는 선택을 유지해야 해서, 바로 전 정렬과 다를 때만 지운다
-            var lastSort by rememberSaveable { mutableStateOf(stationState.sort) }
-            LaunchedEffect(stationState.sort) {
-                if (stationState.sort != lastSort) viewModel.clearSelectedStation()
-                lastSort = stationState.sort
-            }
             // 목록이 새로 오면 고른 충전소도 새 가용 대수로 바꾼다
             LaunchedEffect(stationState.items) {
                 uiState.selectedStation?.let { selected ->
@@ -181,7 +171,7 @@ fun HomeScreen(
                                     .fillMaxWidth()
                                     .height(cardStationHeightFor(LocalAppLayout.current))
                                     .clip(RoundedCornerShape(AlterRadius.XXLarge))
-                                    .background(AlterTheme.colors.surface),
+                                    .background(AlterTheme.colors.containerBackground),
                             )
                         } else {
                             CardStationEmpty(
@@ -205,7 +195,12 @@ fun HomeScreen(
                                 startVoiceSearch()
                             }
                         },
-                        onSortChange = stationViewModel::onSortChange,
+                        // 사용자가 정렬을 바꾸면 고른 충전소를 놓고 원래 추천으로 돌아간다 (REQ_SL_006).
+                        // 검색 결과에 방문 기록이 없어 정렬이 저절로 바뀔 때는 선택을 유지한다
+                        onSortChange = { sort ->
+                            stationViewModel.onSortChange(sort)
+                            viewModel.clearSelectedStation()
+                        },
                         onFilterChange = stationViewModel::onFilterChange,
                         onStationClick = { item ->
                             stationViewModel.summaryOf(item.stationId)?.let(viewModel::onStationSelected)

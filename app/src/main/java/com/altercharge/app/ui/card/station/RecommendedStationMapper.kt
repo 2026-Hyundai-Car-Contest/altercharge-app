@@ -54,12 +54,12 @@ private fun RecommendedStationInfo.chargerInfoTags(): List<ChargeInfoTag> {
 }
 
 /**
- * Figma availability. 상세의 충전기가 모두 점검 · 정지면 점검 중(길 안내 막음), 관측 15분이 지나면 정보 없음.
+ * Figma availability. 관측 15분이 지나면 정보 없음(점검 상태도 오래된 값이라 믿지 않는다), 상세의 충전기가 모두 점검 · 정지면 점검 중(길 안내 막음).
  * 가용 0곳만으로는 점검 중이라고 단정할 수 없어 available(0 / 전체)로 둔다.
  */
 private fun RecommendedStationInfo.availabilityStatus(now: Instant): ChargerStatus = when {
-    chargers.isNotEmpty() && chargers.all { it.status in INSPECTION_STATUSES } -> ChargerStatus.UNDER_INSPECTION
     validityOf(statusObservedAt, now, AVAILABILITY_VALIDITY) == Validity.EXPIRED -> ChargerStatus.UNKNOWN
+    chargers.isNotEmpty() && chargers.all { it.status in INSPECTION_STATUSES } -> ChargerStatus.UNDER_INSPECTION
     else -> ChargerStatus.AVAILABLE
 }
 

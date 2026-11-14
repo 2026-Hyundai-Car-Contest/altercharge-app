@@ -1,6 +1,12 @@
 package com.altercharge.app.ui.card.stationlist
 
 import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -137,7 +143,7 @@ fun RecommendedStationList(
         // 받아 둔 충전소가 아예 없으면 헤더만 남기고 검색 · 필터 · 목록을 숨긴다 (Figma selection = empty, 807:59523).
         // 검색 · 필터 결과가 없을 때는 조건을 바꿀 수 있게 그대로 둔다
         if (state.showEmptyIllustration) {
-            StationListEmpty(modifier = Modifier.weight(1f))
+            StationListEmpty(offline = state.offline, modifier = Modifier.weight(1f))
             return@Column
         }
 
@@ -168,10 +174,24 @@ fun RecommendedStationList(
         }
 
         // 충전소 목록
+        val listState = rememberLazyListState()
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
+                .weight(1f)
+                // Figma: 아래에 더 있으면 마지막 항목이 흐려진다. 끝까지 내리면 흐림을 없앤다
+                .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+                .drawWithContent {
+                    drawContent()
+                    if (listState.canScrollForward) {
+                        val fadeStart = ((size.height - LIST_FADE_HEIGHT.toPx()) / size.height).coerceIn(0f, 1f)
+                        drawRect(
+                            brush = Brush.verticalGradient(fadeStart to Color.Black, 1f to Color.Transparent),
+                            blendMode = BlendMode.DstIn,
+                        )
+                    }
+                },
             // Figma list gap 8
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
@@ -187,7 +207,7 @@ fun RecommendedStationList(
 }
 
 @Composable
-private fun StationListEmpty(modifier: Modifier = Modifier) {
+private fun StationListEmpty(offline: Boolean, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
@@ -198,14 +218,26 @@ private fun StationListEmpty(modifier: Modifier = Modifier) {
             contentDescription = null,
             modifier = Modifier.size(width = 260.dp, height = 188.dp),
         )
+        // 오프라인이라 받아 둔 충전소가 없으면 연결되면 보여 준다고 알린다 (REQ_CM_006 예외, R1 빈 카드와 같은 문구)
         Text(
-            text = stringResource(R.string.station_list_empty_title),
+            text = stringResource(if (offline) R.string.card_station_empty_title else R.string.station_list_empty_title),
             style = AlterTheme.typography.bodyXSmall,
             color = AlterTheme.colors.textSecondary,
             textAlign = TextAlign.Center,
         )
+        if (offline) {
+            Text(
+                text = stringResource(R.string.card_station_empty_description),
+                style = AlterTheme.typography.labelXSmall,
+                color = AlterTheme.colors.textTertiary,
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }
+
+/** 목록 아래 흐림 높이 */
+private val LIST_FADE_HEIGHT = 40.dp
 
 @Composable
 private fun listNotice(state: StationListUiState): String? = when {

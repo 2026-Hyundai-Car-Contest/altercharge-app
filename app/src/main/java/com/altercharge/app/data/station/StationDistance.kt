@@ -1,6 +1,7 @@
 /**
  * 충전소까지 직선거리와 방문 판정 (REQ_SL_001 · REQ_ST_008).
- * 목록의 distanceMeters는 받은 시점 위치로 계산된 값이라, 저장해 둔 목록을 쓰거나 위치가 바뀌면 위치로 다시 계산한다 (REQ_CM_006).
+ * 목록의 distanceMeters는 받은 시점 위치로 서버가 계산한 값이다. 1차는 위치가 고정이라 저장한 목록도 그 값을 그대로 쓰고,
+ * 실제 위치를 쓰는 2차에서 저장 목록 거리를 여기서 다시 계산한다 (REQ_CM_006).
  */
 package com.altercharge.app.data.station
 
