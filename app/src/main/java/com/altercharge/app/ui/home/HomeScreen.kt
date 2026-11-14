@@ -134,7 +134,9 @@ fun HomeScreen(
                     RecommendedStationList(
                         modifier = Modifier.fillMaxSize()
                     )
-                }
+                },
+                // L2를 펼치면(상황 15) 카드가 길어져 왼쪽 열만 스크롤한다
+                leftColumnScrollable = cards?.driveRecord?.expanded == true,
             )
         }
     }
