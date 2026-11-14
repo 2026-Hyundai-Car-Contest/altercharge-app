@@ -39,6 +39,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.altercharge.app.R
 import com.altercharge.app.data.remote.model.ConnectorType
+import com.altercharge.app.data.station.ConnectorFilter
+import com.altercharge.app.data.station.POWER_STEPS
+import com.altercharge.app.data.station.PowerRange
+import com.altercharge.app.data.station.StationFilter
 import com.altercharge.app.data.station.StationSort
 import com.altercharge.app.ui.card.info.lastCheckedText
 import com.altercharge.app.ui.card.station.ChargingType
@@ -59,32 +63,39 @@ import com.altercharge.app.ui.station.StationListMessage
 import com.altercharge.app.ui.station.StationListUiState
 import com.altercharge.app.ui.station.VoiceSearchState
 
-data class ConnectorTypeFilter(
-    val id: String,
+/** 연결 타입 필터 한 줄 (REQ_SL_005). 설명 문구는 시안 핸드오프 값이다 */
+private data class ConnectorOption(
+    val filter: ConnectorFilter,
     val title: String,
     val description: String,
 )
 
-val defaultConnectorOptions = listOf(
-    ConnectorTypeFilter(
-        id = "ac_slow",
-        title = "AC 완속 (5핀, Type 1)",
+@Composable
+private fun connectorOptions(): List<ConnectorOption> = listOf(
+    ConnectorOption(
+        filter = ConnectorFilter.AC_SLOW,
+        title = "${stringResource(R.string.card_item_connector_ac_slow)} (5핀, Type 1)",
         description = "AC 단상 · 220V · 국내 대부분 차량",
     ),
-    ConnectorTypeFilter(
-        id = "ac_3phase",
-        title = "AC 3상 (7핀, Type 2)",
+    ConnectorOption(
+        filter = ConnectorFilter.AC_THREE_PHASE,
+        title = "${stringResource(R.string.card_item_connector_ac_three_phase)} (7핀, Type 2)",
         description = "AC 3상 · 380V · 르노 조에 등 일부",
     ),
-    ConnectorTypeFilter(
-        id = "dc_chademo",
-        title = "DC 차데모 (CHAdeMO)",
-        description = "DC 급속 · 약 50~500V · 구형 쏘울EV...",
+    ConnectorOption(
+        filter = ConnectorFilter.DC_CHADEMO,
+        title = "${stringResource(R.string.card_item_connector_dc_chademo)} (CHAdeMO)",
+        description = "DC 급속 · 약 50~500V · 구형 쏘울EV",
     ),
-    ConnectorTypeFilter(
-        id = "dc_combo",
-        title = "DC 콤보 (CCS1)",
+    ConnectorOption(
+        filter = ConnectorFilter.DC_COMBO,
+        title = "${stringResource(R.string.card_item_connector_dc_combo)} (CCS1)",
         description = "DC 급속 · 약 200~1000V · 현대 · 기아",
+    ),
+    ConnectorOption(
+        filter = ConnectorFilter.NACS,
+        title = stringResource(R.string.card_item_connector_nacs),
+        description = "DC 급속 · 테슬라 표준 · 신규 충전소",
     ),
 )
 
@@ -125,8 +136,8 @@ private val previewStations = listOf(
 )
 
 /**
- * R2 주변 충전소 목록 (REQ_SL_001 ~ REQ_SL_004).
- * 검색 · 정렬은 [state]의 값을 따르고, 바뀌면 콜백으로 알린다 (값은 ViewModel이 만든다).
+ * R2 주변 충전소 목록 (REQ_SL_001 ~ REQ_SL_005).
+ * 검색 · 정렬 · 필터는 [state]의 값을 따르고, 바뀌면 콜백으로 알린다 (값은 ViewModel이 만든다).
  */
 @Composable
 fun RecommendedStationList(
@@ -135,19 +146,20 @@ fun RecommendedStationList(
     onQueryChange: (String) -> Unit = {},
     onMicClick: () -> Unit = {},
     onSortChange: (StationSort) -> Unit = {},
+    onFilterChange: (StationFilter) -> Unit = {},
     onStationClick: (CardItemUiState) -> Unit = {},
 ) {
-    // 연결 타입 필터 상태
-    var isConnectorMenuExpanded by remember { mutableStateOf(false) }
-    var selectedConnectors by remember { mutableStateOf(setOf<String>()) }
-    var pendingConnectors by remember { mutableStateOf(setOf<String>()) }
+    val options = connectorOptions()
+    val filter = state.filter
 
-    // 속도 (충전 출력) 필터 상태
+    // 연결 타입 필터: 적용 전 선택은 메뉴 안에서만 바꾼다 (적용을 눌러야 목록에 반영)
+    var isConnectorMenuExpanded by remember { mutableStateOf(false) }
+    var pendingConnectors by remember { mutableStateOf(filter.connectors) }
+
+    // 속도 (충전 출력) 필터
     var isPowerMenuExpanded by remember { mutableStateOf(false) }
-    var minPower by remember { mutableIntStateOf(3) }
-    var maxPower by remember { mutableIntStateOf(350) }
-    var pendingMinPower by remember { mutableIntStateOf(3) }
-    var pendingMaxPower by remember { mutableIntStateOf(350) }
+    var pendingMinPower by remember { mutableIntStateOf(filter.power.minKw) }
+    var pendingMaxPower by remember { mutableIntStateOf(filter.power.maxKw) }
 
     // 방문 기록이 없으면 방문순을 고를 수 없다 (REQ_SL_004 예외)
     val sortItems = if (state.visitSortEnabled) {
@@ -155,8 +167,6 @@ fun RecommendedStationList(
     } else {
         listOf(StationSortType.DISTANCE)
     }
-
-    // 정렬은 화면에서 하지 않는다: 목록은 ViewModel이 정렬해서 준다 (REQ_SL_004)
 
     Column(
         verticalArrangement = Arrangement.spacedBy(AlterMargin.Normal),
@@ -175,7 +185,7 @@ fun RecommendedStationList(
             textAlign = TextAlign.Left,
         )
 
-        // 1. 검색바 (REQ_SL_002)
+        // 1. 검색바 (REQ_SL_002 · REQ_SL_003)
         SearchBar(
             modifier = Modifier.fillMaxWidth(),
             value = state.query,
@@ -183,7 +193,7 @@ fun RecommendedStationList(
             onMicClick = onMicClick,
         )
 
-        // 2. 필터 영역 (정렬 아이콘, 거리순/방문순, 연결 타입, 속도)
+        // 2. 필터 영역 (정렬, 연결 타입, 속도)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(AlterMargin.XSmall),
@@ -220,17 +230,14 @@ fun RecommendedStationList(
                     onItemSelected = { onSortChange(it.toSort()) },
                 )
 
-                // 연결 타입 필터 드롭다운
+                // 연결 타입 필터 드롭다운 (REQ_SL_005)
                 Box(modifier = Modifier.wrapContentSize(Alignment.TopStart)) {
-                    val isFiltered = selectedConnectors.isNotEmpty()
+                    val isFiltered = filter.connectors.isNotEmpty()
                     val connectorChipLabel = when {
-                        selectedConnectors.isEmpty() -> "연결 타입 전체"
-                        selectedConnectors.size == 1 -> {
-                            defaultConnectorOptions.firstOrNull { it.id == selectedConnectors.first() }
-                                ?.title?.substringBefore(" (") ?: "연결 타입 1개"
-                        }
-
-                        else -> "연결 타입 ${selectedConnectors.size}개"
+                        filter.connectors.isEmpty() -> stringResource(R.string.station_list_filter_connector_all)
+                        filter.connectors.size == 1 -> options.firstOrNull { it.filter == filter.connectors.first() }
+                            ?.title?.substringBefore(" (") ?: stringResource(R.string.station_list_filter_connector_all)
+                        else -> stringResource(R.string.station_list_filter_connector_count, filter.connectors.size)
                     }
 
                     Row(
@@ -244,7 +251,7 @@ fun RecommendedStationList(
                                 else AlterTheme.colors.surfaceHigh,
                             )
                             .clickable {
-                                pendingConnectors = selectedConnectors
+                                pendingConnectors = filter.connectors
                                 isConnectorMenuExpanded = true
                             }
                             .padding(start = 14.dp, end = 10.dp, top = 6.dp, bottom = 6.dp),
@@ -279,25 +286,23 @@ fun RecommendedStationList(
                         DropDownWrapper(
                             title = "연결 타입",
                             subTitle = "여러 개 선택",
-                            onReset = {
-                                pendingConnectors = emptySet()
-                            },
+                            onReset = { pendingConnectors = emptySet() },
                             onApply = {
-                                selectedConnectors = pendingConnectors
+                                onFilterChange(filter.copy(connectors = pendingConnectors))
                                 isConnectorMenuExpanded = false
                             },
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                defaultConnectorOptions.forEach { option ->
+                                options.forEach { option ->
                                     SelectableDropdownItem(
                                         title = option.title,
                                         description = option.description,
-                                        selected = option.id in pendingConnectors,
+                                        selected = option.filter in pendingConnectors,
                                         onClick = {
-                                            pendingConnectors = if (option.id in pendingConnectors) {
-                                                pendingConnectors - option.id
+                                            pendingConnectors = if (option.filter in pendingConnectors) {
+                                                pendingConnectors - option.filter
                                             } else {
-                                                pendingConnectors + option.id
+                                                pendingConnectors + option.filter
                                             }
                                         },
                                     )
@@ -308,13 +313,25 @@ fun RecommendedStationList(
                 }
             }
 
-            // 속도 (충전 출력) 필터 드롭다운
+            // 속도 (충전 출력) 필터 드롭다운 (REQ_SL_005)
             Box(modifier = Modifier.wrapContentSize(Alignment.TopStart)) {
-                val isFiltered = (minPower > 3 || maxPower < 350)
+                val isFiltered = !filter.power.isAll
                 val powerChipLabel = if (isFiltered) {
-                    "${minPower}~${maxPower}kW"
+                    if (filter.power.normalizedMaxKw >= POWER_STEPS.last()) {
+                        stringResource(
+                            R.string.station_list_filter_power_range_over,
+                            filter.power.normalizedMinKw,
+                            filter.power.normalizedMaxKw,
+                        )
+                    } else {
+                        stringResource(
+                            R.string.station_list_filter_power_range,
+                            filter.power.normalizedMinKw,
+                            filter.power.normalizedMaxKw,
+                        )
+                    }
                 } else {
-                    "속도 전체"
+                    stringResource(R.string.station_list_filter_power_all)
                 }
 
                 Row(
@@ -328,8 +345,8 @@ fun RecommendedStationList(
                             else AlterTheme.colors.surfaceHigh,
                         )
                         .clickable {
-                            pendingMinPower = minPower
-                            pendingMaxPower = maxPower
+                            pendingMinPower = filter.power.minKw
+                            pendingMaxPower = filter.power.maxKw
                             isPowerMenuExpanded = true
                         }
                         .padding(start = 14.dp, end = 10.dp, top = 6.dp, bottom = 6.dp),
@@ -363,14 +380,17 @@ fun RecommendedStationList(
                 ) {
                     DropDownWrapper(
                         title = "속도 (충전 출력)",
-                        subTitle = "${pendingMinPower}kW ~ ${pendingMaxPower}kW 이상",
+                        subTitle = if (pendingMaxPower >= POWER_STEPS.last()) {
+                            stringResource(R.string.station_list_filter_power_range_over, pendingMinPower, pendingMaxPower)
+                        } else {
+                            stringResource(R.string.station_list_filter_power_range, pendingMinPower, pendingMaxPower)
+                        },
                         onReset = {
-                            pendingMinPower = 3
-                            pendingMaxPower = 350
+                            pendingMinPower = POWER_STEPS.first()
+                            pendingMaxPower = POWER_STEPS.last()
                         },
                         onApply = {
-                            minPower = pendingMinPower
-                            maxPower = pendingMaxPower
+                            onFilterChange(filter.copy(power = PowerRange(pendingMinPower, pendingMaxPower)))
                             isPowerMenuExpanded = false
                         },
                     ) {
@@ -387,7 +407,7 @@ fun RecommendedStationList(
             }
         }
 
-        // 안내 줄: 불러오는 중 · 빈 목록 · 오프라인 · 검색 · 음성 안내 (REQ_CM_006 · REQ_SL_002 · REQ_SL_003)
+        // 안내 줄: 불러오는 중 · 빈 목록 · 오프라인 · 음성 안내 (REQ_CM_006 · REQ_SL_003)
         listNotice(state)?.let { notice ->
             Text(
                 text = notice,
@@ -397,7 +417,7 @@ fun RecommendedStationList(
             )
         }
 
-        // 3. 충전소 목록 (스크롤 가능한 LazyColumn)
+        // 3. 충전소 목록
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
@@ -421,6 +441,7 @@ private fun listNotice(state: StationListUiState): String? = when {
     state.message == StationListMessage.VOICE_PERMISSION -> stringResource(R.string.station_list_voice_permission)
     state.message == StationListMessage.VOICE_UNAVAILABLE -> stringResource(R.string.station_list_voice_unavailable)
     state.message == StationListMessage.VOICE_ERROR -> stringResource(R.string.station_list_voice_error)
+    state.isFilterEmpty -> stringResource(R.string.station_list_filter_empty)
     state.isLoading && state.items.isEmpty() -> stringResource(R.string.station_list_loading)
     state.items.isEmpty() -> stringResource(R.string.station_list_empty)
     state.offline && state.lastChecked != null ->
