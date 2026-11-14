@@ -1,7 +1,5 @@
 package com.altercharge.app.ui.card.station
 
-import androidx.compose.ui.res.pluralStringResource
-import com.altercharge.app.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -21,11 +19,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.altercharge.app.R
 import com.altercharge.app.data.remote.model.ConnectorType
 import com.altercharge.app.ui.card.stationitem.connectorLabelText
 import com.altercharge.app.ui.designsystem.component.IviButton
@@ -40,7 +40,10 @@ import com.altercharge.app.ui.designsystem.theme.AlterTheme
 @Composable
 fun CardStation(
     state: CardStationUiState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** "여기로 안내" (REQ_BR_004). 요청 중이면 [navigating]으로 버튼을 막는다 */
+    onNavigate: () -> Unit = {},
+    navigating: Boolean = false,
 ) {
     val shape = RoundedCornerShape(AlterRadius.XXLarge)
 
@@ -70,12 +73,14 @@ fun CardStation(
                 )
             }
 
-            // 충전소 이름
             Text(
                 text = state.stationName,
                 color = AlterTheme.colors.textPrimary,
                 fontWeight = AlterFontWeight.Strong,
-                fontSize = 32.sp
+                fontSize = 32.sp,
+                // Figma name은 한 줄(48). 긴 이름이 두 줄이 되면 카드가 길어져 R2가 밀린다
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
 
             // 충전소 주소 (REQ_ST_007 상세 정보). 상세를 못 받았으면 줄을 숨긴다
@@ -141,7 +146,9 @@ fun CardStation(
                     hierarchy = IviButtonHierarchy.Contrast,
                     size = IviButtonSize.Compact,
                     text = stringResource(R.string.card_station_navigate),
-                    onClick = {}
+                    onClick = onNavigate,
+                    // 점검 중이면 안내를 막는다 (Figma availability=fault · REQ_EX_004)
+                    enabled = !navigating && state.chargerStatus != ChargerStatus.UNDER_INSPECTION,
                 )
             }
         }
@@ -192,7 +199,8 @@ Row(
     }
     Text(
         text = displayText,
-        color = AlterTheme.colors.textPrimary,
+        // Figma tag value: text_dark_tertiary 20 regular
+        color = AlterTheme.colors.textTertiary,
         fontSize = 20.sp,
         lineHeight = 30.sp,
         modifier = modifier
@@ -207,9 +215,11 @@ fun ChargerAvailability(
     chargerStatus: ChargerStatus,
     modifier: Modifier = Modifier
 ) {
-    val chargerAvailableText =
-        if(chargerStatus == ChargerStatus.AVAILABLE) stringResource(R.string.card_station_availability_possible, "$availableChargerCount / $totalChargerCount")
-        else stringResource(R.string.card_station_availability_impossibility)
+    val chargerAvailableText = when (chargerStatus) {
+        ChargerStatus.AVAILABLE -> stringResource(R.string.card_station_availability_possible, "$availableChargerCount / $totalChargerCount")
+        ChargerStatus.UNDER_INSPECTION -> stringResource(R.string.card_station_availability_impossibility)
+        ChargerStatus.UNKNOWN -> stringResource(R.string.common_value_unavailable)
+    }
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -230,9 +240,9 @@ Row(
     )
     Text(
         text = chargerAvailableText,
-        color = AlterTheme.colors.textPrimary,
-        fontWeight = AlterFontWeight.Strong,
-        lineHeight = 30.sp,
+        // Figma value: 20 bold. 정보 없음은 text_dark_tertiary
+        style = AlterTheme.typography.bodyXXSmall,
+        color = if (chargerStatus == ChargerStatus.UNKNOWN) AlterTheme.colors.textTertiary else AlterTheme.colors.textPrimary,
         modifier = modifier
             .padding(start = AlterMargin.XSmall)
 
@@ -257,7 +267,6 @@ fun CardStationChip(
     )
 }
 
-// extension
 @Composable
 private fun ChipTone.backgroundColor(): Color {
     return when(this) {
@@ -269,7 +278,7 @@ private fun ChipTone.backgroundColor(): Color {
 @Composable
 private fun ChipTone.textColor(): Color {
     return when(this) {
-        ChipTone.ACCENT -> AlterTheme.colors.blue700
+        ChipTone.ACCENT -> AlterTheme.colors.blue500 // Figma chip_info tone=accent label = blue_500
         ChipTone.NEUTRAL -> AlterTheme.colors.contentNeutral
     }
 }
@@ -279,14 +288,16 @@ private fun ChargerStatus.statusColor(): Color {
     return when(this) {
         ChargerStatus.AVAILABLE -> AlterTheme.colors.blue500
         ChargerStatus.UNDER_INSPECTION -> AlterTheme.colors.negative
+        ChargerStatus.UNKNOWN -> UnknownDotColor
     }
 }
 
 @Composable
 private fun ChargerStatus.statusBackgroundColor(): Color {
     return when(this) {
-        ChargerStatus.AVAILABLE -> AlterTheme.colors.blue50
-        ChargerStatus.UNDER_INSPECTION -> AlterTheme.colors.negative.copy(alpha = 0.16f)
+        // Figma tag_seats bg는 세 상태 모두 16% 불투명도
+        ChargerStatus.AVAILABLE, ChargerStatus.UNKNOWN -> AlterTheme.colors.blue50.copy(alpha = SeatsBgAlpha)
+        ChargerStatus.UNDER_INSPECTION -> AlterTheme.colors.negative.copy(alpha = SeatsBgAlpha)
     }
 }
 
@@ -307,3 +318,8 @@ val samplePreviewUiState = CardStationUiState(
     connectorTypes = listOf(ConnectorType.DC_COMBO, ConnectorType.AC_SLOW)
 )
 
+/** Figma tag_seats · bg 불투명도 */
+private const val SeatsBgAlpha = 0.16f
+
+/** Figma basic_400 (라이트 · 다크 같은 값) */
+private val UnknownDotColor = Color(0xFFA4A8AE)

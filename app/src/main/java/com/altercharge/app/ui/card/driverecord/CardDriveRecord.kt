@@ -50,7 +50,7 @@ fun CardDriveRecord(
             onPreviousWeek = onPreviousWeek,
             onNextWeek = onNextWeek,
         )
-        // TODO 디자이너 확인: wf_landscape는 "타일 숨김"인데 펼침 시안(439:20131)은 타일이 있다. 지금은 펼치면 보여준다
+        // 시안 메모: wf_landscape는 "타일 숨김"인데 펼침 시안(439:20131)은 타일이 있다. 지금은 펼치면 보여준다
         ContentBlock(state = state, onToggleExpanded = onToggleExpanded)
     }
 }

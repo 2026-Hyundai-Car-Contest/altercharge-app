@@ -91,7 +91,8 @@ internal object ServerJson {
             navigationAllowed = getBoolean("navigationAllowed"),
             // 모르는 이유는 막는 쪽으로: 상태를 확인할 수 없다고 본다
             reasonCode = enumOr(requiredString("reasonCode"), NavigationReason.STATUS_UNKNOWN),
-            latestStatuses = getJSONArray("latestStatuses").strings().map { enumOr(it, ChargerStatus.UNKNOWN) },
+            // 배포 서버(2026-11-14)는 이 필드를 보내지 않는다: 없으면 빈 목록 (안내 여부는 navigationAllowed · reasonCode로 판단)
+            latestStatuses = optJSONArray("latestStatuses")?.strings()?.map { enumOr(it, ChargerStatus.UNKNOWN) }.orEmpty(),
             checkedAt = instant("checkedAt"),
         )
     }

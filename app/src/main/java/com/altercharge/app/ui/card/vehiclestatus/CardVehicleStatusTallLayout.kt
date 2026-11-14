@@ -45,7 +45,7 @@ internal fun TallLayout(
                 modifier = headlineModifier,
             )
         }
-        // TODO 디자이너 확인(변수 연결): landscape_tall 충전 중(366:37686) stage만 배경이
+        // 시안 메모(변수 연결): landscape_tall 충전 중(366:37686) stage만 배경이
         //   panel_station_list/item/enabled/container(흰색)에 연결돼 있다. 다른 variant는 stage/background(#F7F8FA).
         //   화면에 보이는 값(흰색)을 따랐다.
         val stageBackground = if (content.isCharging && spec.chargingStageOnSurface) {

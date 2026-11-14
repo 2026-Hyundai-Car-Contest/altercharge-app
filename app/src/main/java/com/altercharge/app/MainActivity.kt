@@ -14,6 +14,8 @@ import com.altercharge.app.data.local.OfflineSnapshotStore
 import com.altercharge.app.data.local.SharedPreferencesStore
 import com.altercharge.app.data.local.StationCacheStore
 import com.altercharge.app.data.local.VisitCountStore
+import com.altercharge.app.data.navi.PleosRouteLauncher
+import com.altercharge.app.data.navi.StationNavigator
 import com.altercharge.app.data.remote.AlterChargeApi
 import com.altercharge.app.data.station.StationRepository
 import com.altercharge.app.data.upload.ChargingEventRecorder
@@ -49,6 +51,9 @@ class MainActivity : ComponentActivity() {
         // 충전 상태 · SOC는 아직 차량 SDK 대신 목업이다 (REQ_VS_002 · REQ_VS_003)
         val telemetry = MockVehicleTelemetrySource()
         val driverName = getString(R.string.common_driver_name)
+        // 길 안내 (REQ_BR_004 · REQ_BR_005): 서버 상태 확인 후 Pleos 내비 목적지 변경
+        // 화면을 다시 만들면 ViewModel은 처음 만든 navigator를 계속 쓴다. 연결은 ViewModel.onCleared에서 닫는다
+        val navigator = StationNavigator(api = api, launcher = PleosRouteLauncher(applicationContext))
 
         setContent {
             val homeViewModel: HomeViewModel = viewModel(
@@ -60,6 +65,7 @@ class MainActivity : ComponentActivity() {
                     stations = stations,
                     location = DEMO_LOCATION,
                     driverName = driverName,
+                    navigator = navigator,
                 )
             )
             val stationViewModel: StationListViewModel = viewModel(
@@ -80,4 +86,5 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
 }

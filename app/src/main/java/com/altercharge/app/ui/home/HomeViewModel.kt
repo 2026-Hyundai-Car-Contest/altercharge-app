@@ -7,8 +7,12 @@ import com.altercharge.app.data.home.HomeCardsLoader
 import com.altercharge.app.data.home.LatLng
 import com.altercharge.app.data.home.VehicleReading
 import com.altercharge.app.data.home.toCardVehicleStatusUiState
-import com.altercharge.app.data.remote.freshness.RefreshRule
+import com.altercharge.app.data.home.toRouteDestination
+import com.altercharge.app.data.home.toSelectedStationInfo
 import com.altercharge.app.data.local.VisitCountStore
+import com.altercharge.app.data.navi.StationNavigator
+import com.altercharge.app.data.remote.freshness.RefreshRule
+import com.altercharge.app.data.remote.model.StationSummary
 import com.altercharge.app.data.station.StationRepository
 import com.altercharge.app.data.upload.ChargingEventRecorder
 import com.altercharge.app.data.vehicle.VehicleTelemetry
@@ -17,6 +21,8 @@ import com.altercharge.app.data.vehicle.isChargeStart
 import com.altercharge.app.domain.time.KoreaZone
 import com.altercharge.app.ui.card.driverecord.CardDriveRecordUiState
 import com.altercharge.app.ui.card.vehiclestatus.ChargingState
+import java.time.Clock
+import java.time.LocalDate
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -24,8 +30,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.Clock
-import java.time.LocalDate
 
 class HomeViewModelFactory(
     private val loader: HomeCardsLoader,
@@ -35,6 +39,7 @@ class HomeViewModelFactory(
     private val stations: StationRepository,
     private val location: LatLng?,
     private val driverName: String,
+    private val navigator: StationNavigator,
 ) : ViewModelProvider.Factory {
 
     override fun <T : ViewModel> create(
@@ -42,7 +47,7 @@ class HomeViewModelFactory(
     ): T {
         if (modelClass.isAssignableFrom(HomeViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return HomeViewModel(loader, telemetry, recorder, visits, stations, location, driverName) as T
+            return HomeViewModel(loader, telemetry, recorder, visits, stations, location, driverName, navigator) as T
         }
 
         throw IllegalArgumentException("Unknown ViewModel")
@@ -62,6 +67,7 @@ class HomeViewModel(
     private val stations: StationRepository,
     private val location: LatLng?,
     private val driverName: String,
+    private val navigator: StationNavigator,
     private val clock: Clock = Clock.system(KoreaZone),
 ) : ViewModel() {
 
@@ -112,7 +118,8 @@ class HomeViewModel(
                     isLoading = false,
                     cards = cards.copy(driveRecord = keepViewedWeek(cards.driveRecord)),
                     recommended = recommended,
-                    myVisitCount = recommended?.let { info -> visits.count(info.stationId) } ?: 0,
+                    // 목록에서 고른 충전소가 R1에 있으면 그 충전소의 방문 횟수를 유지한다 (REQ_SL_006)
+                    myVisitCount = (it.selectedStation ?: recommended)?.let { info -> visits.count(info.stationId) } ?: 0,
                     vehicleStatus = reading.toCardVehicleStatusUiState(driverName, cards.vehicleStatus),
                 )
             }
@@ -130,6 +137,58 @@ class HomeViewModel(
             }
             false
         }
+    }
+
+    /**
+     * R1 "여기로 안내" (REQ_BR_004 · REQ_BR_005). 서버에 충전기 상태를 다시 묻고, 갈 수 있으면 내비 목적지를 바꾼다.
+     * 요청 중에는 다시 누르지 못하게 한다.
+     */
+    fun navigateToRecommended() {
+        val station = _uiState.value.r1Station ?: return
+        if (_uiState.value.navigating) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(navigating = true) }
+            val outcome = navigator.navigate(station.toRouteDestination())
+            _uiState.update { it.copy(navigating = false, navigationResult = outcome) }
+        }
+    }
+
+    /**
+     * 목록에서 충전소를 고르면 R1에 추천 대신 보여 준다 (REQ_SL_006).
+     * 같은 충전소를 다시 고르면 원래 추천으로 돌아간다.
+     */
+    fun onStationSelected(station: StationSummary) {
+        val current = _uiState.value.selectedStation
+        if (current?.stationId == station.stationId) {
+            clearSelectedStation()
+            return
+        }
+        _uiState.update {
+            it.copy(selectedStation = station.toSelectedStationInfo(), myVisitCount = visits.count(station.stationId))
+        }
+    }
+
+    /** 목록이 새로 오면 고른 충전소 값(가용 대수 · 관측 시각)을 새 값으로 바꾼다. 선택은 그대로 둔다 */
+    fun refreshSelectedStation(station: StationSummary) {
+        if (_uiState.value.selectedStation?.stationId != station.stationId) return
+        _uiState.update { it.copy(selectedStation = station.toSelectedStationInfo()) }
+    }
+
+    /** 정렬을 바꾸면 원래 추천으로 돌아간다 (REQ_SL_006) */
+    fun clearSelectedStation() {
+        if (_uiState.value.selectedStation == null) return
+        _uiState.update { state ->
+            state.copy(selectedStation = null, myVisitCount = state.recommended?.let { visits.count(it.stationId) } ?: 0)
+        }
+    }
+
+    fun onNavigationResultShown() {
+        _uiState.update { it.copy(navigationResult = null) }
+    }
+
+    override fun onCleared() {
+        navigator.release()
+        super.onCleared()
     }
 
     fun showPreviousWeek() = moveWeek(-1)

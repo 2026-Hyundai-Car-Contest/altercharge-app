@@ -1,6 +1,6 @@
 /**
  * 충전소 음성 검색 (REQ_SL_003). 결과는 텍스트 검색(REQ_SL_002)과 같은 경로로 보낸다.
- * Pleos SpeechToText는 아직 Coming Soon이라 Android SpeechRecognizer를 쓴다.
+ * 1차는 Android SpeechRecognizer로 기기 기본 음성 인식 서비스를 쓴다(Pleos 에뮬레이터에서는 차량 플랫폼 서비스). 앱이 음성을 외부로 보내지 않는다.
  * 마이크 권한은 처음 누를 때 요청하고, 거부하면 다시 묻지 않고 안내만 한다.
  */
 package com.altercharge.app.ui.station

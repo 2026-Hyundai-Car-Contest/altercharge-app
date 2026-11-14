@@ -19,4 +19,11 @@
   <string name="card_station_refresh">Refresh</string>
   <string name="card_station_navigate">Navigate</string>
   <string name="card_station_empty_online_title">No station to recommend</string>
+  <!-- 길 안내 결과 (REQ_BR_004 · REQ_BR_005) -->
+  <string name="navigation_started">Destination sent to navigation</string>
+  <string name="navigation_offline">Navigation is available once connected</string>
+  <string name="navigation_failed">Couldn’t start navigation</string>
+  <string name="navigation_no_available_charger">No charger available right now</string>
+  <string name="navigation_station_unavailable">This station is unavailable right now</string>
+  <string name="navigation_status_unknown">Can’t check charger status</string>
 </resources>

@@ -83,7 +83,6 @@ fun FilterActionButtons(
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        // 초기화 버튼
         Surface(
             modifier = Modifier
                 .weight(1f)
@@ -105,7 +104,6 @@ fun FilterActionButtons(
             }
         }
 
-        // 적용 버튼
         Surface(
             modifier = Modifier
                 .weight(1f)

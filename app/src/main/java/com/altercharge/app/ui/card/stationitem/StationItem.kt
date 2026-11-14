@@ -1,8 +1,8 @@
 package com.altercharge.app.ui.card.stationitem
 
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,7 +18,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,14 +42,22 @@ import com.altercharge.app.ui.designsystem.theme.AlterTheme
 @Composable
 fun StationItem(
     state: CardItemUiState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** 목록에서 고른 충전소 (REQ_SL_006). Figma state=selected: blue_50 바탕 + blue_500 2px 테두리 */
+    selected: Boolean = false,
 ) {
-    // 전체 컨테이너
     Column(
         modifier = modifier
             .fillMaxWidth()
+            // Figma item 그림자: y 2 · blur 8 · 검정 5%
+            .shadow(elevation = 2.dp, shape = RoundedCornerShape(AlterRadius.Small), ambientColor = ItemShadow, spotColor = ItemShadow)
             .clip(RoundedCornerShape(AlterRadius.Small))
-            .background(AlterTheme.colors.background)
+            // Figma item/enabled/container = basic_00(라이트 흰색 · 다크 #131417)
+            .background(if (selected) AlterTheme.colors.blue50 else AlterTheme.colors.surface)
+            .then(
+                if (selected) Modifier.border(2.dp, AlterTheme.colors.blue500, RoundedCornerShape(AlterRadius.Small))
+                else Modifier
+            )
             .padding(vertical = 10.dp, horizontal = 16.dp)
     ) {
         // 충전소명(좌측), 충전소자리(우측)
@@ -55,11 +66,11 @@ fun StationItem(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            // 충전소명
             Text(
                 text = state.stationName,
                 fontWeight = AlterFontWeight.Strong,
-                color = AlterTheme.colors.textPrimary,
+                // Figma name: text_dark_secondary
+                color = AlterTheme.colors.textSecondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
@@ -94,15 +105,9 @@ fun StationItem(
                         color = AlterTheme.colors.textPrimary,
                         modifier = Modifier.padding(start = 3.dp)
                     )
+                    // Figma seats: "2" · "/4" · "대" (사선과 전체 수는 붙여 쓴다)
                     Text(
-                        text = "/",
-                        fontSize = 16.sp,
-                        lineHeight = 24.sp,
-                        color = AlterTheme.colors.textTertiary,
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
-                    Text(
-                        text = state.totalChargerCount.toString(),
+                        text = "/${state.totalChargerCount}",
                         fontSize = 16.sp,
                         lineHeight = 24.sp,
                         color = AlterTheme.colors.textTertiary,
@@ -175,7 +180,6 @@ fun StationItem(
     }
 }
 
-// extension
 
 @Composable
 private fun ChargingType.image(): Int {
@@ -241,3 +245,6 @@ private fun StationItemListDarkKoPreview() {
         }
     }
 }
+
+/** Figma station_item 그림자 색: #141417 5% */
+private val ItemShadow = Color(0x0D141417)

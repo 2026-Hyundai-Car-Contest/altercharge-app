@@ -7,12 +7,13 @@ enum class ChipTone {
     NEUTRAL
 }
 
+/** Figma card_station availability: available · fault(점검 중) · unknown(정보 없음) */
 enum class ChargerStatus {
     AVAILABLE,          // 사용 가능
-    UNDER_INSPECTION    // 점검 중
+    UNDER_INSPECTION,   // 점검 중: 길 안내 버튼을 막는다 (REQ_EX_004)
+    UNKNOWN,            // 가용 대수 유효 기간(15분)이 지나 확인할 수 없음 (REQ_CM_009)
 }
 
-// 텍스트와 아이콘으로 분리하고 다시 충전유형과 전압으로 분리
 sealed class ChargeInfoTag {
     abstract val text: String
     abstract val type: ChargeInfoType
