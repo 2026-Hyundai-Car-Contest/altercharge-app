@@ -1,5 +1,7 @@
 package com.altercharge.app.ui.home
 
+import com.altercharge.app.ui.card.vehiclestatus.CardVehicleStatusUiState
+import androidx.compose.runtime.State
 import java.time.format.DateTimeFormatter
 import java.time.LocalTime
 import com.altercharge.app.domain.time.KoreaZone
@@ -97,19 +99,10 @@ fun HomeScreen(
                 stationViewModel.onVisitsChanged()
             }
 
-            // 상단 바 시각: 분이 바뀔 때마다 다시 그린다
-            val statusBarTime by produceState(initialValue = currentStatusBarTime()) {
-                while (true) {
-                    delay(60_000L - System.currentTimeMillis() % 60_000L)
-                    value = currentStatusBarTime()
-                }
-            }
+            val statusBarTime by rememberStatusBarTime()
 
             // 분이 바뀌면 차량 값도 다시 읽어 충전 완료 예정 시각을 상단 바 시각에 맞춘다
             LaunchedEffect(statusBarTime) { viewModel.refreshVehicleStatus() }
-
-            val chipRecommended = stringResource(R.string.card_station_chip_recommended)
-            val chipFallback = stringResource(R.string.card_station_chip_fallback)
 
             // 음성 검색 (REQ_SL_003). 오프라인에서는 검색할 수 없어 마이크를 눌러도 안내만 한다
             val startVoiceSearch = rememberVoiceSearch(
@@ -119,23 +112,7 @@ fun HomeScreen(
             )
 
             AlterChargeLayout(
-                statusBar = {
-                    StatusBar(
-                        StatusBarUiState(
-                            // 충전 중이면 충전 중, 아니면 주차 중 (REQ_VS_002 목업 충전 상태)
-                            if (uiState.vehicleStatus?.charging == ChargingState.CHARGING) DriveState.CHARGING
-                            else DriveState.PARKED,
-                            battery = uiState.vehicleStatus?.socPercent?.let { StatusValue.Ready(it) }
-                                ?: StatusValue.Unavailable,
-                            range = uiState.vehicleStatus?.rangeKm?.let { StatusValue.Ready(it) }
-                                ?: StatusValue.Unavailable,
-                            // 차량 온도는 아직 SDK 값이 없어 숨긴다 (목업 숫자를 지어내지 않는다)
-                            temperatureC = null,
-                            // 목록의 "14:30 기준" · 충전 완료 예정 시각과 같은 시계(한국 시간)를 쓴다
-                            time = statusBarTime,
-                        )
-                    )
-                },
+                statusBar = { StatusBar(statusBarStateOf(uiState.vehicleStatus, time = statusBarTime)) },
                 l1 = {
                     cards?.let {
                         CardInfo(
@@ -169,40 +146,11 @@ fun HomeScreen(
                     }
                 },
                 r1 = {
-                    // 목록에서 고른 충전소가 있으면 추천 대신 보여 준다 (REQ_SL_006)
-                    val recommended = uiState.r1Station
-                    if (recommended != null) {
-                        CardStation(
-                            state = recommended.toCardStationUiState(
-                                chipText = if (recommended.fallbackUsed) chipFallback else chipRecommended,
-                                myChargingCount = uiState.myVisitCount,
-                            ),
-                            onNavigate = viewModel::navigateToRecommended,
-                            navigating = uiState.navigating,
-                            // 좌표가 없으면 경로를 찾을 수 없어 안내를 막는다 (REQ_BR_004 예외)
-                            canNavigate = recommended.toRouteDestination() != null,
-                            // Figma R1은 높이 고정. 오프라인 시각 · 주소 줄이 늘어도 R2가 밀리지 않게 한다
-                            modifier = Modifier.fillMaxWidth().height(cardStationHeightFor(LocalAppLayout.current)),
-                        )
-                    } else {
-                        // 추천을 못 받았을 때 (REQ_CM_006). 첫 요청 중에는 "못 불러왔다"고 미리 말하지 않게 빈 카드만 둔다
-                        if (uiState.isLoading && cards == null) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(cardStationHeightFor(LocalAppLayout.current))
-                                    .clip(RoundedCornerShape(AlterRadius.XXLarge))
-                                    .background(AlterTheme.colors.containerBackground),
-                            )
-                        } else {
-                            CardStationEmpty(
-                                onRefresh = viewModel::loadHome,
-                                refreshing = uiState.isLoading,
-                                // 차량 값을 못 읽어 판정이 없을 때(cards == null)도 서버 탓이 아니니 오프라인 문구를 쓰지 않는다
-                                offline = cards?.offline == true,
-                            )
-                        }
-                    }
+                    RecommendedStationSlot(
+                        uiState = uiState,
+                        onNavigate = viewModel::navigateToRecommended,
+                        onRefresh = viewModel::loadHome,
+                    )
                 },
                 r2 = {
                     RecommendedStationList(
@@ -233,6 +181,72 @@ fun HomeScreen(
                 leftColumnScrollable = cards?.driveRecord?.expanded == true,
             )
         }
+    }
+}
+
+/** 상단 바 시각. 분이 바뀔 때마다 다시 그린다 */
+@Composable
+private fun rememberStatusBarTime(): State<String> = produceState(initialValue = currentStatusBarTime()) {
+    while (true) {
+        delay(MINUTE_MS - System.currentTimeMillis() % MINUTE_MS)
+        value = currentStatusBarTime()
+    }
+}
+
+private const val MINUTE_MS = 60_000L
+
+/** 차량 상태 카드 값으로 상단 바를 채운다. 차량 값을 아직 못 읽었으면 배터리 · 주행 가능 거리는 "값 없음"이다 */
+private fun statusBarStateOf(vehicleStatus: CardVehicleStatusUiState?, time: String) = StatusBarUiState(
+    // 충전 중이면 충전 중, 아니면 주차 중 (REQ_VS_002 목업 충전 상태)
+    if (vehicleStatus?.charging == ChargingState.CHARGING) DriveState.CHARGING else DriveState.PARKED,
+    battery = vehicleStatus?.socPercent?.let { StatusValue.Ready(it) } ?: StatusValue.Unavailable,
+    range = vehicleStatus?.rangeKm?.let { StatusValue.Ready(it) } ?: StatusValue.Unavailable,
+    // 차량 온도는 아직 SDK 값이 없어 숨긴다 (목업 숫자를 지어내지 않는다)
+    temperatureC = null,
+    // 목록의 "14:30 기준" · 충전 완료 예정 시각과 같은 시계(한국 시간)를 쓴다
+    time = time,
+)
+
+/**
+ * R1 자리. 목록에서 고른 충전소가 있으면 추천 대신 보여 주고 (REQ_SL_006),
+ * 보여 줄 충전소가 없으면 첫 요청 중에는 빈 카드, 그 뒤에는 빈 상태 카드를 둔다 (REQ_CM_006).
+ */
+@Composable
+private fun RecommendedStationSlot(
+    uiState: HomeUiState,
+    onNavigate: () -> Unit,
+    onRefresh: () -> Unit,
+) {
+    // Figma R1은 높이 고정. 오프라인 시각 · 주소 줄이 늘어도 R2가 밀리지 않게 한다
+    val fixedHeight = Modifier.fillMaxWidth().height(cardStationHeightFor(LocalAppLayout.current))
+    val station = uiState.r1Station
+    val cards = uiState.cards
+    when {
+        station != null -> CardStation(
+            state = station.toCardStationUiState(
+                chipText = stringResource(
+                    if (station.fallbackUsed) R.string.card_station_chip_fallback else R.string.card_station_chip_recommended,
+                ),
+                myChargingCount = uiState.myVisitCount,
+            ),
+            onNavigate = onNavigate,
+            navigating = uiState.navigating,
+            // 좌표가 없으면 경로를 찾을 수 없어 안내를 막는다 (REQ_BR_004 예외)
+            canNavigate = station.toRouteDestination() != null,
+            modifier = fixedHeight,
+        )
+        // 첫 요청 중에는 "못 불러왔다"고 미리 말하지 않게 빈 카드만 둔다
+        uiState.isLoading && cards == null -> Box(
+            modifier = fixedHeight
+                .clip(RoundedCornerShape(AlterRadius.XXLarge))
+                .background(AlterTheme.colors.containerBackground),
+        )
+        else -> CardStationEmpty(
+            onRefresh = onRefresh,
+            refreshing = uiState.isLoading,
+            // 차량 값을 못 읽어 판정이 없을 때(cards == null)도 서버 탓이 아니니 오프라인 문구를 쓰지 않는다
+            offline = cards?.offline == true,
+        )
     }
 }
 

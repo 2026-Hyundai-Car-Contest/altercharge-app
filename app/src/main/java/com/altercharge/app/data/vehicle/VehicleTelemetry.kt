@@ -6,14 +6,13 @@
  */
 package com.altercharge.app.data.vehicle
 
-import com.altercharge.app.domain.time.KoreaZone
-import java.time.format.FormatStyle
-import java.time.format.DateTimeFormatter
-import java.time.LocalTime
 import com.altercharge.app.data.home.VehicleReading
+import com.altercharge.app.domain.time.KoreaZone
+import com.altercharge.app.domain.time.formatShortTime
 import com.altercharge.app.ui.card.vehiclestatus.ChargeFault
 import com.altercharge.app.ui.card.vehiclestatus.ChargingState
 import java.time.Instant
+import java.time.LocalTime
 
 /** @property observedAt 이 값을 차에서 읽은 시각. 모르면 null */
 data class VehicleTelemetry(
@@ -79,8 +78,6 @@ class MockVehicleTelemetrySource(
 
         /** 지금 시각에 남은 시간을 더한 완충 시각. 화면 언어 형식 (KO "오후 2:50", EN "2:50 PM") */
         internal fun fullAtFrom(now: LocalTime, remainingMinutes: Int?): String? =
-            remainingMinutes?.let {
-                now.plusMinutes(it.toLong()).format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)).replace('\u202F', ' ')
-            }
+            remainingMinutes?.let { formatShortTime(now.plusMinutes(it.toLong())) }
     }
 }

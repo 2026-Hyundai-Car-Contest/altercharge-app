@@ -32,6 +32,7 @@ import com.altercharge.app.domain.judgment.judge
 import com.altercharge.app.domain.judgment.recomputeReason
 import com.altercharge.app.domain.judgment.stamp
 import com.altercharge.app.domain.time.KoreaZone
+import com.altercharge.app.domain.time.toKoreaDate
 import com.altercharge.app.ui.card.driverecord.CardDriveRecordUiState
 import com.altercharge.app.ui.card.info.CardInfoUiState
 import com.altercharge.app.ui.card.info.LastChecked
@@ -70,7 +71,7 @@ class HomeCardsLoader(
     /** 판정을 저장하므로 겹쳐 부르지 않는다. 위치를 모르면 null (충전소는 저장값) */
     suspend fun load(vehicle: VehicleReading, location: LatLng?): HomeCards {
         val now = clock.instant()
-        val today = now.atZone(KoreaZone).toLocalDate() // LocalDate.ofInstant는 API 34부터라 못 쓴다
+        val today = now.toKoreaDate()
 
         // 방금 보낸 기록까지 판정에 들어가게 기록을 받기 전에 보낸다
         uploader?.let {
@@ -110,7 +111,7 @@ class HomeCardsLoader(
     /** L2 이전 · 다음 주. 받아 둔 기록으로 만들어 서버를 다시 부르지 않는다 */
     fun driveRecordFor(
         weekStart: LocalDate,
-        today: LocalDate = clock.instant().atZone(KoreaZone).toLocalDate(),
+        today: LocalDate = clock.instant().toKoreaDate(),
         expanded: Boolean = false,
     ): CardDriveRecordUiState = (lastHistory ?: emptyHistory())
         .toCardDriveRecordUiState(weekStart = weekStart, today = today, latestCharge = lastCharge, expanded = expanded)

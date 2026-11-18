@@ -79,15 +79,20 @@ adb shell am start -W --display 0 -n com.altercharge.app/.MainActivity
 app/src/main/java/com/altercharge/app/
 ├─ ui/
 │  ├─ designsystem/   # 색 · 글자 · 여백 토큰, 버튼, 상단 바, 화면 4종 레이아웃 틀
-│  ├─ card/           # info(다음 충전일) · driverecord(주간 기록) · vehiclestatus(차량 상태) · station(추천 충전소) · stationitem(충전소 목록)
-│  └─ common/         # 드롭다운, 검색창
+│  ├─ card/           # info(다음 충전일) · driverecord(주간 기록) · vehiclestatus(차량 상태) · station(추천 충전소) · stationitem · stationlist(충전소 목록)
+│  ├─ common/         # 드롭다운, 검색창, 출력 범위 슬라이더
+│  ├─ home/           # 홈 화면과 화면 값(ViewModel)
+│  └─ station/        # 충전소 목록 화면 값(ViewModel), 음성 검색
 ├─ domain/
 │  ├─ judgment/       # 충전 판정 계산과 다시 계산하는 시점
-│  └─ time/           # 날짜 기준 시간대(한국시간)
+│  └─ time/           # 날짜 기준 시간대(한국시간), 시각 읽기 · 표시
 └─ data/
    ├─ remote/         # 서버 API 호출, JSON 변환, 카드 값 변환, 유효 기간
-   ├─ local/          # 오프라인용 마지막 값 저장
-   ├─ upload/         # 주행 기록 전송 주기와 재전송
+   ├─ local/          # 기기 저장소 (오프라인용 마지막 값, 충전소 목록, 방문 횟수)
+   ├─ station/        # 주변 충전소 목록 받기, 정렬 · 필터, 거리 계산
+   ├─ upload/         # 주행 기록 · 충전 이벤트 전송과 재전송
+   ├─ vehicle/        # 차량 값 읽기 (지금은 목업)
+   ├─ navi/           # 길 안내 (서버 확인 후 Pleos 내비 목적지 변경)
    └─ home/           # 홈 화면 카드 값을 한 번에 만들기
 ```
 
@@ -135,7 +140,7 @@ cd altercharge-app
 |---|---|
 | `./scripts/setup.sh` | 환경 세팅 (처음 한 번) |
 | `./scripts/run.sh` | 빌드 + 에뮬레이터 켜기 + 설치 + 실행 |
-| `./scripts/check.sh` | 푸시 전 lint와 빌드 확인 (CI와 같은 검사) |
+| `./scripts/check.sh` | 푸시 전 lint, 빌드, 단위 테스트 확인 (CI와 같은 검사) |
 | `./scripts/release.sh 얼터차지` | 제출용 서명 APK를 `apk/얼터차지_AlterCharge_release.apk`로 만들기 (키스토어 필요) |
 
 Android Studio에서 실행하려면 `altercharge-app` 폴더를 Open 하고, 실행 기기로 `Pleos_Connect_API34`를 고른 뒤 Run 합니다. 이때도 **Gradle JDK를 17로 지정**해야 합니다. (Settings > Build, Execution, Deployment > Build Tools > Gradle > Gradle JDK)
@@ -190,10 +195,10 @@ adb shell am start -W --display 0 -n com.altercharge.app/.debug.DesignCatalogAct
 
 자세한 내용은 [CONTRIBUTING.md](CONTRIBUTING.md)에 있습니다.
 
-- `main` 하나만 쓰고, 작업은 `type/작업내용` 브랜치에서 해서 PR을 **Squash and Merge**로 합칩니다. `main`에 직접 푸시하지 않습니다.
+- `main`은 1차 제출본으로 두고, 2차 작업은 `develop`에서 `type/작업내용` 브랜치를 따서 PR을 **Squash and Merge**로 `develop`에 합칩니다. `main`과 `develop`에 직접 푸시하지 않습니다.
 - 커밋은 `type: 작업 내용` (한국어). 타입: `feat` `fix` `refactor` `style` `chore` `docs` `test`
-- 공용 파일(Gradle, 매니페스트, 공통 컴포넌트)을 바꿀 때는 팀에 먼저 알립니다. 푸시 전에는 `./scripts/check.sh`를 돌립니다.
-- PR을 열면 담당자 지정, 리뷰어 요청, 라벨, 브랜치 이름·제목 검사, 빌드와 lint(CI)가 자동으로 돕니다. 병합하면 `main`의 디버그 APK가 Actions 결과물로 남습니다.
+- 푸시 전에는 `./scripts/check.sh`(lint, 빌드, 단위 테스트)를 돌립니다.
+- PR을 열면 담당자 지정, 라벨, 브랜치 이름·제목 검사, lint·빌드·단위 테스트(CI)가 자동으로 돕니다. 병합하면 디버그 APK가 Actions 결과물로 남습니다.
 - 키스토어, `local.properties`, 토큰, API 키는 커밋하지 않습니다.
 
 ## 공모전 제출 (접수 마감 2026-11-15)

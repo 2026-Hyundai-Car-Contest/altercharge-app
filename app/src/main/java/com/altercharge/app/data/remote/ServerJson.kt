@@ -4,6 +4,7 @@
  */
 package com.altercharge.app.data.remote
 
+import com.altercharge.app.data.enumOrNull
 import com.altercharge.app.data.remote.model.ApiError
 import com.altercharge.app.data.remote.model.ChargerDetail
 import com.altercharge.app.data.remote.model.ChargerStatus
@@ -209,8 +210,6 @@ internal object ServerJson {
     private fun JSONObject.instant(key: String): Instant = OffsetDateTime.parse(requiredString(key)).toInstant()
 
     private fun JSONObject.optInstant(key: String): Instant? = optStringOrNull(key)?.let { OffsetDateTime.parse(it).toInstant() }
-
-    private inline fun <reified E : Enum<E>> enumOrNull(name: String): E? = enumValues<E>().firstOrNull { it.name == name }
 
     private inline fun <reified E : Enum<E>> enumOr(name: String, fallback: E): E = enumOrNull<E>(name) ?: fallback
 }

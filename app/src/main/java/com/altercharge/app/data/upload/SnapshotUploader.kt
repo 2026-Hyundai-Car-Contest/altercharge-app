@@ -11,8 +11,10 @@ import com.altercharge.app.data.local.KeyValueStore
 import com.altercharge.app.data.remote.AlterChargeApi
 import com.altercharge.app.data.remote.ApiResult
 import com.altercharge.app.data.remote.DEMO_VEHICLE_ID
+import com.altercharge.app.data.remote.shouldRetryLater
 import com.altercharge.app.data.remote.model.VehicleSnapshotRequest
-import com.altercharge.app.domain.time.KoreaZone
+import com.altercharge.app.domain.time.toInstantOrNull
+import com.altercharge.app.domain.time.toKoreaDate
 import java.time.Duration
 import java.time.Instant
 
@@ -40,9 +42,9 @@ class SnapshotUploader(
         val done = mutableSetOf<Instant>()
         var sent = 0
         for (request in toSend) {
-            val r = api.postSnapshot(request)
-            if (r.shouldRetryLater()) break
-            if (r is ApiResult.Success) sent++
+            val result = api.postSnapshot(request)
+            if (result.shouldRetryLater()) break
+            if (result is ApiResult.Success) sent++
             done += request.recordedAt
         }
         save(pending().filter { it.recordedAt !in done && isWithinRetention(it, now) }, lastQueuedAt())
@@ -52,18 +54,12 @@ class SnapshotUploader(
     private fun isWithinRetention(r: VehicleSnapshotRequest, now: Instant) =
         Duration.between(r.recordedAt, now) <= SERVER_RETENTION
 
-    private fun ApiResult<*>.shouldRetryLater(): Boolean = when (this) {
-        is ApiResult.NetworkError, ApiResult.NotConfigured -> true
-        is ApiResult.HttpError -> status >= 500 || status == 408 || status == 429
-        else -> false
-    }
-
     fun pendingCount(): Int = pending().size
 
     private fun pending(): List<VehicleSnapshotRequest> =
         store.getString(KEY_PENDING).orEmpty().lines().filter { it.isNotBlank() }.mapNotNull(::decode)
 
-    private fun lastQueuedAt(): Instant? = store.getString(KEY_LAST_QUEUED_AT)?.let { runCatching { Instant.parse(it) }.getOrNull() }
+    private fun lastQueuedAt(): Instant? = store.getString(KEY_LAST_QUEUED_AT)?.toInstantOrNull()
 
     private fun save(queue: List<VehicleSnapshotRequest>, lastQueuedAt: Instant?) {
         store.putStrings(
@@ -101,7 +97,7 @@ class SnapshotUploader(
  */
 internal fun isDue(lastQueuedAt: Instant?, now: Instant): Boolean {
     if (lastQueuedAt == null) return true
-    val newDay = lastQueuedAt.atZone(KoreaZone).toLocalDate() != now.atZone(KoreaZone).toLocalDate()
+    val newDay = lastQueuedAt.toKoreaDate() != now.toKoreaDate()
     return newDay || Duration.between(lastQueuedAt, now) >= SEND_INTERVAL
 }
 

@@ -2,6 +2,7 @@ package com.altercharge.app.ui.card.stationlist
 
 import com.altercharge.app.ui.common.dropdown.FilterRowBounds
 import kotlin.math.roundToInt
+import androidx.annotation.StringRes
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.runtime.LaunchedEffect
@@ -39,7 +40,6 @@ import com.altercharge.app.ui.common.dropdown.FilterChip
 import com.altercharge.app.ui.common.dropdown.FilterDropdownPopup
 import com.altercharge.app.ui.common.dropdown.SelectableDropdownItem
 import com.altercharge.app.ui.common.dropdown.SortDropDown
-import com.altercharge.app.ui.common.dropdown.StationSortType
 import com.altercharge.app.ui.designsystem.theme.AlterMargin
 import com.altercharge.app.ui.designsystem.theme.AlterTheme
 import com.altercharge.app.ui.station.StationListUiState
@@ -104,10 +104,10 @@ internal fun StationListFilterRow(
     var pendingMinPower by remember { mutableIntStateOf(filter.power.minKw) }
     var pendingMaxPower by remember { mutableIntStateOf(filter.power.maxKw) }
 
-    val sortLabels = StationSortType.entries.associateWith { stringResource(it.labelRes) }
+    val sortLabels = StationSort.entries.associateWith { stringResource(it.labelRes) }
 
     // Figma dropdown_sort는 거리순 · 방문순 두 항목이다. 방문 기록이 없으면 방문순은 흐리게 두고 고를 수 없다 (REQ_SL_004 예외)
-    val sortItems = listOf(StationSortType.DISTANCE, StationSortType.VISIT)
+    val sortItems = listOf(StationSort.DISTANCE, StationSort.VISIT)
     var isSortMenuExpanded by remember { mutableStateOf(false) }
 
     val anyMenuOpen = isSortMenuExpanded || isConnectorMenuExpanded || isPowerMenuExpanded
@@ -144,10 +144,10 @@ internal fun StationListFilterRow(
             // 거리순 / 방문순 드롭다운 (REQ_SL_004)
             SortDropDown(
                 items = sortItems,
-                selectedItem = state.sort.toSortType(),
+                selectedItem = state.sort,
                 itemLabel = { sortLabels.getValue(it) },
-                onItemSelected = { onSortChange(it.toSort()) },
-                isEnabled = { it != StationSortType.VISIT || state.visitSortEnabled },
+                onItemSelected = onSortChange,
+                isEnabled = { it != StationSort.VISIT || state.visitSortEnabled },
                 onExpandedChange = { isSortMenuExpanded = it },
             )
 
@@ -273,12 +273,9 @@ internal fun StationListFilterRow(
     }
 }
 
-private fun StationSort.toSortType(): StationSortType = when (this) {
-    StationSort.DISTANCE -> StationSortType.DISTANCE
-    StationSort.VISIT -> StationSortType.VISIT
-}
-
-private fun StationSortType.toSort(): StationSort = when (this) {
-    StationSortType.DISTANCE -> StationSort.DISTANCE
-    StationSortType.VISIT -> StationSort.VISIT
-}
+/** 정렬 메뉴 라벨. 문자열 리소스라 화면에서 stringResource로 읽는다 (영문 화면 대응) */
+private val StationSort.labelRes: Int
+    @StringRes get() = when (this) {
+        StationSort.DISTANCE -> R.string.station_list_sort_distance
+        StationSort.VISIT -> R.string.station_list_sort_visit
+    }

@@ -1,7 +1,6 @@
 package com.altercharge.app.ui.common.dropdown
 
 import androidx.compose.ui.draw.alpha
-import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -145,12 +144,4 @@ private fun SortDropDownItem(
             Spacer(modifier = Modifier.size(20.dp))
         }
     }
-}
-
-/** 라벨은 문자열 리소스라 화면에서 stringResource(labelRes)로 읽는다 (영문 화면 대응) */
-enum class StationSortType(
-    @StringRes val labelRes: Int
-) {
-    DISTANCE(R.string.station_list_sort_distance),
-    VISIT(R.string.station_list_sort_visit)
 }

@@ -47,8 +47,15 @@ class StationRepository(
      * 방금 받은 전체 목록 (위치 · 받은 시각). 홈 시작 때 목록 · 충전 시작 판정이 같은 목록을 연달아 부르므로
      * [FRESH_REUSE] 안에서는 다시 받지 않는다. 동시에 불러도 [nearbyLock]으로 한 번만 받는다.
      */
-    private var lastFresh: Triple<Double, Double, NearbyResult>? = null
+    private var lastFresh: FreshList? = null
     private val nearbyLock = Mutex()
+
+    /** 방금 서버에서 받은 전체 목록과 그때 요청한 위치 */
+    private data class FreshList(val lat: Double, val lng: Double, val result: NearbyResult) {
+        fun isReusableFor(lat: Double, lng: Double, now: Instant): Boolean =
+            this.lat == lat && this.lng == lng &&
+                result.receivedAt?.let { Duration.between(it, now) < FRESH_REUSE } == true
+    }
 
     /** 받아 둔 목록. 없거나 7일이 지났으면 null */
     fun cached(): NearbyResult? = validCache()?.let {
@@ -73,12 +80,10 @@ class StationRepository(
         return nearbyLock.withLock {
             val recent = lastFresh
             val now = clock.instant()
-            if (recent != null && recent.first == lat && recent.second == lng &&
-                recent.third.receivedAt?.let { Duration.between(it, now) < FRESH_REUSE } == true
-            ) {
-                recent.third
+            if (recent != null && recent.isReusableFor(lat, lng, now)) {
+                recent.result
             } else {
-                fetch(lat, lng, word = null).also { if (!it.offline) lastFresh = Triple(lat, lng, it) }
+                fetch(lat, lng, word = null).also { if (!it.offline) lastFresh = FreshList(lat, lng, it) }
             }
         }
     }

@@ -5,8 +5,10 @@
  */
 package com.altercharge.app.data.local
 
+import com.altercharge.app.data.enumOrNull
 import com.altercharge.app.data.remote.model.ConnectorType
 import com.altercharge.app.data.remote.model.StationSummary
+import com.altercharge.app.domain.time.toInstantOrNull
 import java.time.Instant
 
 data class CachedStations(val stations: List<StationSummary>, val receivedAt: Instant)
@@ -24,7 +26,7 @@ class StationCacheStore(private val store: KeyValueStore) {
 
     /** 목록이나 받은 시각이 없으면 null */
     fun load(): CachedStations? {
-        val receivedAt = store.getString(KEY_RECEIVED_AT)?.let { runCatching { Instant.parse(it) }.getOrNull() }
+        val receivedAt = store.getString(KEY_RECEIVED_AT)?.toInstantOrNull()
             ?: return null
         val text = store.getString(KEY_STATIONS) ?: return null
         return CachedStations(decodeStations(text), receivedAt)
@@ -74,10 +76,10 @@ internal fun decodeStations(text: String): List<StationSummary> {
             totalValidCount = f[7].toIntOrNull() ?: return@mapNotNull null,
             chargerTypes = f[8].split(TYPE_SEPARATOR)
                 .filter { it.isNotEmpty() }
-                .map { name -> enumValues<ConnectorType>().firstOrNull { it.name == name } ?: ConnectorType.UNKNOWN },
+                .map { name -> enumOrNull<ConnectorType>(name) ?: ConnectorType.UNKNOWN },
             maxOutputKw = f[9].toDoubleOrNull(),
             visitCount = f[10].toIntOrNull(),
-            statusObservedAt = f[11].takeIf { it.isNotEmpty() }?.let { runCatching { Instant.parse(it) }.getOrNull() },
+            statusObservedAt = f[11].toInstantOrNull(),
         )
     }
 }

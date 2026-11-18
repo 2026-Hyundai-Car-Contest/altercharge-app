@@ -4,18 +4,19 @@
  */
 package com.altercharge.app.data.local
 
+import com.altercharge.app.data.enumOrNull
+import com.altercharge.app.data.home.RecommendedStationInfo
 import com.altercharge.app.data.remote.model.ConnectorType
 import com.altercharge.app.data.remote.model.RecommendationReason
 import com.altercharge.app.data.remote.model.SpeedCategory
-import org.json.JSONArray
-import org.json.JSONObject
-import com.altercharge.app.data.home.RecommendedStationInfo
-import android.content.Context
 import com.altercharge.app.domain.judgment.Judgment
 import com.altercharge.app.domain.judgment.JudgmentResult
 import com.altercharge.app.domain.judgment.JudgmentStamp
+import com.altercharge.app.domain.time.toInstantOrNull
 import java.time.Instant
 import java.time.LocalDate
+import org.json.JSONArray
+import org.json.JSONObject
 
 data class OfflineSnapshot(
     val judgment: JudgmentResult?,
@@ -26,22 +27,6 @@ data class OfflineSnapshot(
     /** 마지막으로 받은 추천 충전소. 오프라인에서도 R1에 유지한다 (REQ_CM_006 "추천 충전소는 유지") */
     val recommended: RecommendedStationInfo? = null,
 )
-
-class SharedPreferencesStore(context: Context) : KeyValueStore {
-    private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-
-    override fun getString(key: String): String? = prefs.getString(key, null)
-
-    override fun putStrings(values: Map<String, String?>) {
-        prefs.edit().apply {
-            values.forEach { (key, value) -> if (value == null) remove(key) else putString(key, value) }
-        }.apply()
-    }
-
-    private companion object {
-        const val PREFS_NAME = "altercharge_offline"
-    }
-}
 
 class OfflineSnapshotStore(private val store: KeyValueStore) {
 
@@ -69,7 +54,7 @@ class OfflineSnapshotStore(private val store: KeyValueStore) {
         judgmentStamp = store.getString(KEY_JUDGMENT_STAMP)?.let(::decodeStamp),
         placeName = store.getString(KEY_PLACE_NAME),
         nearestStationKm = store.getString(KEY_NEAREST_KM)?.toDoubleOrNull(),
-        stationReceivedAt = store.getString(KEY_STATION_RECEIVED_AT)?.let { runCatching { Instant.parse(it) }.getOrNull() },
+        stationReceivedAt = store.getString(KEY_STATION_RECEIVED_AT)?.toInstantOrNull(),
         recommended = store.getString(KEY_RECOMMENDED)?.let(::decodeRecommended),
     )
 
@@ -160,17 +145,17 @@ private fun decodeRecommended(text: String): RecommendedStationInfo? = runCatchi
         distanceMeters = o.getInt("distanceMeters"),
         availableCount = o.getInt("availableCount"),
         visitCount = optInt("visitCount"),
-        speedCategory = optString("speedCategory")?.let { runCatching { SpeedCategory.valueOf(it) }.getOrNull() },
+        speedCategory = optString("speedCategory")?.let { enumOrNull<SpeedCategory>(it) },
         maxOutputKw = optDouble("maxOutputKw"),
         fallbackUsed = o.getBoolean("fallbackUsed"),
-        reasonCode = runCatching { RecommendationReason.valueOf(o.getString("reasonCode")) }.getOrDefault(RecommendationReason.UNKNOWN),
+        reasonCode = enumOrNull<RecommendationReason>(o.getString("reasonCode")) ?: RecommendationReason.UNKNOWN,
         address = optString("address"),
         totalValidCount = optInt("totalValidCount"),
         connectorTypes = (0 until (connectors?.length() ?: 0)).mapNotNull { i ->
-            runCatching { ConnectorType.valueOf(connectors!!.getString(i)) }.getOrNull()
+            enumOrNull<ConnectorType>(connectors!!.getString(i))
         },
         lat = optDouble("lat"),
         lng = optDouble("lng"),
-        statusObservedAt = optString("statusObservedAt")?.let { runCatching { Instant.parse(it) }.getOrNull() },
+        statusObservedAt = optString("statusObservedAt")?.toInstantOrNull(),
     )
 }.getOrNull()
