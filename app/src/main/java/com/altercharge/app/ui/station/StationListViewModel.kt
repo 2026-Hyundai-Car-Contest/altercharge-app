@@ -60,7 +60,6 @@ class StationListViewModel(
     /** null이면 전체 목록, 값이 있으면 서버 검색 결과 */
     private var searchWord: String? = null
 
-    private var localCounts: Map<String, Int> = emptyMap()
     private var receivedAt: Instant? = null
     private var searchJob: Job? = null
 
@@ -69,15 +68,17 @@ class StationListViewModel(
 
     init {
         refresh()
-        retryWhileOffline()
+        startAutoRefresh()
     }
 
     /** 목록에서 고른 충전소의 원본 값 (REQ_SL_006: R1에 대신 보여 줄 때 쓴다) */
     fun summaryOf(stationId: String): StationSummary? =
         (searchResults.orEmpty() + allStations).firstOrNull { it.stationId == stationId }
 
-    /** 화면에 다시 들어왔거나 사용자가 다시 시도했을 때 */
-    /** @param keepMessage 자동 새로고침이면 true. 보던 안내 문구(검색 불가 등)를 5분마다 지우지 않는다 */
+    /**
+     * 화면에 다시 들어왔거나 사용자가 다시 시도했을 때.
+     * @param keepMessage 자동 새로고침이면 true. 보던 안내 문구(검색 불가 등)를 5분마다 지우지 않는다
+     */
     fun refresh(keepMessage: Boolean = false) {
         refreshJob?.cancel()
         refreshJob = viewModelScope.launch {
@@ -103,41 +104,34 @@ class StationListViewModel(
     /** 검색어. 목록은 서버가 이름 · 주소로 찾는다 (REQ_SL_002). 타이핑 중에는 잠깐 기다린다 */
     fun onQueryChange(text: String) {
         _uiState.update { it.copy(query = text, message = null) }
-        searchJob?.cancel()
         val word = text.trim()
-        if (word.isEmpty()) {
-            searchWord = null
-            searchResults = null
-            // 검색 요청 중에 지웠으면 그 요청은 취소됐으니 로딩 표시도 내린다
-            _uiState.update { it.copy(isLoading = false) }
-            rebuild()
-            return
-        }
+        if (word.isEmpty()) clearSearch() else startSearch(word, debounceMs = SEARCH_DEBOUNCE_MS)
+    }
+
+    /** 검색 요청도 하나만 둔다: 음성 · 타이핑 · 재요청이 겹치면 마지막 검색어 결과만 남긴다 */
+    private fun startSearch(word: String, debounceMs: Long = 0L) {
+        searchJob?.cancel()
         searchJob = viewModelScope.launch {
-            delay(SEARCH_DEBOUNCE_MS)
+            if (debounceMs > 0) delay(debounceMs)
             search(word)
         }
     }
 
-    /** 검색 요청도 하나만 둔다: 음성 · 타이핑 · 재요청이 겹치면 마지막 검색어 결과만 남긴다 */
-    private fun startSearch(word: String) {
+    /** 검색어를 지우면 전체 목록으로 돌아간다 (REQ_SL_002) */
+    private fun clearSearch() {
         searchJob?.cancel()
-        searchJob = viewModelScope.launch { search(word) }
+        searchWord = null
+        searchResults = null
+        // 검색 요청 중에 지웠으면 그 요청은 취소됐으니 로딩 표시도 내린다
+        _uiState.update { it.copy(isLoading = false) }
+        rebuild()
     }
 
     /** 음성 인식 결과. 텍스트 검색과 같은 결과를 낸다 (REQ_SL_003) */
     fun onVoiceResult(text: String) {
         _uiState.update { it.copy(query = text, voice = VoiceSearchState.Idle, message = null) }
-        searchJob?.cancel()
         val word = text.trim()
-        if (word.isEmpty()) {
-            searchWord = null
-            searchResults = null
-            _uiState.update { it.copy(isLoading = false) }
-            rebuild()
-        } else {
-            startSearch(word)
-        }
+        if (word.isEmpty()) clearSearch() else startSearch(word)
     }
 
     fun onVoiceListening() {
@@ -197,7 +191,6 @@ class StationListViewModel(
     private fun applyStations(stations: List<StationSummary>, at: Instant?, offline: Boolean, loading: Boolean) {
         allStations = stations
         receivedAt = at
-        localCounts = repository.localVisitCounts()
         _uiState.update {
             it.copy(
                 isLoading = loading,
@@ -211,15 +204,14 @@ class StationListViewModel(
 
     /** 지금 목록(전체 또는 검색 결과)에 필터 · 정렬을 적용해 화면 값을 만든다 */
     private fun rebuild() {
-        // 방문 횟수는 화면을 그릴 때마다 기기 저장값에서 읽는다 (충전 시작으로 바로 늘어난 값을 반영)
-        localCounts = repository.localVisitCounts()
         val built = buildStationList(
             all = allStations,
             // 오프라인이면 검색창이 비어 보이므로(REQ_SL_002 예외) 전체 목록을 쓴다. 검색어는 남겨 연결되면 다시 찾는다
             searchResults = if (_uiState.value.offline) null else searchResults,
             sort = _uiState.value.sort,
             filter = _uiState.value.filter,
-            localCounts = localCounts,
+            // 방문 횟수는 목록을 만들 때마다 기기 저장값에서 읽는다 (충전 시작으로 바로 늘어난 값을 반영)
+            localCounts = repository.localVisitCounts(),
             receivedAt = receivedAt,
             now = clock.instant(),
         )
@@ -238,7 +230,7 @@ class StationListViewModel(
     }
 
     /** 오프라인이면 30초, 연결돼 있으면 5분마다 다시 받는다 (REQ_CM_006 · REQ_CM_009) */
-    private fun retryWhileOffline() {
+    private fun startAutoRefresh() {
         viewModelScope.launch {
             var sinceRefresh = 0L
             while (isActive) {

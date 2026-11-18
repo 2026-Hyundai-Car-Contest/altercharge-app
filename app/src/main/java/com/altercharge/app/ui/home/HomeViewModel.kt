@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.altercharge.app.data.home.HomeCardsLoader
 import com.altercharge.app.data.home.LatLng
+import com.altercharge.app.data.home.RecommendedStationInfo
 import com.altercharge.app.data.home.VehicleReading
 import com.altercharge.app.data.home.toCardVehicleStatusUiState
 import com.altercharge.app.data.home.toRouteDestination
@@ -88,8 +89,9 @@ class HomeViewModel(
         loadJob = viewModelScope.launch {
             // 오프라인이면 30초, 연결돼 있으면 5분마다 다시 받는다 (REQ_CM_006 · REQ_CM_009)
             while (true) {
-                val retry = loadOnce()
-                delay(if (retry) RefreshRule.AUTO_RETRY_INTERVAL.toMillis() else RefreshRule.ONLINE_REFRESH_INTERVAL.toMillis())
+                val offline = loadOnce()
+                val interval = if (offline) RefreshRule.AUTO_RETRY_INTERVAL else RefreshRule.ONLINE_REFRESH_INTERVAL
+                delay(interval.toMillis())
             }
         }
     }
@@ -99,19 +101,23 @@ class HomeViewModel(
      * "충전 완료 예정" 시각이 화면 시각 + 남은 시간과 어긋나지 않게 한다 (서버 요청은 하지 않는다)
      */
     fun refreshVehicleStatus() {
-        val reading = telemetry.read()
+        showVehicleStatus(telemetry.read())
+    }
+
+    /** 차량 값은 네트워크와 관계없이 그대로 보여 준다 (REQ_CM_006). 서버 값은 마지막으로 받은 것을 쓴다 */
+    private fun showVehicleStatus(reading: VehicleTelemetry) {
         _uiState.update {
             it.copy(vehicleStatus = reading.toCardVehicleStatusUiState(driverName, it.cards?.vehicleStatus))
         }
     }
 
+    /** 내가 이 충전소에 충전하러 간 횟수 (REQ_ST_008). 충전소가 없으면 0 */
+    private fun visitCountOf(station: RecommendedStationInfo?): Int = station?.let { visits.count(it.stationId) } ?: 0
+
     /** @return 서버에 못 붙어 다시 요청해야 하면 true */
     private suspend fun loadOnce(): Boolean {
         val reading = telemetry.read()
-        // 차량 값은 네트워크와 관계없이 그대로 보여 준다 (REQ_CM_006)
-        _uiState.update {
-            it.copy(vehicleStatus = reading.toCardVehicleStatusUiState(driverName, it.cards?.vehicleStatus))
-        }
+        showVehicleStatus(reading)
 
         val vehicle = reading.readingOrNull()
         if (vehicle == null) {
@@ -134,7 +140,7 @@ class HomeViewModel(
                     cards = cards.copy(driveRecord = keepViewedWeek(cards.driveRecord)),
                     recommended = recommended,
                     // 목록에서 고른 충전소가 R1에 있으면 그 충전소의 방문 횟수를 유지한다 (REQ_SL_006)
-                    myVisitCount = (it.selectedStation ?: recommended)?.let { info -> visits.count(info.stationId) } ?: 0,
+                    myVisitCount = visitCountOf(it.selectedStation ?: recommended),
                     vehicleStatus = reading.toCardVehicleStatusUiState(driverName, cards.vehicleStatus),
                 )
             }
@@ -193,7 +199,7 @@ class HomeViewModel(
     fun clearSelectedStation() {
         if (_uiState.value.selectedStation == null) return
         _uiState.update { state ->
-            state.copy(selectedStation = null, myVisitCount = state.recommended?.let { visits.count(it.stationId) } ?: 0)
+            state.copy(selectedStation = null, myVisitCount = visitCountOf(state.recommended))
         }
     }
 
@@ -239,11 +245,11 @@ class HomeViewModel(
      * 충전이 시작된 순간이면 충전소 방문을 기록한다 (REQ_ST_008).
      * 충전소는 저장해 둔 3km 목록에서 100m 안으로 찾고, 없으면 목록을 한 번 받아 본다.
      */
-    private suspend fun detectChargingStart(telemetry: VehicleTelemetry, vehicle: VehicleReading) {
+    private suspend fun detectChargingStart(reading: VehicleTelemetry, vehicle: VehicleReading) {
         val previous = lastCharging
-        lastCharging = telemetry.charging
+        lastCharging = reading.charging
         if (location == null) return
-        if (!isChargeStart(previous, telemetry.charging)) return
+        if (!isChargeStart(previous, reading.charging)) return
 
         val saved = stations.cached()?.stations.orEmpty()
         val known = if (saved.isNotEmpty()) saved else stations.nearby(location.lat, location.lng).stations

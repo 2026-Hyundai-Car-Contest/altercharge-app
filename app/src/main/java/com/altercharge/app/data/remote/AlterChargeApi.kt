@@ -44,6 +44,13 @@ sealed interface ApiResult<out T> {
     data object NotConfigured : Failure
 }
 
+/** 보내기에 실패했을 때 나중에 다시 보낼 만한지. 연결 안 됨 · 5xx · 408 · 429만 그렇고, 다른 4xx는 다시 보내도 같다 */
+internal fun ApiResult<*>.shouldRetryLater(): Boolean = when (this) {
+    is ApiResult.NetworkError, ApiResult.NotConfigured -> true
+    is ApiResult.HttpError -> status >= 500 || status == 408 || status == 429
+    else -> false
+}
+
 class AlterChargeApi(
     private val baseUrl: String = BuildConfig.BASE_URL,
     private val http: HttpClient = UrlConnectionClient(),

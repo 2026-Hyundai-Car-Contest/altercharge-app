@@ -14,11 +14,12 @@ import com.altercharge.app.data.local.VisitCountStore
 import com.altercharge.app.data.remote.AlterChargeApi
 import com.altercharge.app.data.remote.ApiResult
 import com.altercharge.app.data.remote.DEMO_VEHICLE_ID
+import com.altercharge.app.data.remote.shouldRetryLater
 import com.altercharge.app.data.remote.model.ChargingEventRequest
 import com.altercharge.app.data.remote.model.ChargingEventType
 import com.altercharge.app.data.remote.model.StationSummary
 import com.altercharge.app.data.station.nearestStationWithin
-import com.altercharge.app.domain.time.KoreaZone
+import com.altercharge.app.domain.time.toKoreaDate
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
@@ -45,7 +46,7 @@ class ChargingEventRecorder(
         lat: Double,
         lng: Double,
         stations: List<StationSummary>,
-        date: LocalDate = at.atZone(KoreaZone).toLocalDate(),
+        date: LocalDate = at.toKoreaDate(),
     ): Recorded {
         val station = nearestStationWithin(stations, lat, lng)
         val count = station?.let { visits.recordIfFirstToday(it.stationId, date) }
@@ -100,12 +101,6 @@ class ChargingEventRecorder(
 
     private fun isWithinRetention(request: ChargingEventRequest, now: Instant): Boolean =
         Duration.between(request.occurredAt, now) <= EVENT_RETENTION
-
-    private fun ApiResult<*>.shouldRetryLater(): Boolean = when (this) {
-        is ApiResult.NetworkError, ApiResult.NotConfigured -> true
-        is ApiResult.HttpError -> status >= 500 || status == 408 || status == 429
-        else -> false
-    }
 
     private fun pending(): List<ChargingEventRequest> =
         store.getString(KEY_PENDING).orEmpty().lines().filter { it.isNotBlank() }.mapNotNull(::decode)
